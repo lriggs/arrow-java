@@ -23,6 +23,7 @@ import org.apache.arrow.memory.util.hash.ArrowBufHasher;
 import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.BaseValueVector;
 import org.apache.arrow.vector.BitVectorHelper;
+import org.apache.arrow.vector.DecimalVector;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.complex.AbstractStructVector;
@@ -306,6 +307,9 @@ public class UnionVector extends AbstractContainerVector implements FieldVector 
 
   public ${name}Vector get${name}Vector(String name) {
     if (${uncappedName}Vector == null) {
+      ${uncappedName}Vector = internalStruct.getChild(fieldName(MinorType.${name?upper_case}), ${name}Vector.class);
+      if (${uncappedName}Vector == null) {
+        throw new IllegalArgumentException("No ${uncappedName} present. Provide ArrowType argument to create a new vector");
       int vectorCount = internalStruct.size();
       ${uncappedName}Vector = addOrGet(name, MinorType.${name?upper_case}, ${name}Vector.class);
       if (internalStruct.size() > vectorCount) {
