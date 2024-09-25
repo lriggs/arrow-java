@@ -29,6 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 
+import com.sun.jna.Library;
+import com.sun.jna.NativeLibrary;
+
 /** This class handles loading of the jni library, and acts as a bridge for the native functions. */
 class JniLoader {
   private static final String LIBRARY_NAME = "gandiva_jni";
