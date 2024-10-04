@@ -89,6 +89,14 @@ under the License.
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <targetPath>codegen</targetPath>
+        <!-- Copy freemarker template and fmpp configuration files of Vector's
+          to allow clients to leverage definitions. -->
+        <directory>${basedir}/src/main/codegen</directory>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
