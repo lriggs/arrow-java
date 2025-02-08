@@ -40,7 +40,6 @@ import org.junit.jupiter.api.Test;
 public class FilterProjectTest extends BaseEvaluatorTest {
 
   @Test
-  @Disabled("GH-43576 - Fix and enable this test")
   public void testSimpleSV16() throws GandivaException, Exception {
     Field a = Field.nullable("a", int32);
     Field b = Field.nullable("b", int32);
