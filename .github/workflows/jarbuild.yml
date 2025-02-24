@@ -53,9 +53,10 @@ jobs:
       - name: Prepare for tag
         run: |
           echo "${{github.event.inputs.release_tag_name}}"
-          version=${ ${{github.event.inputs.release_tag_name}}%-rc*}
+          ver=echo "${{github.event.inputs.release_tag_name}}"
+          version=${ver%-rc*}
           version=${version#v}
-          rc=${ ${{github.event.inputs.release_tag_name}}#*-rc}
+          rc=${ver#*-rc}
           echo "VERSION=${version}" >> ${GITHUB_ENV}
           echo "VERSION=${version}"
           echo "RC=${rc}" >> ${GITHUB_ENV}
