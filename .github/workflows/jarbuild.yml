@@ -544,7 +544,7 @@ jobs:
           # https://github.com/cli/cli/issues/9586
           for artifact in artifacts/*/*; do
             sleep 1
-            gh release upload ${release_tag_name} \
+            gh release upload ${{github.event.inputs.release_tag_name}} \
               --repo ${GITHUB_REPOSITORY} \
               $artifact
           done
