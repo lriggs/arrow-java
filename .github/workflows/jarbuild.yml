@@ -529,10 +529,12 @@ jobs:
       - name: Upload
         run: |
           # GH-499: How to create release notes?
-          version=${release_tag_name%-rc*}
+          echo "${{github.event.inputs.release_tag_name}}"
+          ver=$(echo ${{github.event.inputs.release_tag_name}})
+          version=${ver%-rc*}
           version=${version#v}
-          rc=${release_tag_name#*-rc}
-          gh release create ${release_tag_name} \
+          rc=${ver#*-rc}
+          gh release create ${{github.event.inputs.release_tag_name}} \
             --generate-notes \
             --prerelease \
             --repo ${GITHUB_REPOSITORY} \
