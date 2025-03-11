@@ -50,7 +50,7 @@ Darwin)
 esac
 
 : "${ARROW_JAVA_BUILD_TESTS:=${ARROW_BUILD_TESTS:-ON}}"
-: "${CMAKE_BUILD_TYPE:=release}"
+: "${CMAKE_BUILD_TYPE:=RelWithDebInfo}"
 read -ra EXTRA_CMAKE_OPTIONS <<<"${JAVA_JNI_CMAKE_ARGS:-}"
 cmake \
   -S "${source_dir}" \

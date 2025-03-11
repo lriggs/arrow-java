@@ -71,7 +71,7 @@ export ARROW_GANDIVA
 export ARROW_ORC
 : "${ARROW_PARQUET:=ON}"
 : "${ARROW_S3:=ON}"
-: "${CMAKE_BUILD_TYPE:=Release}"
+: "${CMAKE_BUILD_TYPE:=RelWithDebInfo}"
 : "${CMAKE_UNITY_BUILD:=ON}"
 
 export ARROW_TEST_DATA="${arrow_dir}/testing/data"
