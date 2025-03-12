@@ -35,7 +35,7 @@ github_actions_group_begin "Clear output directories and leftovers"
 rm -rf "${build_dir}"
 github_actions_group_end
 
-github_actions_group_begin "Building Arrow Java C Data Interface native library"
+github_actions_group_begin "Building LR Arrow Java C Data Interface native library"
 
 case "$(uname)" in
 Linux)
@@ -59,7 +59,7 @@ cmake \
   -DARROW_JAVA_JNI_ENABLE_GANDIVA="${ARROW_GANDIVA:-OFF}" \
   -DARROW_JAVA_JNI_ENABLE_ORC="${ARROW_ORC:-OFF}" \
   -DBUILD_TESTING="${ARROW_JAVA_BUILD_TESTS}" \
-  -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+  -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
   -DCMAKE_PREFIX_PATH="${arrow_install_dir}" \
   -DCMAKE_INSTALL_PREFIX="${prefix_dir}" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD:-OFF}" \
