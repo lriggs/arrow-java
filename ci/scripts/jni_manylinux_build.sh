@@ -75,7 +75,7 @@ export ARROW_ORC
 : "${CMAKE_UNITY_BUILD:=ON}"
 : "${VCPKG_ROOT:=/opt/vcpkg}"
 : "${VCPKG_FEATURE_FLAGS:=-manifests}"
-: "${VCPKG_TARGET_TRIPLET:=${VCPKG_DEFAULT_TRIPLET:-x64-linux-static-${CMAKE_BUILD_TYPE}}}"
+: "${VCPKG_TARGET_TRIPLET:=${VCPKG_DEFAULT_TRIPLET:-x64-linux-static-RelWithDebInfo}}"
 : "${GANDIVA_CXX_FLAGS:=-isystem;${devtoolset_include_cpp};-isystem;${devtoolset_include_cpp}/x86_64-redhat-linux;-lpthread}"
 
 export ARROW_TEST_DATA="${arrow_dir}/testing/data"
@@ -106,7 +106,7 @@ cmake \
   -DARROW_RPATH_ORIGIN="${ARROW_RPATH_ORIGIN}" \
   -DARROW_S3="${ARROW_S3}" \
   -DARROW_USE_CCACHE="${ARROW_USE_CCACHE}" \
-  -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+  -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
   -DCMAKE_INSTALL_PREFIX="${install_dir}" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
   -DGTest_SOURCE=BUNDLED \
