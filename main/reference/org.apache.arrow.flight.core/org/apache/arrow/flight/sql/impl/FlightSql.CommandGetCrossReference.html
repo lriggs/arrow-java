@@ -77,7 +77,7 @@ loadScripts(document, 'script');</script>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
 <div class="inheritance">com.google.protobuf.AbstractMessageLite
 <div class="inheritance">com.google.protobuf.AbstractMessage
-<div class="inheritance">com.google.protobuf.GeneratedMessageV3
+<div class="inheritance">com.google.protobuf.GeneratedMessage
 <div class="inheritance">org.apache.arrow.flight.sql.impl.FlightSql.CommandGetCrossReference</div>
 </div>
 </div>
@@ -94,7 +94,7 @@ loadScripts(document, 'script');</script>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public static final class </span><span class="element-name type-name-label">FlightSql.CommandGetCrossReference</span>
-<span class="extends-implements">extends com.google.protobuf.GeneratedMessageV3
+<span class="extends-implements">extends com.google.protobuf.GeneratedMessage
 implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="interface in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReferenceOrBuilder</a></span></div>
 <div class="block"><pre>
 
@@ -102,32 +102,32 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
  reference the primary key or the columns representing a unique constraint of the parent table (could be the same
  or a different table) on a Flight SQL enabled backend.
  Used in the command member of FlightDescriptor for the following RPC calls:
-  - GetSchema: return the Arrow schema of the query.
-  - GetFlightInfo: execute the catalog metadata request.
+ - GetSchema: return the Arrow schema of the query.
+ - GetFlightInfo: execute the catalog metadata request.
 
  The returned Arrow schema will be:
  &lt;
-  pk_catalog_name: utf8,
-  pk_db_schema_name: utf8,
-  pk_table_name: utf8 not null,
-  pk_column_name: utf8 not null,
-  fk_catalog_name: utf8,
-  fk_db_schema_name: utf8,
-  fk_table_name: utf8 not null,
-  fk_column_name: utf8 not null,
-  key_sequence: int32 not null,
-  fk_key_name: utf8,
-  pk_key_name: utf8,
-  update_rule: uint8 not null,
-  delete_rule: uint8 not null
+ pk_catalog_name: utf8,
+ pk_db_schema_name: utf8,
+ pk_table_name: utf8 not null,
+ pk_column_name: utf8 not null,
+ fk_catalog_name: utf8,
+ fk_db_schema_name: utf8,
+ fk_table_name: utf8 not null,
+ fk_column_name: utf8 not null,
+ key_sequence: int32 not null,
+ fk_key_name: utf8,
+ pk_key_name: utf8,
+ update_rule: uint8 not null,
+ delete_rule: uint8 not null
  &gt;
  The returned data should be ordered by pk_catalog_name, pk_db_schema_name, pk_table_name, pk_key_name, then key_sequence.
  update_rule and delete_rule returns a byte that is equivalent to actions:
-    - 0 = CASCADE
-    - 1 = RESTRICT
-    - 2 = SET NULL
-    - 3 = NO ACTION
-    - 4 = SET DEFAULT
+ - 0 = CASCADE
+ - 1 = RESTRICT
+ - 2 = SET NULL
+ - 3 = NO ACTION
+ - 4 = SET DEFAULT
  </pre>
 
  Protobuf type <code>arrow.flight.protocol.sql.CommandGetCrossReference</code></div>
@@ -162,8 +162,11 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 </div>
 </div>
 <div class="inherited-list">
-<h2 id="nested-classes-inherited-from-class-com.google.protobuf.GeneratedMessageV3">Nested classes/interfaces inherited from class&nbsp;com.google.protobuf.GeneratedMessageV3</h2>
-<code>com.google.protobuf.GeneratedMessageV3.BuilderParent, com.google.protobuf.GeneratedMessageV3.ExtendableBuilder&lt;MessageT extends com.google.protobuf.GeneratedMessageV3.ExtendableMessage&lt;MessageT&gt;,<wbr>BuilderT extends com.google.protobuf.GeneratedMessageV3.ExtendableBuilder&lt;MessageT,<wbr>BuilderT&gt;&gt;, com.google.protobuf.GeneratedMessageV3.ExtendableMessage&lt;MessageT extends com.google.protobuf.GeneratedMessageV3.ExtendableMessage&lt;MessageT&gt;&gt;, com.google.protobuf.GeneratedMessageV3.ExtendableMessageOrBuilder&lt;MessageT extends com.google.protobuf.GeneratedMessageV3.ExtendableMessage&lt;MessageT&gt;&gt;, com.google.protobuf.GeneratedMessageV3.FieldAccessorTable, com.google.protobuf.GeneratedMessageV3.UnusedPrivateParameter</code></div>
+<h2 id="nested-classes-inherited-from-class-com.google.protobuf.GeneratedMessage">Nested classes/interfaces inherited from class&nbsp;com.google.protobuf.GeneratedMessage</h2>
+<code>com.google.protobuf.GeneratedMessage.ExtendableBuilder&lt;MessageT extends com.google.protobuf.GeneratedMessage.ExtendableMessage&lt;MessageT&gt;,<wbr>BuilderT extends com.google.protobuf.GeneratedMessage.ExtendableBuilder&lt;MessageT,<wbr>BuilderT&gt;&gt;, com.google.protobuf.GeneratedMessage.ExtendableMessage&lt;MessageT extends com.google.protobuf.GeneratedMessage.ExtendableMessage&lt;MessageT&gt;&gt;, com.google.protobuf.GeneratedMessage.ExtendableMessageOrBuilder&lt;MessageT extends com.google.protobuf.GeneratedMessage.ExtendableMessage&lt;MessageT&gt;&gt;, com.google.protobuf.GeneratedMessage.FieldAccessorTable, com.google.protobuf.GeneratedMessage.GeneratedExtension&lt;ContainingT extends com.google.protobuf.Message,<wbr>T extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&gt;, com.google.protobuf.GeneratedMessage.UnusedPrivateParameter</code></div>
+<div class="inherited-list">
+<h2 id="nested-classes-inherited-from-class-com.google.protobuf.AbstractMessage">Nested classes/interfaces inherited from class&nbsp;com.google.protobuf.AbstractMessage</h2>
+<code>com.google.protobuf.AbstractMessage.BuilderParent</code></div>
 <div class="inherited-list">
 <h2 id="nested-classes-inherited-from-class-com.google.protobuf.AbstractMessageLite">Nested classes/interfaces inherited from class&nbsp;com.google.protobuf.AbstractMessageLite</h2>
 <code>com.google.protobuf.AbstractMessageLite.InternalOneOfEnum</code></div>
@@ -198,7 +201,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <div class="col-last odd-row-color">&nbsp;</div>
 </div>
 <div class="inherited-list">
-<h3 id="fields-inherited-from-class-com.google.protobuf.GeneratedMessageV3">Fields inherited from class&nbsp;com.google.protobuf.GeneratedMessageV3</h3>
+<h3 id="fields-inherited-from-class-com.google.protobuf.GeneratedMessage">Fields inherited from class&nbsp;com.google.protobuf.GeneratedMessage</h3>
 <code>alwaysUseFieldBuilders, unknownFields</code></div>
 <div class="inherited-list">
 <h3 id="fields-inherited-from-class-com.google.protobuf.AbstractMessage">Fields inherited from class&nbsp;com.google.protobuf.AbstractMessage</h3>
@@ -235,42 +238,42 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getFkCatalog()" class="member-name-link">getFkCatalog</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The catalog name where the foreign table is.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.google.protobuf.ByteString</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getFkCatalogBytes()" class="member-name-link">getFkCatalogBytes</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The catalog name where the foreign table is.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getFkDbSchema()" class="member-name-link">getFkDbSchema</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The schema name where the foreign table is.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.google.protobuf.ByteString</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getFkDbSchemaBytes()" class="member-name-link">getFkDbSchemaBytes</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The schema name where the foreign table is.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getFkTable()" class="member-name-link">getFkTable</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The foreign table name.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.google.protobuf.ByteString</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getFkTableBytes()" class="member-name-link">getFkTableBytes</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The foreign table name.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.google.protobuf.Parser&lt;<a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a>&gt;</code></div>
@@ -280,42 +283,42 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getPkCatalog()" class="member-name-link">getPkCatalog</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The catalog name where the parent table is.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.google.protobuf.ByteString</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getPkCatalogBytes()" class="member-name-link">getPkCatalogBytes</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The catalog name where the parent table is.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getPkDbSchema()" class="member-name-link">getPkDbSchema</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The Schema name where the parent table is.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.google.protobuf.ByteString</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getPkDbSchemaBytes()" class="member-name-link">getPkDbSchemaBytes</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The Schema name where the parent table is.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getPkTable()" class="member-name-link">getPkTable</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The parent table name.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>com.google.protobuf.ByteString</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getPkTableBytes()" class="member-name-link">getPkTableBytes</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The parent table name.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>int</code></div>
@@ -325,14 +328,14 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hasFkCatalog()" class="member-name-link">hasFkCatalog</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The catalog name where the foreign table is.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>boolean</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hasFkDbSchema()" class="member-name-link">hasFkDbSchema</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The schema name where the foreign table is.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>int</code></div>
@@ -342,17 +345,17 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hasPkCatalog()" class="member-name-link">hasPkCatalog</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The catalog name where the parent table is.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>boolean</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hasPkDbSchema()" class="member-name-link">hasPkDbSchema</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
-
+ *
  The Schema name where the parent table is.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected com.google.protobuf.GeneratedMessage.FieldAccessorTable</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#internalGetFieldAccessorTable()" class="member-name-link">internalGetFieldAccessorTable</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final boolean</code></div>
@@ -368,74 +371,71 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#newBuilderForType()" class="member-name-link">newBuilderForType</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected <a href="FlightSql.CommandGetCrossReference.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent)" class="member-name-link">newBuilderForType</a><wbr>(com.google.protobuf.GeneratedMessageV3.BuilderParent&nbsp;parent)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#newBuilderForType(com.google.protobuf.AbstractMessage.BuilderParent)" class="member-name-link">newBuilderForType</a><wbr>(com.google.protobuf.AbstractMessage.BuilderParent&nbsp;parent)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#newInstance(com.google.protobuf.GeneratedMessageV3.UnusedPrivateParameter)" class="member-name-link">newInstance</a><wbr>(com.google.protobuf.GeneratedMessageV3.UnusedPrivateParameter&nbsp;unused)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseDelimitedFrom(java.io.InputStream)" class="member-name-link">parseDelimitedFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseDelimitedFrom(java.io.InputStream,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseDelimitedFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input,
- com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseDelimitedFrom(java.io.InputStream)" class="member-name-link">parseDelimitedFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(byte%5B%5D)" class="member-name-link">parseFrom</a><wbr>(byte[]&nbsp;data)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseDelimitedFrom(java.io.InputStream,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseDelimitedFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input,
+ com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(byte%5B%5D,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(byte[]&nbsp;data,
- com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(byte%5B%5D)" class="member-name-link">parseFrom</a><wbr>(byte[]&nbsp;data)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.ByteString)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.ByteString&nbsp;data)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(byte%5B%5D,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(byte[]&nbsp;data,
+ com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.ByteString,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.ByteString&nbsp;data,
- com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.ByteString)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.ByteString&nbsp;data)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.CodedInputStream)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.CodedInputStream&nbsp;input)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.ByteString,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.ByteString&nbsp;data,
+ com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.CodedInputStream,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.CodedInputStream&nbsp;input,
- com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.CodedInputStream)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.CodedInputStream&nbsp;input)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.io.InputStream)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(com.google.protobuf.CodedInputStream,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(com.google.protobuf.CodedInputStream&nbsp;input,
+ com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.io.InputStream,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input,
- com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.io.InputStream)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.nio.ByteBuffer)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/ByteBuffer.html" title="class or interface in java.nio" class="external-link">ByteBuffer</a>&nbsp;data)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.io.InputStream,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/InputStream.html" title="class or interface in java.io" class="external-link">InputStream</a>&nbsp;input,
+ com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.nio.ByteBuffer,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/ByteBuffer.html" title="class or interface in java.nio" class="external-link">ByteBuffer</a>&nbsp;data,
- com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.nio.ByteBuffer)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/ByteBuffer.html" title="class or interface in java.nio" class="external-link">ByteBuffer</a>&nbsp;data)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static com.google.protobuf.Parser&lt;<a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parser()" class="member-name-link">parser</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parseFrom(java.nio.ByteBuffer,com.google.protobuf.ExtensionRegistryLite)" class="member-name-link">parseFrom</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/ByteBuffer.html" title="class or interface in java.nio" class="external-link">ByteBuffer</a>&nbsp;data,
+ com.google.protobuf.ExtensionRegistryLite&nbsp;extensionRegistry)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetCrossReference.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#toBuilder()" class="member-name-link">toBuilder</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#writeTo(com.google.protobuf.CodedOutputStream)" class="member-name-link">writeTo</a><wbr>(com.google.protobuf.CodedOutputStream&nbsp;output)</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static com.google.protobuf.Parser&lt;<a href="FlightSql.CommandGetCrossReference.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#parser()" class="member-name-link">parser</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetCrossReference.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference.Builder</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#toBuilder()" class="member-name-link">toBuilder</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#writeTo(com.google.protobuf.CodedOutputStream)" class="member-name-link">writeTo</a><wbr>(com.google.protobuf.CodedOutputStream&nbsp;output)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
 <div class="inherited-list">
-<h3 id="methods-inherited-from-class-com.google.protobuf.GeneratedMessageV3">Methods inherited from class&nbsp;com.google.protobuf.GeneratedMessageV3</h3>
-<code>canUseUnsafe, computeStringSize, computeStringSizeNoTag, emptyBooleanList, emptyDoubleList, emptyFloatList, emptyIntList, emptyList, emptyLongList, getAllFields, getDescriptorForType, getField, getOneofFieldDescriptor, getRepeatedField, getRepeatedFieldCount, getUnknownFields, hasField, hasOneof, internalGetMapField, internalGetMapFieldReflection, isStringEmpty, makeExtensionsImmutable, makeMutableCopy, makeMutableCopy, mergeFromAndMakeImmutableInternal, mutableCopy, mutableCopy, mutableCopy, mutableCopy, mutableCopy, newBooleanList, newBuilderForType, newDoubleList, newFloatList, newIntList, newLongList, parseDelimitedWithIOException, parseDelimitedWithIOException, parseUnknownField, parseUnknownFieldProto3, parseWithIOException, parseWithIOException, parseWithIOException, parseWithIOException, serializeBooleanMapTo, serializeIntegerMapTo, serializeLongMapTo, serializeStringMapTo, writeReplace, writeString, writeStringNoTag</code></div>
+<h3 id="methods-inherited-from-class-com.google.protobuf.GeneratedMessage">Methods inherited from class&nbsp;com.google.protobuf.GeneratedMessage</h3>
+<code>canUseUnsafe, computeStringSize, computeStringSizeNoTag, emptyBooleanList, emptyDoubleList, emptyFloatList, emptyIntList, emptyList, emptyLongList, getAllFields, getDescriptorForType, getField, getOneofFieldDescriptor, getRepeatedField, getRepeatedFieldCount, getUnknownFields, hasField, hasOneof, internalGetMapField, internalGetMapFieldReflection, isStringEmpty, makeMutableCopy, makeMutableCopy, mergeFromAndMakeImmutableInternal, newFileScopedGeneratedExtension, newInstance, newMessageScopedGeneratedExtension, parseDelimitedWithIOException, parseDelimitedWithIOException, parseUnknownField, parseUnknownFieldProto3, parseWithIOException, parseWithIOException, parseWithIOException, parseWithIOException, serializeBooleanMapTo, serializeIntegerMapTo, serializeLongMapTo, serializeStringMapTo, writeReplace, writeString, writeStringNoTag</code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-com.google.protobuf.AbstractMessage">Methods inherited from class&nbsp;com.google.protobuf.AbstractMessage</h3>
-<code>findInitializationErrors, getInitializationErrorString, hashBoolean, hashEnum, hashEnumList, hashFields, hashLong, toString</code></div>
+<code>findInitializationErrors, getInitializationErrorString, hashFields, toString</code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-com.google.protobuf.AbstractMessageLite">Methods inherited from class&nbsp;com.google.protobuf.AbstractMessageLite</h3>
-<code>addAll, addAll, checkByteStringIsUtf8, toByteArray, toByteString, writeDelimitedTo, writeTo</code></div>
+<code>addAll, checkByteStringIsUtf8, toByteArray, toByteString, writeDelimitedTo, writeTo</code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -549,16 +549,6 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="newInstance(com.google.protobuf.GeneratedMessageV3.UnusedPrivateParameter)">
-<h3>newInstance</h3>
-<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span>&nbsp;<span class="element-name">newInstance</span><wbr><span class="parameters">(com.google.protobuf.GeneratedMessageV3.UnusedPrivateParameter&nbsp;unused)</span></div>
-<dl class="notes">
-<dt>Overrides:</dt>
-<dd><code>newInstance</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3</code></dd>
-</dl>
-</section>
-</li>
-<li>
 <section class="detail" id="getDescriptor()">
 <h3>getDescriptor</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type">com.google.protobuf.Descriptors.Descriptor</span>&nbsp;<span class="element-name">getDescriptor</span>()</div>
@@ -567,10 +557,10 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <li>
 <section class="detail" id="internalGetFieldAccessorTable()">
 <h3>internalGetFieldAccessorTable</h3>
-<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">com.google.protobuf.GeneratedMessageV3.FieldAccessorTable</span>&nbsp;<span class="element-name">internalGetFieldAccessorTable</span>()</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">com.google.protobuf.GeneratedMessage.FieldAccessorTable</span>&nbsp;<span class="element-name">internalGetFieldAccessorTable</span>()</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>internalGetFieldAccessorTable</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3</code></dd>
+<dd><code>internalGetFieldAccessorTable</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage</code></dd>
 </dl>
 </section>
 </li>
@@ -579,7 +569,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>hasPkCatalog</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">hasPkCatalog</span>()</div>
 <div class="block"><pre>
-
+ *
  The catalog name where the parent table is.
  An empty string retrieves those without a catalog.
  If omitted the catalog name should not be used to narrow the search.
@@ -599,7 +589,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getPkCatalog</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getPkCatalog</span>()</div>
 <div class="block"><pre>
-
+ *
  The catalog name where the parent table is.
  An empty string retrieves those without a catalog.
  If omitted the catalog name should not be used to narrow the search.
@@ -619,7 +609,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getPkCatalogBytes</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.google.protobuf.ByteString</span>&nbsp;<span class="element-name">getPkCatalogBytes</span>()</div>
 <div class="block"><pre>
-
+ *
  The catalog name where the parent table is.
  An empty string retrieves those without a catalog.
  If omitted the catalog name should not be used to narrow the search.
@@ -639,7 +629,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>hasPkDbSchema</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">hasPkDbSchema</span>()</div>
 <div class="block"><pre>
-
+ *
  The Schema name where the parent table is.
  An empty string retrieves those without a schema.
  If omitted the schema name should not be used to narrow the search.
@@ -659,7 +649,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getPkDbSchema</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getPkDbSchema</span>()</div>
 <div class="block"><pre>
-
+ *
  The Schema name where the parent table is.
  An empty string retrieves those without a schema.
  If omitted the schema name should not be used to narrow the search.
@@ -679,7 +669,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getPkDbSchemaBytes</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.google.protobuf.ByteString</span>&nbsp;<span class="element-name">getPkDbSchemaBytes</span>()</div>
 <div class="block"><pre>
-
+ *
  The Schema name where the parent table is.
  An empty string retrieves those without a schema.
  If omitted the schema name should not be used to narrow the search.
@@ -699,7 +689,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getPkTable</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getPkTable</span>()</div>
 <div class="block"><pre>
-
+ *
  The parent table name. It cannot be null.
  </pre>
 
@@ -717,7 +707,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getPkTableBytes</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.google.protobuf.ByteString</span>&nbsp;<span class="element-name">getPkTableBytes</span>()</div>
 <div class="block"><pre>
-
+ *
  The parent table name. It cannot be null.
  </pre>
 
@@ -735,7 +725,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>hasFkCatalog</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">hasFkCatalog</span>()</div>
 <div class="block"><pre>
-
+ *
  The catalog name where the foreign table is.
  An empty string retrieves those without a catalog.
  If omitted the catalog name should not be used to narrow the search.
@@ -755,7 +745,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getFkCatalog</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getFkCatalog</span>()</div>
 <div class="block"><pre>
-
+ *
  The catalog name where the foreign table is.
  An empty string retrieves those without a catalog.
  If omitted the catalog name should not be used to narrow the search.
@@ -775,7 +765,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getFkCatalogBytes</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.google.protobuf.ByteString</span>&nbsp;<span class="element-name">getFkCatalogBytes</span>()</div>
 <div class="block"><pre>
-
+ *
  The catalog name where the foreign table is.
  An empty string retrieves those without a catalog.
  If omitted the catalog name should not be used to narrow the search.
@@ -795,7 +785,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>hasFkDbSchema</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">boolean</span>&nbsp;<span class="element-name">hasFkDbSchema</span>()</div>
 <div class="block"><pre>
-
+ *
  The schema name where the foreign table is.
  An empty string retrieves those without a schema.
  If omitted the schema name should not be used to narrow the search.
@@ -815,7 +805,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getFkDbSchema</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getFkDbSchema</span>()</div>
 <div class="block"><pre>
-
+ *
  The schema name where the foreign table is.
  An empty string retrieves those without a schema.
  If omitted the schema name should not be used to narrow the search.
@@ -835,7 +825,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getFkDbSchemaBytes</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.google.protobuf.ByteString</span>&nbsp;<span class="element-name">getFkDbSchemaBytes</span>()</div>
 <div class="block"><pre>
-
+ *
  The schema name where the foreign table is.
  An empty string retrieves those without a schema.
  If omitted the schema name should not be used to narrow the search.
@@ -855,7 +845,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getFkTable</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getFkTable</span>()</div>
 <div class="block"><pre>
-
+ *
  The foreign table name. It cannot be null.
  </pre>
 
@@ -873,7 +863,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <h3>getFkTableBytes</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">com.google.protobuf.ByteString</span>&nbsp;<span class="element-name">getFkTableBytes</span>()</div>
 <div class="block"><pre>
-
+ *
  The foreign table name. It cannot be null.
  </pre>
 
@@ -894,7 +884,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <dt>Specified by:</dt>
 <dd><code>isInitialized</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageLiteOrBuilder</code></dd>
 <dt>Overrides:</dt>
-<dd><code>isInitialized</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3</code></dd>
+<dd><code>isInitialized</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage</code></dd>
 </dl>
 </section>
 </li>
@@ -907,7 +897,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <dt>Specified by:</dt>
 <dd><code>writeTo</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageLite</code></dd>
 <dt>Overrides:</dt>
-<dd><code>writeTo</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3</code></dd>
+<dd><code>writeTo</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage</code></dd>
 <dt>Throws:</dt>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/IOException.html" title="class or interface in java.io" class="external-link">IOException</a></code></dd>
 </dl>
@@ -921,7 +911,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <dt>Specified by:</dt>
 <dd><code>getSerializedSize</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageLite</code></dd>
 <dt>Overrides:</dt>
-<dd><code>getSerializedSize</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3</code></dd>
+<dd><code>getSerializedSize</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage</code></dd>
 </dl>
 </section>
 </li>
@@ -1124,12 +1114,12 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 </section>
 </li>
 <li>
-<section class="detail" id="newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent)">
+<section class="detail" id="newBuilderForType(com.google.protobuf.AbstractMessage.BuilderParent)">
 <h3>newBuilderForType</h3>
-<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetCrossReference.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference.Builder</a></span>&nbsp;<span class="element-name">newBuilderForType</span><wbr><span class="parameters">(com.google.protobuf.GeneratedMessageV3.BuilderParent&nbsp;parent)</span></div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetCrossReference.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetCrossReference.Builder</a></span>&nbsp;<span class="element-name">newBuilderForType</span><wbr><span class="parameters">(com.google.protobuf.AbstractMessage.BuilderParent&nbsp;parent)</span></div>
 <dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>newBuilderForType</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3</code></dd>
+<dt>Overrides:</dt>
+<dd><code>newBuilderForType</code>&nbsp;in class&nbsp;<code>com.google.protobuf.AbstractMessage</code></dd>
 </dl>
 </section>
 </li>
@@ -1155,7 +1145,7 @@ implements <a href="FlightSql.CommandGetCrossReferenceOrBuilder.html" title="int
 <dt>Specified by:</dt>
 <dd><code>getParserForType</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageLite</code></dd>
 <dt>Overrides:</dt>
-<dd><code>getParserForType</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3</code></dd>
+<dd><code>getParserForType</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage</code></dd>
 </dl>
 </section>
 </li>

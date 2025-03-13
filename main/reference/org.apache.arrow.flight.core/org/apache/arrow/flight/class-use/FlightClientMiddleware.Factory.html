@@ -79,6 +79,19 @@ loadScripts(document, 'script');</script>
 <div class="col-second even-row-color"><span class="type-name-label">FlightClient.Builder.</span><code><a href="../FlightClient.Builder.html#intercept(org.apache.arrow.flight.FlightClientMiddleware.Factory)" class="member-name-link">intercept</a><wbr>(<a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a>&nbsp;factory)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
+<div class="caption"><span>Method parameters in <a href="../package-summary.html">org.apache.arrow.flight</a> with type arguments of type <a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Method</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>static <a href="../FlightClient.html" title="class in org.apache.arrow.flight">FlightClient</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">FlightGrpcUtils.</span><code><a href="../FlightGrpcUtils.html#createFlightClient(org.apache.arrow.memory.BufferAllocator,io.grpc.ManagedChannel,java.util.List)" class="member-name-link">createFlightClient</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;incomingAllocator,
+ io.grpc.ManagedChannel&nbsp;channel,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a>&gt;&nbsp;middleware)</code></div>
+<div class="col-last even-row-color">
+<div class="block">Creates a Flight client.</div>
+</div>
+</div>
 </section>
 </li>
 <li>
@@ -116,6 +129,33 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="org.apache.arrow.flight.grpc">
 <h2>Uses of <a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a> in <a href="../grpc/package-summary.html">org.apache.arrow.flight.grpc</a></h2>
+<div class="caption"><span>Fields in <a href="../grpc/package-summary.html">org.apache.arrow.flight.grpc</a> with type parameters of type <a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Field</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a>&gt;</code></div>
+<div class="col-second even-row-color"><span class="type-name-label">NettyClientBuilder.</span><code><a href="../grpc/NettyClientBuilder.html#middleware" class="member-name-link">middleware</a></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+<div class="caption"><span>Methods in <a href="../grpc/package-summary.html">org.apache.arrow.flight.grpc</a> that return types with arguments of type <a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Method</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a>&gt;</code></div>
+<div class="col-second even-row-color"><span class="type-name-label">NettyClientBuilder.</span><code><a href="../grpc/NettyClientBuilder.html#middleware()" class="member-name-link">middleware</a>()</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+<div class="caption"><span>Methods in <a href="../grpc/package-summary.html">org.apache.arrow.flight.grpc</a> with parameters of type <a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Method</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code><a href="../grpc/NettyClientBuilder.html" title="class in org.apache.arrow.flight.grpc">NettyClientBuilder</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">NettyClientBuilder.</span><code><a href="../grpc/NettyClientBuilder.html#intercept(org.apache.arrow.flight.FlightClientMiddleware.Factory)" class="member-name-link">intercept</a><wbr>(<a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a>&nbsp;factory)</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
 <div class="caption"><span>Constructor parameters in <a href="../grpc/package-summary.html">org.apache.arrow.flight.grpc</a> with type arguments of type <a href="../FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a></span></div>
 <div class="summary-table three-column-summary">
 <div class="table-header col-first">Modifier</div>

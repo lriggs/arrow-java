@@ -77,7 +77,7 @@ loadScripts(document, 'script');</script>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
 <div class="inheritance">com.google.protobuf.AbstractMessageLite.Builder
 <div class="inheritance">com.google.protobuf.AbstractMessage.Builder&lt;BuilderT&gt;
-<div class="inheritance">com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;
+<div class="inheritance">com.google.protobuf.GeneratedMessage.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;
 <div class="inheritance">org.apache.arrow.flight.sql.impl.FlightSql.CommandGetTables.Builder</div>
 </div>
 </div>
@@ -94,35 +94,35 @@ loadScripts(document, 'script');</script>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public static final class </span><span class="element-name type-name-label">FlightSql.CommandGetTables.Builder</span>
-<span class="extends-implements">extends com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;
+<span class="extends-implements">extends com.google.protobuf.GeneratedMessage.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;
 implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTablesOrBuilder</a></span></div>
 <div class="block"><pre>
 
  Represents a request to retrieve the list of tables, and optionally their schemas, on a Flight SQL enabled backend.
  Used in the command member of FlightDescriptor for the following RPC calls:
-  - GetSchema: return the Arrow schema of the query.
-  - GetFlightInfo: execute the catalog metadata request.
+ - GetSchema: return the Arrow schema of the query.
+ - GetFlightInfo: execute the catalog metadata request.
 
  The returned Arrow schema will be:
  &lt;
-  catalog_name: utf8,
-  db_schema_name: utf8,
-  table_name: utf8 not null,
-  table_type: utf8 not null,
-  [optional] table_schema: bytes not null (schema of the table as described in Schema.fbs::Schema,
-                                           it is serialized as an IPC message.)
+ catalog_name: utf8,
+ db_schema_name: utf8,
+ table_name: utf8 not null,
+ table_type: utf8 not null,
+ [optional] table_schema: bytes not null (schema of the table as described in Schema.fbs::Schema,
+ it is serialized as an IPC message.)
  &gt;
  Fields on table_schema may contain the following metadata:
-  - ARROW:FLIGHT:SQL:CATALOG_NAME      - Table's catalog name
-  - ARROW:FLIGHT:SQL:DB_SCHEMA_NAME    - Database schema name
-  - ARROW:FLIGHT:SQL:TABLE_NAME        - Table name
-  - ARROW:FLIGHT:SQL:TYPE_NAME         - The data source-specific name for the data type of the column.
-  - ARROW:FLIGHT:SQL:PRECISION         - Column precision/size
-  - ARROW:FLIGHT:SQL:SCALE             - Column scale/decimal digits if applicable
-  - ARROW:FLIGHT:SQL:IS_AUTO_INCREMENT - "1" indicates if the column is auto incremented, "0" otherwise.
-  - ARROW:FLIGHT:SQL:IS_CASE_SENSITIVE - "1" indicates if the column is case-sensitive, "0" otherwise.
-  - ARROW:FLIGHT:SQL:IS_READ_ONLY      - "1" indicates if the column is read only, "0" otherwise.
-  - ARROW:FLIGHT:SQL:IS_SEARCHABLE     - "1" indicates if the column is searchable via WHERE clause, "0" otherwise.
+ - ARROW:FLIGHT:SQL:CATALOG_NAME      - Table's catalog name
+ - ARROW:FLIGHT:SQL:DB_SCHEMA_NAME    - Database schema name
+ - ARROW:FLIGHT:SQL:TABLE_NAME        - Table name
+ - ARROW:FLIGHT:SQL:TYPE_NAME         - The data source-specific name for the data type of the column.
+ - ARROW:FLIGHT:SQL:PRECISION         - Column precision/size
+ - ARROW:FLIGHT:SQL:SCALE             - Column scale/decimal digits if applicable
+ - ARROW:FLIGHT:SQL:IS_AUTO_INCREMENT - "1" indicates if the column is auto incremented, "0" otherwise.
+ - ARROW:FLIGHT:SQL:IS_CASE_SENSITIVE - "1" indicates if the column is case-sensitive, "0" otherwise.
+ - ARROW:FLIGHT:SQL:IS_READ_ONLY      - "1" indicates if the column is read only, "0" otherwise.
+ - ARROW:FLIGHT:SQL:IS_SEARCHABLE     - "1" indicates if the column is searchable via WHERE clause, "0" otherwise.
  The returned data should be ordered by catalog_name, db_schema_name, table_name, then table_type, followed by table_schema if requested.
  </pre>
 
@@ -149,49 +149,42 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter of table types which must match.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor,java.lang.Object)" class="member-name-link">addRepeatedField</a><wbr>(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addTableTypes(java.lang.String)" class="member-name-link">addTableTypes</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">
+
+ Specifies a filter of table types which must match.</div>
+</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addTableTypes(java.lang.String)" class="member-name-link">addTableTypes</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addTableTypesBytes(com.google.protobuf.ByteString)" class="member-name-link">addTableTypesBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies a filter of table types which must match.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#addTableTypesBytes(com.google.protobuf.ByteString)" class="member-name-link">addTableTypesBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">
-
- Specifies a filter of table types which must match.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#build()" class="member-name-link">build</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#buildPartial()" class="member-name-link">buildPartial</a>()</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#build()" class="member-name-link">build</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#buildPartial()" class="member-name-link">buildPartial</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clear()" class="member-name-link">clear</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clear()" class="member-name-link">clear</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearCatalog()" class="member-name-link">clearCatalog</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearCatalog()" class="member-name-link">clearCatalog</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies the Catalog to search for the tables.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearDbSchemaFilterPattern()" class="member-name-link">clearDbSchemaFilterPattern</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearDbSchemaFilterPattern()" class="member-name-link">clearDbSchemaFilterPattern</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies a filter pattern for schemas to search for.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearField(com.google.protobuf.Descriptors.FieldDescriptor)" class="member-name-link">clearField</a><wbr>(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearIncludeSchema()" class="member-name-link">clearIncludeSchema</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
@@ -199,25 +192,19 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies if the Arrow schema should be returned for found tables.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearOneof(com.google.protobuf.Descriptors.OneofDescriptor)" class="member-name-link">clearOneof</a><wbr>(com.google.protobuf.Descriptors.OneofDescriptor&nbsp;oneof)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearTableNameFilterPattern()" class="member-name-link">clearTableNameFilterPattern</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearTableNameFilterPattern()" class="member-name-link">clearTableNameFilterPattern</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies a filter pattern for tables to search for.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearTableTypes()" class="member-name-link">clearTableTypes</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clearTableTypes()" class="member-name-link">clearTableTypes</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies a filter of table types which must match.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#clone()" class="member-name-link">clone</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getCatalog()" class="member-name-link">getCatalog</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
@@ -324,7 +311,7 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 
  Specifies a filter pattern for tables to search for.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>protected com.google.protobuf.GeneratedMessage.FieldAccessorTable</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#internalGetFieldAccessorTable()" class="member-name-link">internalGetFieldAccessorTable</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final boolean</code></div>
@@ -340,41 +327,34 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#mergeFrom(org.apache.arrow.flight.sql.impl.FlightSql.CommandGetTables)" class="member-name-link">mergeFrom</a><wbr>(<a href="FlightSql.CommandGetTables.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables</a>&nbsp;other)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final <a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#mergeUnknownFields(com.google.protobuf.UnknownFieldSet)" class="member-name-link">mergeUnknownFields</a><wbr>(com.google.protobuf.UnknownFieldSet&nbsp;unknownFields)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setCatalog(java.lang.String)" class="member-name-link">setCatalog</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">
-
- Specifies the Catalog to search for the tables.</div>
-</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setCatalogBytes(com.google.protobuf.ByteString)" class="member-name-link">setCatalogBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setCatalog(java.lang.String)" class="member-name-link">setCatalog</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies the Catalog to search for the tables.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setDbSchemaFilterPattern(java.lang.String)" class="member-name-link">setDbSchemaFilterPattern</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setCatalogBytes(com.google.protobuf.ByteString)" class="member-name-link">setCatalogBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
- Specifies a filter pattern for schemas to search for.</div>
+ Specifies the Catalog to search for the tables.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setDbSchemaFilterPatternBytes(com.google.protobuf.ByteString)" class="member-name-link">setDbSchemaFilterPatternBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setDbSchemaFilterPattern(java.lang.String)" class="member-name-link">setDbSchemaFilterPattern</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies a filter pattern for schemas to search for.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setField(com.google.protobuf.Descriptors.FieldDescriptor,java.lang.Object)" class="member-name-link">setField</a><wbr>(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setDbSchemaFilterPatternBytes(com.google.protobuf.ByteString)" class="member-name-link">setDbSchemaFilterPatternBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">
+
+ Specifies a filter pattern for schemas to search for.</div>
+</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setIncludeSchema(boolean)" class="member-name-link">setIncludeSchema</a><wbr>(boolean&nbsp;value)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
@@ -382,41 +362,33 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies if the Arrow schema should be returned for found tables.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor,int,java.lang.Object)" class="member-name-link">setRepeatedField</a><wbr>(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field,
- int&nbsp;index,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setTableNameFilterPattern(java.lang.String)" class="member-name-link">setTableNameFilterPattern</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">
-
- Specifies a filter pattern for tables to search for.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setTableNameFilterPatternBytes(com.google.protobuf.ByteString)" class="member-name-link">setTableNameFilterPatternBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setTableNameFilterPattern(java.lang.String)" class="member-name-link">setTableNameFilterPattern</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies a filter pattern for tables to search for.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setTableTypes(int,java.lang.String)" class="member-name-link">setTableTypes</a><wbr>(int&nbsp;index,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setTableNameFilterPatternBytes(com.google.protobuf.ByteString)" class="member-name-link">setTableNameFilterPatternBytes</a><wbr>(com.google.protobuf.ByteString&nbsp;value)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">
+
+ Specifies a filter pattern for tables to search for.</div>
+</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setTableTypes(int,java.lang.String)" class="member-name-link">setTableTypes</a><wbr>(int&nbsp;index,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;value)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">
 
  Specifies a filter of table types which must match.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final <a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setUnknownFields(com.google.protobuf.UnknownFieldSet)" class="member-name-link">setUnknownFields</a><wbr>(com.google.protobuf.UnknownFieldSet&nbsp;unknownFields)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
 <div class="inherited-list">
-<h3 id="methods-inherited-from-class-com.google.protobuf.GeneratedMessageV3.Builder">Methods inherited from class&nbsp;com.google.protobuf.GeneratedMessageV3.Builder</h3>
-<code>getAllFields, getField, getFieldBuilder, getOneofFieldDescriptor, getParentForChildren, getRepeatedField, getRepeatedFieldBuilder, getRepeatedFieldCount, getUnknownFields, getUnknownFieldSetBuilder, hasField, hasOneof, internalGetMapField, internalGetMapFieldReflection, internalGetMutableMapField, internalGetMutableMapFieldReflection, isClean, markClean, mergeUnknownLengthDelimitedField, mergeUnknownVarintField, newBuilderForField, onBuilt, onChanged, parseUnknownField, setUnknownFieldSetBuilder, setUnknownFieldsProto3</code></div>
+<h3 id="methods-inherited-from-class-com.google.protobuf.GeneratedMessage.Builder">Methods inherited from class&nbsp;com.google.protobuf.GeneratedMessage.Builder</h3>
+<code>addRepeatedField, clearField, clearOneof, clone, getAllFields, getField, getFieldBuilder, getOneofFieldDescriptor, getParentForChildren, getRepeatedField, getRepeatedFieldBuilder, getRepeatedFieldCount, getUnknownFields, getUnknownFieldSetBuilder, hasField, hasOneof, internalGetMapField, internalGetMapFieldReflection, internalGetMutableMapField, internalGetMutableMapFieldReflection, isClean, markClean, mergeUnknownFields, mergeUnknownLengthDelimitedField, mergeUnknownVarintField, newBuilderForField, onBuilt, onChanged, parseUnknownField, setField, setRepeatedField, setUnknownFields, setUnknownFieldSetBuilder, setUnknownFieldsProto3</code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-com.google.protobuf.AbstractMessage.Builder">Methods inherited from class&nbsp;com.google.protobuf.AbstractMessage.Builder</h3>
 <code>findInitializationErrors, getInitializationErrorString, internalMergeFrom, mergeFrom, mergeFrom, mergeFrom, mergeFrom, mergeFrom, mergeFrom, mergeFrom, mergeFrom, mergeFrom, newUninitializedMessageException, toString</code></div>
@@ -455,10 +427,10 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 <li>
 <section class="detail" id="internalGetFieldAccessorTable()">
 <h3>internalGetFieldAccessorTable</h3>
-<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">com.google.protobuf.GeneratedMessageV3.FieldAccessorTable</span>&nbsp;<span class="element-name">internalGetFieldAccessorTable</span>()</div>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">com.google.protobuf.GeneratedMessage.FieldAccessorTable</span>&nbsp;<span class="element-name">internalGetFieldAccessorTable</span>()</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>internalGetFieldAccessorTable</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
+<dd><code>internalGetFieldAccessorTable</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -472,7 +444,7 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 <dt>Specified by:</dt>
 <dd><code>clear</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageLite.Builder</code></dd>
 <dt>Overrides:</dt>
-<dd><code>clear</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
+<dd><code>clear</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -486,7 +458,7 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 <dt>Specified by:</dt>
 <dd><code>getDescriptorForType</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageOrBuilder</code></dd>
 <dt>Overrides:</dt>
-<dd><code>getDescriptorForType</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
+<dd><code>getDescriptorForType</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -527,84 +499,6 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 </section>
 </li>
 <li>
-<section class="detail" id="clone()">
-<h3>clone</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">clone</span>()</div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>clone</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Specified by:</dt>
-<dd><code>clone</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageLite.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>clone</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="setField(com.google.protobuf.Descriptors.FieldDescriptor,java.lang.Object)">
-<h3>setField</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">setField</span><wbr><span class="parameters">(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>setField</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>setField</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="clearField(com.google.protobuf.Descriptors.FieldDescriptor)">
-<h3>clearField</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">clearField</span><wbr><span class="parameters">(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>clearField</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>clearField</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="clearOneof(com.google.protobuf.Descriptors.OneofDescriptor)">
-<h3>clearOneof</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">clearOneof</span><wbr><span class="parameters">(com.google.protobuf.Descriptors.OneofDescriptor&nbsp;oneof)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>clearOneof</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>clearOneof</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor,int,java.lang.Object)">
-<h3>setRepeatedField</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">setRepeatedField</span><wbr><span class="parameters">(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field,
- int&nbsp;index,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>setRepeatedField</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>setRepeatedField</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor,java.lang.Object)">
-<h3>addRepeatedField</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">addRepeatedField</span><wbr><span class="parameters">(com.google.protobuf.Descriptors.FieldDescriptor&nbsp;field,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;value)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>addRepeatedField</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>addRepeatedField</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
 <section class="detail" id="mergeFrom(com.google.protobuf.Message)">
 <h3>mergeFrom</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">mergeFrom</span><wbr><span class="parameters">(com.google.protobuf.Message&nbsp;other)</span></div>
@@ -630,7 +524,7 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 <dt>Specified by:</dt>
 <dd><code>isInitialized</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.MessageLiteOrBuilder</code></dd>
 <dt>Overrides:</dt>
-<dd><code>isInitialized</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
+<dd><code>isInitialized</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessage.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -779,8 +673,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for schemas to search for.
  When no db_schema_filter_pattern is provided, all schemas matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string db_schema_filter_pattern = 2;</code></div>
@@ -801,8 +695,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for schemas to search for.
  When no db_schema_filter_pattern is provided, all schemas matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string db_schema_filter_pattern = 2;</code></div>
@@ -823,8 +717,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for schemas to search for.
  When no db_schema_filter_pattern is provided, all schemas matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string db_schema_filter_pattern = 2;</code></div>
@@ -845,8 +739,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for schemas to search for.
  When no db_schema_filter_pattern is provided, all schemas matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string db_schema_filter_pattern = 2;</code></div>
@@ -867,8 +761,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for schemas to search for.
  When no db_schema_filter_pattern is provided, all schemas matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string db_schema_filter_pattern = 2;</code></div>
@@ -887,8 +781,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for schemas to search for.
  When no db_schema_filter_pattern is provided, all schemas matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string db_schema_filter_pattern = 2;</code></div>
@@ -909,8 +803,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for tables to search for.
  When no table_name_filter_pattern is provided, all tables matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string table_name_filter_pattern = 3;</code></div>
@@ -931,8 +825,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for tables to search for.
  When no table_name_filter_pattern is provided, all tables matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string table_name_filter_pattern = 3;</code></div>
@@ -953,8 +847,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for tables to search for.
  When no table_name_filter_pattern is provided, all tables matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string table_name_filter_pattern = 3;</code></div>
@@ -975,8 +869,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for tables to search for.
  When no table_name_filter_pattern is provided, all tables matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string table_name_filter_pattern = 3;</code></div>
@@ -997,8 +891,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for tables to search for.
  When no table_name_filter_pattern is provided, all tables matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string table_name_filter_pattern = 3;</code></div>
@@ -1017,8 +911,8 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
  Specifies a filter pattern for tables to search for.
  When no table_name_filter_pattern is provided, all tables matching other filters are searched.
  In the pattern string, two special characters can be used to denote matching rules:
-    - "%" means to match any substring with 0 or more characters.
-    - "_" means to match any one character.
+ - "%" means to match any substring with 0 or more characters.
+ - "_" means to match any one character.
  </pre>
 
  <code>optional string table_name_filter_pattern = 3;</code></div>
@@ -1260,30 +1154,6 @@ implements <a href="FlightSql.CommandGetTablesOrBuilder.html" title="interface i
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>This builder for chaining.</dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="setUnknownFields(com.google.protobuf.UnknownFieldSet)">
-<h3>setUnknownFields</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">setUnknownFields</span><wbr><span class="parameters">(com.google.protobuf.UnknownFieldSet&nbsp;unknownFields)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>setUnknownFields</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>setUnknownFields</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="mergeUnknownFields(com.google.protobuf.UnknownFieldSet)">
-<h3>mergeUnknownFields</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a></span>&nbsp;<span class="element-name">mergeUnknownFields</span><wbr><span class="parameters">(com.google.protobuf.UnknownFieldSet&nbsp;unknownFields)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>mergeUnknownFields</code>&nbsp;in interface&nbsp;<code>com.google.protobuf.Message.Builder</code></dd>
-<dt>Overrides:</dt>
-<dd><code>mergeUnknownFields</code>&nbsp;in class&nbsp;<code>com.google.protobuf.GeneratedMessageV3.Builder&lt;<a href="FlightSql.CommandGetTables.Builder.html" title="class in org.apache.arrow.flight.sql.impl">FlightSql.CommandGetTables.Builder</a>&gt;</code></dd>
 </dl>
 </section>
 </li>

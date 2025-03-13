@@ -107,27 +107,27 @@ implements com.google.protobuf.ProtocolMessageEnum</span></div>
 <div class="col-first even-row-color"><code><a href="#SEARCHABLE_BASIC" class="member-name-link">SEARCHABLE_BASIC</a></code></div>
 <div class="col-last even-row-color">
 <div class="block">
-
+ *
  Indicates that the column can be used In a WHERE clause with any
  operator other than LIKE.</div>
 </div>
 <div class="col-first odd-row-color"><code><a href="#SEARCHABLE_CHAR" class="member-name-link">SEARCHABLE_CHAR</a></code></div>
 <div class="col-last odd-row-color">
 <div class="block">
-
+ *
  Indicates that the column can be used in a WHERE clause if it is using a
  LIKE operator.</div>
 </div>
 <div class="col-first even-row-color"><code><a href="#SEARCHABLE_FULL" class="member-name-link">SEARCHABLE_FULL</a></code></div>
 <div class="col-last even-row-color">
 <div class="block">
-
+ *
  Indicates that the column can be used in a WHERE clause using any operator.</div>
 </div>
 <div class="col-first odd-row-color"><code><a href="#SEARCHABLE_NONE" class="member-name-link">SEARCHABLE_NONE</a></code></div>
 <div class="col-last odd-row-color">
 <div class="block">
-
+ *
  Indicates that column cannot be used in a WHERE clause.</div>
 </div>
 <div class="col-first even-row-color"><code><a href="#UNRECOGNIZED" class="member-name-link">UNRECOGNIZED</a></code></div>
@@ -148,7 +148,7 @@ implements com.google.protobuf.ProtocolMessageEnum</span></div>
 <div class="col-second even-row-color"><code><a href="#SEARCHABLE_BASIC_VALUE" class="member-name-link">SEARCHABLE_BASIC_VALUE</a></code></div>
 <div class="col-last even-row-color">
 <div class="block">
-
+ *
  Indicates that the column can be used In a WHERE clause with any
  operator other than LIKE.</div>
 </div>
@@ -156,7 +156,7 @@ implements com.google.protobuf.ProtocolMessageEnum</span></div>
 <div class="col-second odd-row-color"><code><a href="#SEARCHABLE_CHAR_VALUE" class="member-name-link">SEARCHABLE_CHAR_VALUE</a></code></div>
 <div class="col-last odd-row-color">
 <div class="block">
-
+ *
  Indicates that the column can be used in a WHERE clause if it is using a
  LIKE operator.</div>
 </div>
@@ -164,14 +164,14 @@ implements com.google.protobuf.ProtocolMessageEnum</span></div>
 <div class="col-second even-row-color"><code><a href="#SEARCHABLE_FULL_VALUE" class="member-name-link">SEARCHABLE_FULL_VALUE</a></code></div>
 <div class="col-last even-row-color">
 <div class="block">
-
+ *
  Indicates that the column can be used in a WHERE clause using any operator.</div>
 </div>
 <div class="col-first odd-row-color"><code>static final int</code></div>
 <div class="col-second odd-row-color"><code><a href="#SEARCHABLE_NONE_VALUE" class="member-name-link">SEARCHABLE_NONE_VALUE</a></code></div>
 <div class="col-last odd-row-color">
 <div class="block">
-
+ *
  Indicates that column cannot be used in a WHERE clause.</div>
 </div>
 </div>
@@ -252,7 +252,7 @@ the order they are declared.</div>
 <h3>SEARCHABLE_NONE</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="FlightSql.Searchable.html" title="enum in org.apache.arrow.flight.sql.impl">FlightSql.Searchable</a></span>&nbsp;<span class="element-name">SEARCHABLE_NONE</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that column cannot be used in a WHERE clause.
  </pre>
 
@@ -264,7 +264,7 @@ the order they are declared.</div>
 <h3>SEARCHABLE_CHAR</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="FlightSql.Searchable.html" title="enum in org.apache.arrow.flight.sql.impl">FlightSql.Searchable</a></span>&nbsp;<span class="element-name">SEARCHABLE_CHAR</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that the column can be used in a WHERE clause if it is using a
  LIKE operator.
  </pre>
@@ -277,12 +277,12 @@ the order they are declared.</div>
 <h3>SEARCHABLE_BASIC</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="FlightSql.Searchable.html" title="enum in org.apache.arrow.flight.sql.impl">FlightSql.Searchable</a></span>&nbsp;<span class="element-name">SEARCHABLE_BASIC</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that the column can be used In a WHERE clause with any
  operator other than LIKE.
 
  - Allowed operators: comparison, quantified comparison, BETWEEN,
-                      DISTINCT, IN, MATCH, and UNIQUE.
+ DISTINCT, IN, MATCH, and UNIQUE.
  </pre>
 
  <code>SEARCHABLE_BASIC = 2;</code></div>
@@ -293,7 +293,7 @@ the order they are declared.</div>
 <h3>SEARCHABLE_FULL</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type"><a href="FlightSql.Searchable.html" title="enum in org.apache.arrow.flight.sql.impl">FlightSql.Searchable</a></span>&nbsp;<span class="element-name">SEARCHABLE_FULL</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that the column can be used in a WHERE clause using any operator.
  </pre>
 
@@ -319,7 +319,7 @@ the order they are declared.</div>
 <h3>SEARCHABLE_NONE_VALUE</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type">int</span>&nbsp;<span class="element-name">SEARCHABLE_NONE_VALUE</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that column cannot be used in a WHERE clause.
  </pre>
 
@@ -339,7 +339,7 @@ the order they are declared.</div>
 <h3>SEARCHABLE_CHAR_VALUE</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type">int</span>&nbsp;<span class="element-name">SEARCHABLE_CHAR_VALUE</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that the column can be used in a WHERE clause if it is using a
  LIKE operator.
  </pre>
@@ -360,12 +360,12 @@ the order they are declared.</div>
 <h3>SEARCHABLE_BASIC_VALUE</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type">int</span>&nbsp;<span class="element-name">SEARCHABLE_BASIC_VALUE</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that the column can be used In a WHERE clause with any
  operator other than LIKE.
 
  - Allowed operators: comparison, quantified comparison, BETWEEN,
-                      DISTINCT, IN, MATCH, and UNIQUE.
+ DISTINCT, IN, MATCH, and UNIQUE.
  </pre>
 
  <code>SEARCHABLE_BASIC = 2;</code></div>
@@ -384,7 +384,7 @@ the order they are declared.</div>
 <h3>SEARCHABLE_FULL_VALUE</h3>
 <div class="member-signature"><span class="modifiers">public static final</span>&nbsp;<span class="return-type">int</span>&nbsp;<span class="element-name">SEARCHABLE_FULL_VALUE</span></div>
 <div class="block"><pre>
-
+ *
  Indicates that the column can be used in a WHERE clause using any operator.
  </pre>
 

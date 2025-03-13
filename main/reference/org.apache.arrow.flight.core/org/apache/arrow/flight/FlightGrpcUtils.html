@@ -103,17 +103,24 @@ loadScripts(document, 'script');</script>
 <div class="block">Creates a Flight client.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightClient.html" title="class in org.apache.arrow.flight">FlightClient</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#createFlightClientWithSharedChannel(org.apache.arrow.memory.BufferAllocator,io.grpc.ManagedChannel)" class="member-name-link">createFlightClientWithSharedChannel</a><wbr>(<a href="../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;incomingAllocator,
- io.grpc.ManagedChannel&nbsp;channel)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#createFlightClient(org.apache.arrow.memory.BufferAllocator,io.grpc.ManagedChannel,java.util.List)" class="member-name-link">createFlightClient</a><wbr>(<a href="../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;incomingAllocator,
+ io.grpc.ManagedChannel&nbsp;channel,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a>&gt;&nbsp;middleware)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Creates a Flight client.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static io.grpc.BindableService</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#createFlightService(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.flight.FlightProducer,org.apache.arrow.flight.auth.ServerAuthHandler,java.util.concurrent.ExecutorService)" class="member-name-link">createFlightService</a><wbr>(<a href="../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="FlightClient.html" title="class in org.apache.arrow.flight">FlightClient</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#createFlightClientWithSharedChannel(org.apache.arrow.memory.BufferAllocator,io.grpc.ManagedChannel)" class="member-name-link">createFlightClientWithSharedChannel</a><wbr>(<a href="../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;incomingAllocator,
+ io.grpc.ManagedChannel&nbsp;channel)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Creates a Flight client.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static io.grpc.BindableService</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#createFlightService(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.flight.FlightProducer,org.apache.arrow.flight.auth.ServerAuthHandler,java.util.concurrent.ExecutorService)" class="member-name-link">createFlightService</a><wbr>(<a href="../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
  <a href="FlightProducer.html" title="interface in org.apache.arrow.flight">FlightProducer</a>&nbsp;producer,
  <a href="auth/ServerAuthHandler.html" title="interface in org.apache.arrow.flight.auth">ServerAuthHandler</a>&nbsp;authHandler,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ExecutorService.html" title="class or interface in java.util.concurrent" class="external-link">ExecutorService</a>&nbsp;executor)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Creates a Flight service.</div>
 </div>
 </div>
@@ -157,6 +164,20 @@ loadScripts(document, 'script');</script>
 <h3>createFlightClient</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="FlightClient.html" title="class in org.apache.arrow.flight">FlightClient</a></span>&nbsp;<span class="element-name">createFlightClient</span><wbr><span class="parameters">(<a href="../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;incomingAllocator,
  io.grpc.ManagedChannel&nbsp;channel)</span></div>
+<div class="block">Creates a Flight client.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>incomingAllocator</code> - Memory allocator</dd>
+<dd><code>channel</code> - provides a connection to a gRPC server.</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="createFlightClient(org.apache.arrow.memory.BufferAllocator,io.grpc.ManagedChannel,java.util.List)">
+<h3>createFlightClient</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="FlightClient.html" title="class in org.apache.arrow.flight">FlightClient</a></span>&nbsp;<span class="element-name">createFlightClient</span><wbr><span class="parameters">(<a href="../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;incomingAllocator,
+ io.grpc.ManagedChannel&nbsp;channel,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="FlightClientMiddleware.Factory.html" title="interface in org.apache.arrow.flight">FlightClientMiddleware.Factory</a>&gt;&nbsp;middleware)</span></div>
 <div class="block">Creates a Flight client.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
