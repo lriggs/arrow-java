@@ -89,6 +89,5 @@ sudo rm -rf /opt/hostedtoolcache/node || :
 # Remove Web browser packages
 sudo apt purge -y \
   firefox \
-  google-chrome-stable \
   microsoft-edge-stable
 df -h
