@@ -372,6 +372,9 @@ jobs:
       - jni-macos
       - jni-windows
     steps:
+      - name: Free up disk space
+        run: |
+          ci/scripts/util_free_space.sh
       - name: Download artifacts
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
