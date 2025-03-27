@@ -86,9 +86,12 @@ sudo rm -rf /opt/hostedtoolcache/go || :
 sudo rm -rf /opt/hostedtoolcache/PyPy || :
 # 376MB
 sudo rm -rf /opt/hostedtoolcache/node || :
+sudo rm -rf /usr/share/dotnet
+sudo rm -rf /opt/ghc
+sudo rm -rf "/usr/local/share/boost"
+sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 # Remove Web browser packages
 sudo apt purge -y \
   firefox \
-  google-chrome-stable \
   microsoft-edge-stable
 df -h
