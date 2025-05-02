@@ -18,7 +18,6 @@ package org.apache.arrow.gandiva.evaluator;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-
 import java.util.List;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 
