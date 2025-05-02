@@ -2,6 +2,8 @@ module:org.apache.arrow.adapter.avro
 org.apache.arrow.adapter.avro
 org.apache.arrow.adapter.avro.consumers
 org.apache.arrow.adapter.avro.consumers.logical
+org.apache.arrow.adapter.avro.producers
+org.apache.arrow.adapter.avro.producers.logical
 module:org.apache.arrow.adapter.jdbc
 org.apache.arrow.adapter.jdbc
 org.apache.arrow.adapter.jdbc.binder
