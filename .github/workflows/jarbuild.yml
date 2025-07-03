@@ -325,9 +325,6 @@ jobs:
           test -f jni/arrow_orc_jni/aarch_64/libarrow_orc_jni.dylib
           test -f jni/gandiva_jni/aarch_64/libgandiva_jni.dylib
 
-          test -f jni/arrow_cdata_jni/x86_64/arrow_cdata_jni.dll
-          test -f jni/arrow_dataset_jni/x86_64/arrow_dataset_jni.dll
-          test -f jni/arrow_orc_jni/x86_64/arrow_orc_jni.dll
       - name: Checkout apache/arrow-testing
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
