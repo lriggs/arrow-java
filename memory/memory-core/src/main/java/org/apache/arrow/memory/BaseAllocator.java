@@ -432,6 +432,20 @@ abstract class BaseAllocator extends Accountant implements BufferAllocator {
 
   @Override
   public synchronized void close() {
+    try {
+      closeImpl();
+    } catch (Exception e) {
+      logger.warn(
+            "BufferAllocator.close() of {} got an exception {} - Details {}",
+            this,
+            e,
+            this.toVerboseString());
+
+      throw e;    
+    }
+  }
+
+  private synchronized void closeImpl() {
     /*
      * Some owners may close more than once because of complex cleanup and shutdown
      * procedures.
