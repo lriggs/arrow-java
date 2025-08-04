@@ -436,12 +436,12 @@ abstract class BaseAllocator extends Accountant implements BufferAllocator {
       closeImpl();
     } catch (Exception e) {
       logger.warn(
-            "BufferAllocator.close() of {} got an exception {} - Details {}",
-            this,
-            e,
-            this.toVerboseString());
+          "BufferAllocator.close() of {} got an exception {} - Details {}",
+          this,
+          e,
+          this.toVerboseString());
 
-      throw e;    
+      throw e;
     }
   }
 
