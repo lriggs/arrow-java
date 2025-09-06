@@ -212,7 +212,22 @@ public class Projector {
               selectionVectorType.getNumber(),
               configurationId);
     } catch (GandivaException e) {
+      // Log system memory usage to help diagnose potential out-of-memory issues
+      Runtime runtime = Runtime.getRuntime();
+      long maxMemory = runtime.maxMemory();
+      long totalMemory = runtime.totalMemory();
+      long freeMemory = runtime.freeMemory();
+      long usedMemory = totalMemory - freeMemory;
+
       logger.error("Failed to build projector. Exception: {}", e.getMessage(), e);
+      logger.error("System Memory Usage - Max: {} MB, Total: {} MB, Used: {} MB, Free: {} MB",
+          maxMemory / (1024 * 1024),
+          totalMemory / (1024 * 1024),
+          usedMemory / (1024 * 1024),
+          freeMemory / (1024 * 1024));
+      logger.error("Memory Usage Percentage: {:.2f}% of max, {:.2f}% of total",
+          (usedMemory * 100.0) / maxMemory,
+          (usedMemory * 100.0) / totalMemory);
       logger.error("SelectionVectorType: {} (number: {})", selectionVectorType, selectionVectorType.getNumber());
       logger.error("Number of expressions: {}", exprs.size());
       for (int i = 0; i < exprs.size(); i++) {
