@@ -203,12 +203,27 @@ public class Projector {
     // Invoke the JNI layer to create the LLVM module representing the expressions
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
     JniWrapper wrapper = JniLoader.getInstance().getWrapper();
-    long moduleId =
-        wrapper.buildProjector(
-            schemaBuf.toByteArray(),
-            builder.build().toByteArray(),
-            selectionVectorType.getNumber(),
-            configurationId);
+    long moduleId;
+    try {
+      moduleId =
+          wrapper.buildProjector(
+              schemaBuf.toByteArray(),
+              builder.build().toByteArray(),
+              selectionVectorType.getNumber(),
+              configurationId);
+    } catch (GandivaException e) {
+      logger.error("Failed to build projector. Exception: {}", e.getMessage(), e);
+      logger.error("SelectionVectorType: {} (number: {})", selectionVectorType, selectionVectorType.getNumber());
+      logger.error("Number of expressions: {}", exprs.size());
+      for (int i = 0; i < exprs.size(); i++) {
+        try {
+          logger.error("Expression {}: {}", i, exprs.get(i).toProtobuf());
+        } catch (GandivaException protoException) {
+          logger.error("Expression {}: Failed to convert to protobuf - {}", i, protoException.getMessage());
+        }
+      }
+      throw e;
+    }
     logger.debug("Created module for the projector with id {}", moduleId);
     return new Projector(wrapper, moduleId, schema, exprs.size());
   }
