@@ -53,13 +53,17 @@ public class ProjectorExceptionLoggingTest {
     List<ExpressionTree> exprs = Lists.newArrayList(expr);
 
     // Test that GandivaException is thrown and our logging code is executed
-    GandivaException exception = assertThrows(GandivaException.class, () -> {
-      Projector.make(schema, exprs, SelectionVectorType.SV_NONE);
-    });
+    GandivaException exception =
+        assertThrows(
+            GandivaException.class,
+            () -> {
+              Projector.make(schema, exprs, SelectionVectorType.SV_NONE);
+            });
 
     // Verify that the exception is properly thrown (our logging should have occurred)
-    assertTrue(exception.getMessage().contains("non_existent_function") || 
-               exception.getMessage().contains("Unknown function"));
+    assertTrue(
+        exception.getMessage().contains("non_existent_function")
+            || exception.getMessage().contains("Unknown function"));
   }
 
   @Test
@@ -73,23 +77,30 @@ public class ProjectorExceptionLoggingTest {
     // Create multiple expressions, some valid and some invalid
     TreeNode aNode = TreeBuilder.makeField(a);
     TreeNode bNode = TreeBuilder.makeField(b);
-    
+
     // Valid expression
-    ExpressionTree validExpr = TreeBuilder.makeExpression("add", Lists.newArrayList(a, b), Field.nullable("valid", int64));
-    
+    ExpressionTree validExpr =
+        TreeBuilder.makeExpression("add", Lists.newArrayList(a, b), Field.nullable("valid", int64));
+
     // Invalid expression with non-existent function
-    TreeNode invalidCond = TreeBuilder.makeFunction("invalid_function", Lists.newArrayList(aNode, bNode), boolType);
-    ExpressionTree invalidExpr = TreeBuilder.makeExpression(invalidCond, Field.nullable("invalid", boolType));
-    
+    TreeNode invalidCond =
+        TreeBuilder.makeFunction("invalid_function", Lists.newArrayList(aNode, bNode), boolType);
+    ExpressionTree invalidExpr =
+        TreeBuilder.makeExpression(invalidCond, Field.nullable("invalid", boolType));
+
     List<ExpressionTree> exprs = Lists.newArrayList(validExpr, invalidExpr);
 
     // Test that GandivaException is thrown and our logging code logs all expressions
-    GandivaException exception = assertThrows(GandivaException.class, () -> {
-      Projector.make(schema, exprs, SelectionVectorType.SV_INT32);
-    });
+    GandivaException exception =
+        assertThrows(
+            GandivaException.class,
+            () -> {
+              Projector.make(schema, exprs, SelectionVectorType.SV_INT32);
+            });
 
     // Verify that the exception is properly thrown
-    assertTrue(exception.getMessage().contains("invalid_function") || 
-               exception.getMessage().contains("Unknown function"));
+    assertTrue(
+        exception.getMessage().contains("invalid_function")
+            || exception.getMessage().contains("Unknown function"));
   }
 }
