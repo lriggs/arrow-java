@@ -31,7 +31,7 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.junit.jupiter.api.Test;
 
-/** Test class to verify exception logging in Projector.make() */
+/** Test class to verify exception logging in Projector.make(). */
 public class ProjectorExceptionLoggingTest {
 
   private static final ArrowType int64 = new ArrowType.Int(64, true);
