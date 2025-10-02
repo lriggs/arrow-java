@@ -73,6 +73,7 @@ export ARROW_ORC
 : "${ARROW_S3:=ON}"
 : "${CMAKE_BUILD_TYPE:=release}"
 : "${CMAKE_UNITY_BUILD:=ON}"
+: "${VCPKG_OVERLAY_PORTS:=${arrow_dir}/ci/vcpkg/overlay}"
 : "${VCPKG_ROOT:=/opt/vcpkg}"
 : "${VCPKG_FEATURE_FLAGS:=-manifests}"
 : "${VCPKG_TARGET_TRIPLET:=${VCPKG_DEFAULT_TRIPLET:-x64-linux-static-${CMAKE_BUILD_TYPE}}}"
@@ -117,6 +118,7 @@ cmake \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
   -DVCPKG_MANIFEST_MODE=OFF \
   -DVCPKG_TARGET_TRIPLET="${VCPKG_TARGET_TRIPLET}" \
+  -DVCPKG_OVERLAY_PORTS="${VCPKG_OVERLAY_PORTS}" \
   -GNinja
 cmake --build "${build_dir}/cpp"
 cmake --install "${build_dir}/cpp"
@@ -153,7 +155,7 @@ if [ "${ARROW_RUN_TESTS:-OFF}" = "ON" ]; then
 fi
 
 JAVA_JNI_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-JAVA_JNI_CMAKE_ARGS="${JAVA_JNI_CMAKE_ARGS} -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+JAVA_JNI_CMAKE_ARGS="${JAVA_JNI_CMAKE_ARGS} -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} -DVCPKG_OVERLAY_PORTS=${VCPKG_OVERLAY_PORTS}"
 export JAVA_JNI_CMAKE_ARGS
 "${source_dir}/ci/scripts/jni_build.sh" \
   "${source_dir}" \
