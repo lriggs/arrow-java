@@ -73,7 +73,7 @@ export ARROW_ORC
 : "${ARROW_S3:=ON}"
 : "${CMAKE_BUILD_TYPE:=release}"
 : "${CMAKE_UNITY_BUILD:=ON}"
-: "${VCPKG_OVERLAY_PORTS:=${arrow_dir}/ci/vcpkg/overlay}"
+: "${VCPKG_OVERLAY_PORTS:=${arrow_dir}/ci/vcpkg/overlay/llvm}"
 : "${VCPKG_ROOT:=/opt/vcpkg}"
 : "${VCPKG_FEATURE_FLAGS:=-manifests}"
 : "${VCPKG_TARGET_TRIPLET:=${VCPKG_DEFAULT_TRIPLET:-x64-linux-static-${CMAKE_BUILD_TYPE}}}"
