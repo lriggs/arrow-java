@@ -24,6 +24,7 @@ RUN vcpkg install \
         --clean-after-build \
         --x-install-root=${VCPKG_ROOT}/installed \
         --x-manifest-root=/arrow/ci/vcpkg \
+        --overlay-ports=/arrow/ci/vcpkg/overlay/llvm/ \
         --x-feature=dev \
         --x-feature=flight \
         --x-feature=gcs \
