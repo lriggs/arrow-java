@@ -30,7 +30,6 @@ RUN echo "=== VCPKG DEBUG INFO ===" && \
     echo "=== RUNNING VCPKG INSTALL ===" && \
     vcpkg install \
         --debug \
-        --verbose \
         --clean-after-build \
         --x-install-root=${VCPKG_ROOT}/installed \
         --x-manifest-root=/arrow/ci/vcpkg \
