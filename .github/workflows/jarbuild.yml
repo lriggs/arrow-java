@@ -137,6 +137,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
         run: |
+          docker compose build vcpkg-jni \
           docker compose run vcpkg-jni
       - name: Push Docker image
         if: success() && github.event_name == 'push' && github.repository == 'apache/arrow-java' && github.ref_name == 'main'
