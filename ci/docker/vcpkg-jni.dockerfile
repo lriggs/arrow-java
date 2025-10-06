@@ -22,6 +22,7 @@ FROM ${base}
 # Use enable llvm[enable-rtti] in the vcpkg.json to avoid link problems in Gandiva
 RUN echo "=== VCPKG DEBUG INFO ===" && \
     echo "VCPKG_ROOT: ${VCPKG_ROOT}" && \
+    ls -la /arrow/ci/vcpkg/ || echo "vcpkg directory not found" && \
     echo "Checking overlay directory:" && \
     ls -la /arrow/ci/vcpkg/overlay/ || echo "Overlay directory not found" && \
     ls -la /arrow/ci/vcpkg/overlay/llvm/ || echo "LLVM overlay directory not found" && \
