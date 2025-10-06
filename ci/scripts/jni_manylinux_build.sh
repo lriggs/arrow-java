@@ -25,7 +25,7 @@ set -euo pipefail
 # shellcheck source=ci/scripts/util_log.sh
 . "$(dirname "${0}")/util_log.sh"
 
-github_actions_group_begin "Prepare arguments"
+github_actions_group_begin "Prepare arguments test2"
 source_dir="$(cd "${1}" && pwd)"
 arrow_dir="$(cd "${2}" && pwd)"
 build_dir="${3}"

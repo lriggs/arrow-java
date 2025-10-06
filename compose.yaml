@@ -92,7 +92,7 @@ services:
     # Usage:
     #   docker compose build vcpkg-jni
     #   docker compose run vcpkg-jni
-    image: ${REPO}:${ARCH}-vcpkg-jni-${VCPKG}
+    image: ${REPO}:${ARCH}-vcpkg-jni-2-${VCPKG}
     build:
       context: .
       dockerfile: ci/docker/vcpkg-jni.dockerfile
