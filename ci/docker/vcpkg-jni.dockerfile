@@ -23,10 +23,12 @@ FROM ${base}
 RUN echo "=== VCPKG DEBUG INFO ===" && \
     echo "VCPKG_ROOT: ${VCPKG_ROOT}" && \
     echo "Git status /arrow" && \
-    ls -la /arrow && \
-    echo "Git status /arrow-java/arrow" && \
-    git -C /arrow-java/arrow status && \
-    ls -la /arrow-java/arrow && \
+    ls -la /arrow
+
+RUN  echo "Git status 42 /arrow-java/arrow-java/arrow" && \
+    git -C /arrow-java/arrow-java/arrow status
+
+RUN ls -la /arrow-java/arrow-java/arrow && \
     ls -la /arrow/ci/vcpkg/ || echo "vcpkg directory not found" && \
     ls -la /home/runner/work/arrow-java/arrow-java/arrow/ci/vcpkg/overlay/ || echo "directory not found" && \
     echo "Checking overlay directory:" && \
