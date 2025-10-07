@@ -136,6 +136,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Breakpoint to ssh
+        if: github.event.inputs.arrow_branch == 'TODO-remove-to-test'
         uses: namespacelabs/breakpoint-action@v0
         with:
           duration: 30m

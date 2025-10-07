@@ -30,7 +30,6 @@ RUN  echo "Git status 42 /arrow-java/arrow-java/arrow" && \
 
 RUN ls -la /arrow-java/arrow-java/arrow && \
     ls -la /arrow/ci/vcpkg/ || echo "vcpkg directory not found" && \
-    ls -la /home/runner/work/arrow-java/arrow-java/arrow/ci/vcpkg/overlay/ || echo "directory not found" && \
     echo "Checking overlay directory:" && \
     ls -la /arrow/ci/vcpkg/overlay/ || echo "Overlay directory not found" && \
     ls -la /arrow/ci/vcpkg/overlay/llvm/ || echo "LLVM overlay directory not found" && \
