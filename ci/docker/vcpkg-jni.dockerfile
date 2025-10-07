@@ -22,6 +22,8 @@ FROM ${base}
 # Use enable llvm[enable-rtti] in the vcpkg.json to avoid link problems in Gandiva
 RUN echo "=== VCPKG DEBUG INFO ===" && \
     echo "VCPKG_ROOT: ${VCPKG_ROOT}" && \
+    echo "Git status /arrow" && \
+    git -C /arrow status && \
     ls -la /arrow/ci/vcpkg/ || echo "vcpkg directory not found" && \
     ls -la /home/runner/work/arrow-java/arrow-java/arrow/ci/vcpkg/overlay/ || echo "directory not found" && \
     echo "Checking overlay directory:" && \
