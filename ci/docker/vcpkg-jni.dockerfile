@@ -23,6 +23,7 @@ FROM ${base}
 RUN echo "=== VCPKG DEBUG INFO ===" && \
     echo "VCPKG_ROOT: ${VCPKG_ROOT}" && \
     ls -la /arrow/ci/vcpkg/ || echo "vcpkg directory not found" && \
+    ls -la /home/runner/work/arrow-java/arrow-java/arrow/ci/vcpkg/overlay/ || echo "directory not found" && \
     echo "Checking overlay directory:" && \
     ls -la /arrow/ci/vcpkg/overlay/ || echo "Overlay directory not found" && \
     ls -la /arrow/ci/vcpkg/overlay/llvm/ || echo "LLVM overlay directory not found" && \
