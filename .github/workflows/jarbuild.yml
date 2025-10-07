@@ -135,6 +135,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Breakpoint to ssh
+        uses: namespacelabs/breakpoint-action@v0
+        with:
+          duration: 30m
+          authorized-users: lriggs
       - name: Build
         run: |
           echo "=== Docker Compose Debug Info ==="
