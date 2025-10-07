@@ -23,7 +23,6 @@ FROM ${base}
 RUN echo "=== VCPKG DEBUG INFO ===" && \
     echo "VCPKG_ROOT: ${VCPKG_ROOT}" && \
     echo "Git status /arrow" && \
-    git -C /arrow status && \
     ls -la /arrow && \
     echo "Git status /arrow-java/arrow" && \
     git -C /arrow-java/arrow status && \
