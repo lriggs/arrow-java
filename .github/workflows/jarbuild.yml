@@ -115,7 +115,7 @@ jobs:
       #     ci/scripts/download_cpp.sh
       - name: Checkout Apache Arrow C++
         # if: github.event_name == 'schedule'
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           repository: ${{github.event.inputs.arrow_repo}}
           ref: ${{github.event.inputs.arrow_branch}}
