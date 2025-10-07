@@ -25,9 +25,6 @@ RUN echo "=== VCPKG DEBUG INFO ===" && \
     echo "Git status /arrow" && \
     ls -la /arrow
 
-RUN  echo "Git status 42 /arrow-java/arrow-java/arrow" && \
-    git -C /arrow-java/arrow-java/arrow status
-
 RUN ls -la /arrow-java/arrow-java/arrow && \
     ls -la /arrow/ci/vcpkg/ || echo "vcpkg directory not found" && \
     echo "Checking overlay directory:" && \
