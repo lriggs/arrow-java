@@ -240,6 +240,7 @@ jobs:
             brew uninstall pkg-config@0.29.2 || :
           fi
 
+          brew install --build-from-source llvm@21
           brew bundle --file=arrow/cpp/Brewfile
           # We want to link aws-sdk-cpp statically but Homebrew's
           # aws-sdk-cpp provides only shared library. If we have
