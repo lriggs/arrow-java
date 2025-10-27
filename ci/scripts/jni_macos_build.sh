@@ -73,6 +73,17 @@ export ARROW_ORC
 : "${ARROW_S3:=ON}"
 : "${CMAKE_BUILD_TYPE:=Release}"
 : "${CMAKE_UNITY_BUILD:=ON}"
+: "${VCPKG_ROOT:=/usr/local/vcpkg}"
+: "${VCPKG_OVERLAY_PORTS:=${arrow_dir}/ci/vcpkg/overlay/llvm}"
+: "${VCPKG_FEATURE_FLAGS:=-manifests}"
+case "${normalized_arch}" in
+aarch_64)
+  : "${VCPKG_TARGET_TRIPLET:=arm64-osx-static}"
+  ;;
+x86_64)
+  : "${VCPKG_TARGET_TRIPLET:=x64-osx-static}"
+  ;;
+esac
 
 export ARROW_TEST_DATA="${arrow_dir}/testing/data"
 export PARQUET_TEST_DATA="${arrow_dir}/cpp/submodules/parquet-testing/data"
@@ -87,6 +98,7 @@ cmake \
   -DARROW_CSV="${ARROW_DATASET}" \
   -DARROW_DATASET="${ARROW_DATASET}" \
   -DARROW_SUBSTRAIT="${ARROW_DATASET}" \
+  -DARROW_DEPENDENCY_SOURCE="VCPKG" \
   -DARROW_DEPENDENCY_USE_SHARED=OFF \
   -DARROW_GANDIVA="${ARROW_GANDIVA}" \
   -DARROW_GANDIVA_STATIC_LIBSTDCPP=ON \
@@ -95,15 +107,14 @@ cmake \
   -DARROW_PARQUET="${ARROW_PARQUET}" \
   -DARROW_S3="${ARROW_S3}" \
   -DARROW_USE_CCACHE="${ARROW_USE_CCACHE}" \
-  -DAWSSDK_SOURCE=BUNDLED \
   -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
   -DCMAKE_INSTALL_PREFIX="${install_dir}" \
+  -DCMAKE_TOOLCHAIN_FILE="${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
-  -DGTest_SOURCE=BUNDLED \
   -DPARQUET_BUILD_EXAMPLES=OFF \
   -DPARQUET_BUILD_EXECUTABLES=OFF \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
-  -Dre2_SOURCE=BUNDLED \
+  -DVCPKG_TARGET_TRIPLET="${VCPKG_TARGET_TRIPLET}" \
   -GNinja
 cmake --build "${build_dir}/cpp" --target install
 github_actions_group_end
@@ -160,3 +171,12 @@ archery linking check-dependencies \
   "gandiva_jni/${normalized_arch}/libgandiva_jni.dylib"
 popd
 github_actions_group_end
+
+JAVA_JNI_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+JAVA_JNI_CMAKE_ARGS="${JAVA_JNI_CMAKE_ARGS} -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+export JAVA_JNI_CMAKE_ARGS
+"${source_dir}/ci/scripts/jni_build.sh" \
+  "${source_dir}" \
+  "${install_dir}" \
+  "${build_dir}" \
+  "${dist_dir}"
