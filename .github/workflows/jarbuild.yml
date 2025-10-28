@@ -243,23 +243,17 @@ jobs:
             --x-install-root=${VCPKG_ROOT}/installed \
             --x-manifest-root=arrow/ci/vcpkg \
             --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
-            --x-feature=dev \
-            --x-feature=flight \
-            --x-feature=gcs \
-            --x-feature=json \
-            --x-feature=parquet \
-            --x-feature=gandiva \
-            --x-feature=s3
-
+            --x-feature=gandiva
           # Remove conflicting brew packages that vcpkg will provide
-          brew uninstall aws-sdk-cpp || :
-          brew uninstall grpc || :
-          brew uninstall grpc@1.54 || :
-          brew uninstall re2 || :
-          brew uninstall protobuf || :
+          # brew uninstall aws-sdk-cpp || :
+          # brew uninstall grpc || :
+          # brew uninstall grpc@1.54 || :
+          # brew uninstall re2 || :
+          # brew uninstall protobuf || :
 
           # Install remaining brew dependencies (non-conflicting ones)
           brew bundle --file=Brewfile
+          brew uninstall llvm || :
       - name: Prepare ccache
         run: |
           echo "CCACHE_DIR=${PWD}/ccache" >> ${GITHUB_ENV}
