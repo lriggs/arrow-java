@@ -262,7 +262,7 @@ jobs:
             --x-install-root=${VCPKG_ROOT}/installed \
             --x-manifest-root=arrow/ci/vcpkg \
             --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
-            --x-feature=gandiva
+            --x-feature=gandiva-llvm
           # Remove conflicting brew packages that vcpkg will provide
           # brew uninstall aws-sdk-cpp || :
           # brew uninstall grpc || :
@@ -285,11 +285,11 @@ jobs:
           set -e
           # Set up vcpkg environment
           # export VCPKG_ROOT=/usr/local/vcpkg
-          export VCPKG_OVERLAY_PORTS=arrow/ci/vcpkg/overlay/llvm
-          export CMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake
+          # export VCPKG_OVERLAY_PORTS=arrow/ci/vcpkg/overlay/llvm
+          # export CMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake
 
           # make brew Java available to CMake
-          export JAVA_HOME=$(brew --prefix openjdk@11)/libexec/openjdk.jdk/Contents/Home
+          # export JAVA_HOME=$(brew --prefix openjdk@11)/libexec/openjdk.jdk/Contents/Home
 
           ci/scripts/jni_macos_build.sh . arrow build jni
       - name: Compress into single artifact to keep directory structure
