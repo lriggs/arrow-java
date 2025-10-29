@@ -262,7 +262,7 @@ jobs:
             --x-install-root=${VCPKG_ROOT}/installed \
             --x-manifest-root=arrow/ci/vcpkg \
             --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
-            --x-feature=gandiva-llvm
+            --x-feature=gandiva
           # Remove conflicting brew packages that vcpkg will provide
           # brew uninstall aws-sdk-cpp || :
           # brew uninstall grpc || :
