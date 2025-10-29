@@ -235,6 +235,25 @@ jobs:
 
           # Install basic build tools via brew (vcpkg needs these)
           brew install cmake ninja pkg-config
+          brew bundle --file=arrow/cpp/Brewfile
+          # We want to link aws-sdk-cpp statically but Homebrew's
+          # aws-sdk-cpp provides only shared library. If we have
+          # Homebrew's aws-sdk-cpp, our build mix Homebrew's
+          # aws-sdk-cpp and bundled aws-sdk-cpp. We uninstall Homebrew's
+          # aws-sdk-cpp to ensure using only bundled aws-sdk-cpp.
+          brew uninstall aws-sdk-cpp
+          # We want to use bundled RE2 for static linking. If
+          # Homebrew's RE2 is installed, its header file may be used.
+          # We uninstall Homebrew's RE2 to ensure using bundled RE2.
+          brew uninstall grpc || : # gRPC depends on RE2
+          brew uninstall grpc@1.54 || : # gRPC 1.54 may be installed too
+          brew uninstall re2
+          # We want to use bundled Protobuf for static linking. If
+          # Homebrew's Protobuf is installed, its library file may be
+          # used on test  We uninstall Homebrew's Protobuf to ensure using
+          # bundled Protobuf.
+          brew uninstall protobuf
+          brew uninstall llvm || :
 
           # Use vcpkg to install LLVM and other dependencies
           # export VCPKG_ROOT=/usr/local/vcpkg
@@ -251,9 +270,7 @@ jobs:
           # brew uninstall re2 || :
           # brew uninstall protobuf || :
 
-          # Install remaining brew dependencies (non-conflicting ones)
-          brew bundle --file=Brewfile
-          brew uninstall llvm || :
+
       - name: Prepare ccache
         run: |
           echo "CCACHE_DIR=${PWD}/ccache" >> ${GITHUB_ENV}
