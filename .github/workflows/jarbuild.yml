@@ -209,13 +209,13 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: Microsoft/vcpkg
-          path: arrow/cpp/submodules/vcpkg
+          path: arrow/vcpkg
       - name: Install vcpkg
         run: |
-          cd arrow/cpp/submodules/vcpkg
+          cd arrow/vcpkg
           ./bootstrap-vcpkg.sh
-          echo "VCPKG_ROOT=${PWD}/arrow/cpp/submodules/vcpkg" >> ${GITHUB_ENV}
-          echo "${PWD}/arrow/cpp/submodules/vcpkg" >> ${GITHUB_PATH}
+          echo "VCPKG_ROOT=${PWD}/arrow/vcpkg" >> ${GITHUB_ENV}
+          echo "${PWD}/arrow/vcpkg" >> ${GITHUB_PATH}
       - name: Install dependencies
         run: |
           # Ensure updating python@XXX with the "--overwrite" option.
