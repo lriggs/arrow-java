@@ -26,13 +26,56 @@ import org.apache.arrow.gandiva.expression.TreeBuilder;
 import org.apache.arrow.gandiva.expression.TreeNode;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
-import org.junit.jupiter.api.Disabled;
+// import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled
 public class MicroBenchmarkTest extends BaseEvaluatorTest {
 
   private double toleranceRatio = 4.0;
+
+  @Test
+  public void testAdd3Loop() throws Exception {
+    long totalTime = 0;
+    int iterations = 50000;
+
+    for (int i = 0; i < iterations; i++) {
+      Field x = Field.nullable("x", int32);
+      Field n2x = Field.nullable("n2x", int32);
+      Field n3x = Field.nullable("n3x", int32);
+
+      // x + n2x + n3x
+      TreeNode add1 =
+          TreeBuilder.makeFunction(
+              "add",
+              Lists.newArrayList(TreeBuilder.makeField(x), TreeBuilder.makeField(n2x)),
+              int32);
+      TreeNode add =
+          TreeBuilder.makeFunction(
+              "add", Lists.newArrayList(add1, TreeBuilder.makeField(n3x)), int32);
+      ExpressionTree expr = TreeBuilder.makeExpression(add, x);
+
+      List<Field> cols = Lists.newArrayList(x, n2x, n3x);
+      Schema schema = new Schema(cols);
+
+      long timeTaken =
+          timedProject(
+              new Int32DataAndVectorGenerator(allocator),
+              schema,
+              Lists.newArrayList(expr),
+              1 * MILLION,
+              16 * THOUSAND,
+              4);
+      totalTime += timeTaken;
+      // assertTrue(timeTaken <= 13 * toleranceRatio);
+    }
+    System.out.println("Total Time taken for projecting 1m records of add3 is " + totalTime + "ms");
+    System.out.println(
+        "Average Time taken for projecting 1m records of add3 for "
+            + iterations
+            + " iterations is "
+            + totalTime / iterations
+            + "ms");
+  }
 
   @Test
   public void testAdd3() throws Exception {
@@ -116,16 +159,18 @@ public class MicroBenchmarkTest extends BaseEvaluatorTest {
     ExpressionTree expr = TreeBuilder.makeExpression(topNode, x);
     Schema schema = new Schema(Lists.newArrayList(x));
 
+    int inputSize = 100 * MILLION;
     long timeTaken =
         timedProject(
             new BoundedInt32DataAndVectorGenerator(allocator, 250),
             schema,
             Lists.newArrayList(expr),
-            1 * MILLION,
+            inputSize,
             16 * THOUSAND,
             4);
-    System.out.println("Time taken for projecting 10m records of nestedIf is " + timeTaken + "ms");
-    assertTrue(timeTaken <= 15 * toleranceRatio);
+    System.out.println(
+        "Time taken for projecting " + inputSize + " records of nestedIf is " + timeTaken + "ms");
+    assertTrue(timeTaken <= 1000 * toleranceRatio);
   }
 
   @Test

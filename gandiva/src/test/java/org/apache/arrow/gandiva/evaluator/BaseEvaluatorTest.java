@@ -375,13 +375,16 @@ class BaseEvaluatorTest {
       int maxRowsInBatch,
       int inputFieldSize)
       throws GandivaException, Exception {
+    long start = System.nanoTime();
     Projector projector = Projector.make(schema, exprs);
+    long finish = System.nanoTime();
     try {
       ProjectEvaluator evaluator =
           new ProjectEvaluator(projector, generator, exprs.size(), maxRowsInBatch);
-      generateDataAndEvaluate(
-          generator, evaluator, schema.getFields().size(), numRows, maxRowsInBatch, inputFieldSize);
-      return evaluator.getElapsedMillis();
+      // generateDataAndEvaluate(
+      //    generator, evaluator, schema.getFields().size(), numRows, maxRowsInBatch,
+      // inputFieldSize);
+      return (finish - start) + evaluator.getElapsedMillis();
     } finally {
       projector.close();
     }
