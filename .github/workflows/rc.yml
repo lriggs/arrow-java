@@ -378,7 +378,6 @@ jobs:
           tar -xf apache-arrow-java-*.tar.gz --strip-components=1
           tar -xvzf jni-linux-x86_64.tar.gz
           tar -xvzf jni-linux-aarch_64.tar.gz
-          tar -xvzf jni-macos-x86_64.tar.gz
           tar -xvzf jni-macos-aarch_64.tar.gz
           tar -xvzf jni-windows-x86_64.tar.gz
       - name: Test that shared libraries exist
