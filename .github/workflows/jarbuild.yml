@@ -165,10 +165,9 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { runs_on: macos-15-intel, arch: "x86_64"}
           - { runs_on: macos-15, arch: "aarch_64" }
     env:
-      MACOSX_DEPLOYMENT_TARGET: "14.0"
+      MACOSX_DEPLOYMENT_TARGET: "15.0"
     steps:
       - name: Download source archive
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
@@ -216,8 +215,30 @@ jobs:
           ./bootstrap-vcpkg.sh
           echo "VCPKG_ROOT=${PWD}/arrow/vcpkg" >> ${GITHUB_ENV}
           echo "${PWD}/arrow/vcpkg" >> ${GITHUB_PATH}
+      - name: Clean up disk space
+        run: |
+          echo "=== Free disk space before cleanup ==="
+          df -h /
+
+          echo ""
+          echo "=== Removing Xcode simulators ==="
+          sudo rm -rf /Library/Developer/CoreSimulator/Caches || :
+          echo "Removed /Library/Developer/CoreSimulator/Caches"
+
+          echo ""
+          echo "=== Removing user simulator data ==="
+          rm -rf ~/Library/Developer/CoreSimulator || :
+          echo "Removed ~/Library/Developer/CoreSimulator"
+
+          echo ""
+          echo "=== Free disk space after cleanup ==="
+          df -h /
       - name: Install dependencies
         run: |
+          echo "=== Free disk space at start of dependency installation ==="
+          df -h /
+
+          echo ""
           # Ensure updating python@XXX with the "--overwrite" option.
           # If python@XXX is updated without "--overwrite", it causes
           # a conflict error. Because Python 3 installed not by
@@ -264,6 +285,11 @@ jobs:
           # bundled Protobuf.
           brew uninstall protobuf
 
+          echo ""
+          echo "=== Free disk space before LLVM build ==="
+          df -h /
+
+          echo ""
           # Use vcpkg to install LLVM.
           vcpkg install \
             --clean-after-build \
@@ -271,7 +297,12 @@ jobs:
             --x-manifest-root=arrow/ci/vcpkg \
             --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
             --x-feature=gandiva-llvm
-            
+
+          echo ""
+          echo "=== Free disk space after LLVM build ==="
+          df -h /
+
+          echo ""
           brew bundle --file=Brewfile
       - name: Prepare ccache
         run: |
@@ -284,10 +315,18 @@ jobs:
           restore-keys: jni-macos-${{ matrix.platform.arch }}-
       - name: Build
         run: |
+          echo "=== Free disk space at start of build ==="
+          df -h /
+
+          echo ""
           set -e
           # make brew Java available to CMake
           export JAVA_HOME=$(brew --prefix openjdk@11)/libexec/openjdk.jdk/Contents/Home
           ci/scripts/jni_macos_build.sh . arrow build jni
+
+          echo ""
+          echo "=== Free disk space at end of build ==="
+          df -h /
       - name: Compress into single artifact to keep directory structure
         run: tar -cvzf jni-macos-${{ matrix.platform.arch }}.tar.gz jni/
       - name: Upload artifacts
@@ -312,7 +351,6 @@ jobs:
           tar -xf apache-arrow-java-*.tar.gz --strip-components=1
           tar -xvzf jni-linux-x86_64.tar.gz
           tar -xvzf jni-linux-aarch_64.tar.gz
-          tar -xvzf jni-macos-x86_64.tar.gz
           tar -xvzf jni-macos-aarch_64.tar.gz
       - name: Test that shared libraries exist
         run: |
@@ -327,11 +365,6 @@ jobs:
           test -f jni/arrow_dataset_jni/aarch_64/libarrow_dataset_jni.so
           test -f jni/arrow_orc_jni/aarch_64/libarrow_orc_jni.so
           test -f jni/gandiva_jni/aarch_64/libgandiva_jni.so
-
-          test -f jni/arrow_cdata_jni/x86_64/libarrow_cdata_jni.dylib
-          test -f jni/arrow_dataset_jni/x86_64/libarrow_dataset_jni.dylib
-          test -f jni/arrow_orc_jni/x86_64/libarrow_orc_jni.dylib
-          test -f jni/gandiva_jni/x86_64/libgandiva_jni.dylib
 
           test -f jni/arrow_cdata_jni/aarch_64/libarrow_cdata_jni.dylib
           test -f jni/arrow_dataset_jni/aarch_64/libarrow_dataset_jni.dylib
