@@ -215,6 +215,12 @@ jobs:
           ./bootstrap-vcpkg.sh
           echo "VCPKG_ROOT=${PWD}/arrow/vcpkg" >> ${GITHUB_ENV}
           echo "${PWD}/arrow/vcpkg" >> ${GITHUB_PATH}
+      - name: Remove logs and unused SDKs
+        run: |
+          sudo rm -rf /usr/local/share/vcpkg/buildtrees
+          sudo rm -rf /Applications/Xcode*/Contents/Developer/Platforms/iPhone*
+          sudo rm -rf /Library/Developer/CoreSimulator/Caches/*
+          df -h    
       - name: Clean up disk space
         run: |
           echo "=== Free disk space before cleanup ==="
