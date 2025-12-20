@@ -44,6 +44,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Print input values to log
+        run: |
+          echo "arrow_branch: ${{github.event.inputs.arrow_branch}}"
+          echo "arrow_repo: ${{github.event.inputs.arrow_repo}}"
+          echo "release_tag_name: ${{github.event.inputs.release_tag_name}}"
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
