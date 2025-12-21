@@ -42,7 +42,7 @@ import org.apache.arrow.vector.complex.NonNullableStructVector;
 import org.apache.arrow.vector.complex.StructVector;
 import org.apache.arrow.vector.complex.UnionVector;
 import org.apache.arrow.vector.complex.writer.BaseWriter.StructWriter;
-import org.apache.arrow.vector.extension.UuidType;
+import org.apache.arrow.vector.holder.UuidHolder;
 import org.apache.arrow.vector.holders.DurationHolder;
 import org.apache.arrow.vector.holders.FixedSizeBinaryHolder;
 import org.apache.arrow.vector.holders.NullableDecimalHolder;
@@ -50,16 +50,15 @@ import org.apache.arrow.vector.holders.NullableIntHolder;
 import org.apache.arrow.vector.holders.NullableTimeStampMilliTZHolder;
 import org.apache.arrow.vector.holders.TimeStampMilliTZHolder;
 import org.apache.arrow.vector.holders.UnionHolder;
-import org.apache.arrow.vector.holders.UuidHolder;
 import org.apache.arrow.vector.types.TimeUnit;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.ArrowType.ArrowTypeID;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
+import org.apache.arrow.vector.types.pojo.UuidType;
 import org.apache.arrow.vector.util.DecimalUtility;
 import org.apache.arrow.vector.util.Text;
-import org.apache.arrow.vector.util.UuidUtility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -134,17 +133,18 @@ public class TestPromotableWriter {
 
       writer.setPosition(9);
       UUID uuid = UUID.randomUUID();
-      writer.extension("A", UuidType.INSTANCE).writeExtension(uuid, UuidType.INSTANCE);
+      writer.extension("A", new UuidType()).writeExtension(uuid, new UuidType());
       writer.end();
 
       writer.setPosition(10);
       UUID uuid2 = UUID.randomUUID();
       UuidHolder uuidHolder = new UuidHolder();
-      uuidHolder.buffer = allocator.buffer(UuidType.UUID_BYTE_WIDTH);
-      uuidHolder.buffer.setBytes(0, UuidUtility.getBytesFromUUID(uuid2));
-      writer.extension("A", UuidType.INSTANCE).write(uuidHolder);
+      ByteBuffer bb = ByteBuffer.allocate(16);
+      bb.putLong(uuid2.getMostSignificantBits());
+      bb.putLong(uuid2.getLeastSignificantBits());
+      uuidHolder.value = bb.array();
+      writer.extension("A", new UuidType()).write(uuidHolder);
       writer.end();
-      allocator.releaseBytes(UuidType.UUID_BYTE_WIDTH);
 
       container.setValueCount(11);
 
@@ -805,7 +805,7 @@ public class TestPromotableWriter {
     try (final NonNullableStructVector container =
             NonNullableStructVector.empty(EMPTY_SCHEMA_PATH, allocator);
         final UuidVector v =
-            container.addOrGet("uuid", FieldType.nullable(UuidType.INSTANCE), UuidVector.class);
+            container.addOrGet("uuid", FieldType.nullable(new UuidType()), UuidVector.class);
         final PromotableWriter writer = new PromotableWriter(v, container)) {
       UUID u1 = UUID.randomUUID();
       UUID u2 = UUID.randomUUID();
@@ -813,9 +813,9 @@ public class TestPromotableWriter {
       container.setValueCount(1);
 
       writer.setPosition(0);
-      writer.writeExtension(u1, UuidType.INSTANCE);
+      writer.writeExtension(u1, new UuidType());
       writer.setPosition(1);
-      writer.writeExtension(u2, UuidType.INSTANCE);
+      writer.writeExtension(u2, new UuidType());
 
       container.setValueCount(2);
 
@@ -829,8 +829,7 @@ public class TestPromotableWriter {
   public void testExtensionTypeForList() throws Exception {
     try (final ListVector container = ListVector.empty(EMPTY_SCHEMA_PATH, allocator);
         final UuidVector v =
-            (UuidVector)
-                container.addOrGetVector(FieldType.nullable(UuidType.INSTANCE)).getVector();
+            (UuidVector) container.addOrGetVector(FieldType.nullable(new UuidType())).getVector();
         final PromotableWriter writer = new PromotableWriter(v, container)) {
       UUID u1 = UUID.randomUUID();
       UUID u2 = UUID.randomUUID();
@@ -838,9 +837,9 @@ public class TestPromotableWriter {
       container.setValueCount(1);
 
       writer.setPosition(0);
-      writer.writeExtension(u1, UuidType.INSTANCE);
+      writer.writeExtension(u1, new UuidType());
       writer.setPosition(1);
-      writer.writeExtension(u2, UuidType.INSTANCE);
+      writer.writeExtension(u2, new UuidType());
 
       container.setValueCount(2);
 

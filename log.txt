@@ -1,0 +1,95 @@
+commit 41b721b904503035599492ba7374011d48d20445
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Tue Feb 25 17:31:24 2025 -0800
+
+    Adding jar build
+
+commit 4bf8d8152a5e939b9b70a3b80e39bad64bf6c7da
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Fri Feb 14 11:28:41 2025 -0800
+
+    Dremio updates
+
+commit 26bfa184ea0999a8cbd0494398798c87c641e2b3
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Fri Dec 13 09:31:31 2024 -0800
+
+    Fix package error for jna include.
+
+commit 33db5a668810a5ede793e366089e19ee0f840b68
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Fri Oct 4 13:23:05 2024 -0700
+
+    Add back tdd definitions.
+
+commit 5edfa29ea5d52eed5073b8607161c3b716b456fd
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Mon Sep 30 10:23:26 2024 -0700
+
+    Add dependency
+
+commit 2101e779fcd40beff1d94713cf57816e1e3f050b
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Wed Sep 25 14:35:41 2024 -0700
+
+    Various include fixes
+
+commit f2b60dfe7fffa3caf612bbce032fcdbbf9062629
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Thu Sep 5 10:34:52 2024 -0700
+
+    Run spotless
+
+commit 03adf2ef20d9ee4aa508cc6eef0137527a9647df
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Mon May 6 17:46:05 2024 -0700
+
+    Fix test dependencies
+
+commit d79657ba2c09467f4b8d22a07754560749dc55d0
+Author: lriggs <logan.riggs@gmail.com>
+Date:   Thu May 2 16:37:24 2024 -0700
+
+    Fix merge error typo. Update TestPromotableWriter.java
+
+commit 77fe99cfae9491d8bf1684d92ec9fdb8d7a862a1
+Author: DenisTarasyuk <denis.tarasyuk@dremio.com>
+Date:   Tue Apr 16 19:09:52 2024 +0300
+
+    DX-88565 Fixed gandiva native library loading option to be global
+    
+    Added jna library which allows more control over native code loading
+
+commit 235e6a9e264a55ed563eb8e2f68950e06124d894
+Author: Logan Riggs <logan.riggs@dremio.com>
+Date:   Thu Mar 14 12:54:53 2024 -0700
+
+    Fix jar build
+
+commit a39001b2485064f07fa902c086baa96104c5271f
+Author: Scott Cowell <scott.cowell@dremio.com>
+Date:   Wed Jan 10 15:56:08 2024 -0800
+
+    DX-85876: Failure in UnionReader.read after DecimalVector promotion to UnionVector (#61)
+    
+    When a DecimalVector is promoted to a UnionVector via a
+    PromotableWriter, the UnionVector will have the decimal vector in it's
+    internal struct vector, but the decimalVector field will not be set.
+    If UnionReader.read is then used to read from the UnionVector, it will
+    fail when it tries to read one of the promoted decimal values, due
+    to decimalVector being null, and the exact decimal type not being
+    provided.  This failure is unnecessary though as we have a pre-existing
+    decimal vector, the caller just does not know the exact type - and
+    it shouldn't be required to.
+    
+    The change here is to check for a pre-existing decimal vector in the
+    internal struct when getDecimalVector() is called.  If one exists,
+    set the decimalVector field and return.  Otherwise, if none exists,
+    throw the exception.
+
+commit d1c37aabdfa8599383da075cc686ccdcee60dabc
+Author: lriggs <logan.riggs@gmail.com>
+Date:   Tue Sep 26 17:00:24 2023 -0700
+
+    Try nullifying fieldReader when cleaning up listreader. (#49)
+

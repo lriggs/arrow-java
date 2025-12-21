@@ -35,7 +35,6 @@ import org.apache.arrow.vector.complex.UnionVector;
 import org.apache.arrow.vector.complex.impl.NullableStructWriter;
 import org.apache.arrow.vector.complex.writer.Float8Writer;
 import org.apache.arrow.vector.complex.writer.IntWriter;
-import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.holders.ComplexHolder;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.Types.MinorType;
@@ -43,6 +42,7 @@ import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.ArrowType.Struct;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
+import org.apache.arrow.vector.types.pojo.UuidType;
 import org.apache.arrow.vector.util.TransferPair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -167,7 +167,7 @@ public class TestStructVector {
           "varchar", FieldType.nullable(MinorType.VARCHAR.getType()), VarCharVector.class);
 
       // add extension vector
-      vector.addOrGet("extension", FieldType.nullable(UuidType.INSTANCE), UuidVector.class);
+      vector.addOrGet("extension", FieldType.nullable(new UuidType()), UuidVector.class);
 
       List<ValueVector> primitiveVectors = vector.getPrimitiveVectors();
       assertEquals(6, primitiveVectors.size());
