@@ -57,9 +57,9 @@ public class AllocatorBenchmarks {
   @BenchmarkMode(Mode.AverageTime)
   @OutputTimeUnit(TimeUnit.MICROSECONDS)
   public void segmentRoundingPolicyBenchmark() {
-    final long bufferSize = 1024L;
+    final int bufferSize = 1024;
     final int numBuffers = 1024;
-    final long segmentSize = 1024L;
+    final int segmentSize = 1024;
 
     RoundingPolicy policy = new SegmentRoundingPolicy(segmentSize);
     try (RootAllocator allocator =

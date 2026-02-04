@@ -16,8 +16,6 @@
  */
 package org.apache.arrow.memory.rounding;
 
-import com.google.errorprone.annotations.InlineMe;
-import org.apache.arrow.memory.util.LargeMemoryUtil;
 import org.apache.arrow.util.Preconditions;
 
 /** The rounding policy that each buffer size must a multiple of the segment size. */
@@ -30,7 +28,7 @@ public class SegmentRoundingPolicy implements RoundingPolicy {
    * The segment size. It must be at least {@link SegmentRoundingPolicy#MIN_SEGMENT_SIZE}, and be a
    * power of 2.
    */
-  private long segmentSize;
+  private int segmentSize;
 
   /**
    * Constructor for the segment rounding policy.
@@ -38,22 +36,8 @@ public class SegmentRoundingPolicy implements RoundingPolicy {
    * @param segmentSize the segment size.
    * @throws IllegalArgumentException if the segment size is smaller than {@link
    *     SegmentRoundingPolicy#MIN_SEGMENT_SIZE}, or is not a power of 2.
-   * @deprecated use {@link SegmentRoundingPolicy#SegmentRoundingPolicy(long)} instead.
    */
-  @Deprecated(forRemoval = true)
-  @InlineMe(replacement = "this((long) segmentSize)")
   public SegmentRoundingPolicy(int segmentSize) {
-    this((long) segmentSize);
-  }
-
-  /**
-   * Constructor for the segment rounding policy.
-   *
-   * @param segmentSize the segment size.
-   * @throws IllegalArgumentException if the segment size is smaller than {@link
-   *     SegmentRoundingPolicy#MIN_SEGMENT_SIZE}, or is not a power of 2.
-   */
-  public SegmentRoundingPolicy(long segmentSize) {
     Preconditions.checkArgument(
         segmentSize >= MIN_SEGMENT_SIZE,
         "The segment size cannot be smaller than %s",
@@ -68,12 +52,7 @@ public class SegmentRoundingPolicy implements RoundingPolicy {
     return (requestSize + (segmentSize - 1)) / segmentSize * segmentSize;
   }
 
-  @Deprecated(forRemoval = true)
   public int getSegmentSize() {
-    return LargeMemoryUtil.checkedCastToInt(segmentSize);
-  }
-
-  public long getSegmentSizeAsLong() {
     return segmentSize;
   }
 }
