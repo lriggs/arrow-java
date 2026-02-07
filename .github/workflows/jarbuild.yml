@@ -214,12 +214,13 @@ jobs:
         with:
           repository: Microsoft/vcpkg
           path: arrow/vcpkg
+          fetch-depth: 0
       - name: Install vcpkg
         run: |
           cd arrow/vcpkg
           ./bootstrap-vcpkg.sh
-          echo "VCPKG_ROOT=${PWD}/arrow/vcpkg" >> ${GITHUB_ENV}
-          echo "${PWD}/arrow/vcpkg" >> ${GITHUB_PATH}
+          echo "VCPKG_ROOT_LOCAL=${PWD}" >> ${GITHUB_ENV}
+          echo "${PWD}" >> ${GITHUB_PATH}
       - name: Clean up disk space
         run: |
           echo "=== Free disk space before cleanup ==="
@@ -270,25 +271,28 @@ jobs:
           brew bundle --file=arrow/cpp/Brewfile
 
           # Clean up any existing LLVM installations in favor of vcpkg.
-          brew uninstall llvm || :
+          # Need to uninstall all versioned LLVM packages (llvm@18, llvm@17, etc.)
+          for llvm_pkg in $(brew list | grep -E '^llvm(@[0-9]+)?$'); do
+            brew uninstall "${llvm_pkg}" || :
+          done
 
           # We want to link aws-sdk-cpp statically but Homebrew's
           # aws-sdk-cpp provides only shared library. If we have
           # Homebrew's aws-sdk-cpp, our build mix Homebrew's
           # aws-sdk-cpp and bundled aws-sdk-cpp. We uninstall Homebrew's
           # aws-sdk-cpp to ensure using only bundled aws-sdk-cpp.
-          brew uninstall aws-sdk-cpp
+          brew uninstall aws-sdk-cpp || :
           # We want to use bundled RE2 for static linking. If
           # Homebrew's RE2 is installed, its header file may be used.
           # We uninstall Homebrew's RE2 to ensure using bundled RE2.
           brew uninstall grpc || : # gRPC depends on RE2
           brew uninstall grpc@1.54 || : # gRPC 1.54 may be installed too
-          brew uninstall re2
+          brew uninstall re2 || :
           # We want to use bundled Protobuf for static linking. If
           # Homebrew's Protobuf is installed, its library file may be
           # used on test  We uninstall Homebrew's Protobuf to ensure using
           # bundled Protobuf.
-          brew uninstall protobuf
+          brew uninstall protobuf || :
 
           echo ""
           echo "=== Free disk space before LLVM build ==="
@@ -298,7 +302,8 @@ jobs:
           # Use vcpkg to install LLVM.
           vcpkg install \
             --clean-after-build \
-            --x-install-root=${VCPKG_ROOT}/installed \
+            --vcpkg-root=${VCPKG_ROOT_LOCAL} \
+            --x-install-root=${VCPKG_ROOT_LOCAL}/installed \
             --x-manifest-root=arrow/ci/vcpkg \
             --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
             --x-feature=gandiva-llvm
