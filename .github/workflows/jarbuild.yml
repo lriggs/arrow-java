@@ -218,7 +218,7 @@ jobs:
         run: |
           cd arrow/vcpkg
           ./bootstrap-vcpkg.sh
-          echo "VCPKG_ROOT=${PWD}/arrow/vcpkg" >> ${GITHUB_ENV}
+          echo "VCPKG_ROOT_LOCAL=${PWD}/arrow/vcpkg" >> ${GITHUB_ENV}
           echo "${PWD}/arrow/vcpkg" >> ${GITHUB_PATH}
       - name: Clean up disk space
         run: |
@@ -298,7 +298,8 @@ jobs:
           # Use vcpkg to install LLVM.
           vcpkg install \
             --clean-after-build \
-            --x-install-root=${VCPKG_ROOT}/installed \
+            --vcpkg-root=${VCPKG_ROOT_LOCAL} \
+            --x-install-root=${VCPKG_ROOT_LOCAL}/installed \
             --x-manifest-root=arrow/ci/vcpkg \
             --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
             --x-feature=gandiva-llvm
