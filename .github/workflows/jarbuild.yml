@@ -218,8 +218,8 @@ jobs:
         run: |
           cd arrow/vcpkg
           ./bootstrap-vcpkg.sh
-          echo "VCPKG_ROOT_LOCAL=${PWD}/arrow/vcpkg" >> ${GITHUB_ENV}
-          echo "${PWD}/arrow/vcpkg" >> ${GITHUB_PATH}
+          echo "VCPKG_ROOT_LOCAL=${PWD}" >> ${GITHUB_ENV}
+          echo "${PWD}" >> ${GITHUB_PATH}
       - name: Clean up disk space
         run: |
           echo "=== Free disk space before cleanup ==="
