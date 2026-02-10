@@ -214,6 +214,7 @@ jobs:
         with:
           repository: Microsoft/vcpkg
           path: arrow/vcpkg
+          fetch-depth: 0
       - name: Install vcpkg
         run: |
           cd arrow/vcpkg
