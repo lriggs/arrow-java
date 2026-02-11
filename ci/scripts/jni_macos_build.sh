@@ -104,8 +104,10 @@ if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
     # Point it to the Xcode toolchain's C++ headers
     xcode_path="$(xcode-select -p)"
     cxx_include_path="${xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
+    sdk_path="$(xcrun --show-sdk-path)"
     if [ -d "${cxx_include_path}" ]; then
-      gandiva_cxx_flags="-DARROW_GANDIVA_PC_CXX_FLAGS=-isystem ${cxx_include_path}"
+      # Need to pass both the C++ headers and SDK path for system headers
+      gandiva_cxx_flags="-DARROW_GANDIVA_PC_CXX_FLAGS=-isystem;${cxx_include_path};-isysroot;${sdk_path}"
     fi
   fi
 fi
