@@ -78,19 +78,32 @@ export ARROW_TEST_DATA="${arrow_dir}/testing/data"
 export PARQUET_TEST_DATA="${arrow_dir}/cpp/submodules/parquet-testing/data"
 export AWS_EC2_METADATA_DISABLED=TRUE
 
-# Set up vcpkg toolchain file if VCPKG_ROOT_LOCAL is set
-vcpkg_toolchain_arg=""
+# Determine vcpkg triplet based on architecture
+vcpkg_arch="$(arch)"
+case "${vcpkg_arch}" in
+arm64)
+  vcpkg_triplet="arm64-osx"
+  ;;
+i386|x86_64)
+  vcpkg_triplet="x64-osx"
+  ;;
+*)
+  vcpkg_triplet="arm64-osx"
+  ;;
+esac
+
+# Set LLVM_DIR to point to vcpkg-installed LLVM if VCPKG_ROOT_LOCAL is set
+llvm_dir_arg=""
 if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
-  vcpkg_toolchain_file="${VCPKG_ROOT_LOCAL}/scripts/buildsystems/vcpkg.cmake"
-  if [ -f "${vcpkg_toolchain_file}" ]; then
-    vcpkg_toolchain_arg="-DCMAKE_TOOLCHAIN_FILE=${vcpkg_toolchain_file}"
+  llvm_cmake_dir="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}/share/llvm"
+  if [ -d "${llvm_cmake_dir}" ]; then
+    llvm_dir_arg="-DLLVM_DIR=${llvm_cmake_dir}"
   fi
 fi
 
 cmake \
   -S "${arrow_dir}/cpp" \
   -B "${build_dir}/cpp" \
-  ${vcpkg_toolchain_arg} \
   -DARROW_ACERO="${ARROW_ACERO}" \
   -DARROW_BUILD_SHARED=OFF \
   -DARROW_BUILD_TESTS="${ARROW_BUILD_TESTS}" \
@@ -110,6 +123,7 @@ cmake \
   -DCMAKE_INSTALL_PREFIX="${install_dir}" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
   -DGTest_SOURCE=BUNDLED \
+  ${llvm_dir_arg} \
   -DPARQUET_BUILD_EXAMPLES=OFF \
   -DPARQUET_BUILD_EXECUTABLES=OFF \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
