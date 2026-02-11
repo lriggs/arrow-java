@@ -94,10 +94,19 @@ esac
 
 # Set LLVM_DIR to point to vcpkg-installed LLVM if VCPKG_ROOT_LOCAL is set
 llvm_dir_arg=""
+gandiva_cxx_flags=""
 if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
   llvm_cmake_dir="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}/share/llvm"
   if [ -d "${llvm_cmake_dir}" ]; then
     llvm_dir_arg="-DLLVM_DIR=${llvm_cmake_dir}"
+
+    # vcpkg's clang needs to know where to find system C++ headers
+    # Point it to the Xcode toolchain's C++ headers
+    xcode_path="$(xcode-select -p)"
+    cxx_include_path="${xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
+    if [ -d "${cxx_include_path}" ]; then
+      gandiva_cxx_flags="-DARROW_GANDIVA_PC_CXX_FLAGS=-isystem ${cxx_include_path}"
+    fi
   fi
 fi
 
@@ -124,6 +133,7 @@ cmake \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
   -DGTest_SOURCE=BUNDLED \
   ${llvm_dir_arg} \
+  ${gandiva_cxx_flags} \
   -DPARQUET_BUILD_EXAMPLES=OFF \
   -DPARQUET_BUILD_EXECUTABLES=OFF \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
