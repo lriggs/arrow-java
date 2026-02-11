@@ -44,14 +44,16 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
  * optimizations using AtomicFieldUpdater instead of AtomicLong/AtomicInteger objects should reduce
  * memory overhead significantly.
  *
- * <p>Expected savings per instance: - ArrowBuf: 8 bytes (id field removed) - BufferLedger: 28
- * bytes (20 from AtomicInteger + 8 from ledgerId) - Accountant: 48 bytes (3 × 16 bytes from
- * AtomicLong objects)
+ * <p>Expected savings per instance: - ArrowBuf: 8 bytes (id field removed) - BufferLedger: 28 bytes
+ * (20 from AtomicInteger + 8 from ledgerId) - Accountant: 48 bytes (3 × 16 bytes from AtomicLong
+ * objects)
  *
  * <p>For 1M ArrowBuf instances, this should save approximately 8 MB of heap memory.
  */
 @State(Scope.Benchmark)
-@Fork(value = 1, jvmArgs = {"-Xms2g", "-Xmx2g"})
+@Fork(
+    value = 1,
+    jvmArgs = {"-Xms2g", "-Xmx2g"})
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 public class MemoryFootprintBenchmarks {
@@ -84,8 +86,8 @@ public class MemoryFootprintBenchmarks {
    * Benchmark that measures heap memory usage when creating many ArrowBuf instances.
    *
    * <p>This benchmark creates 100,000 ArrowBuf instances and measures the heap memory used. With
-   * the AtomicFieldUpdater optimizations, we expect to save approximately 800 KB of heap memory
-   * (8 bytes × 100,000 instances) just from removing the id field in ArrowBuf.
+   * the AtomicFieldUpdater optimizations, we expect to save approximately 800 KB of heap memory (8
+   * bytes × 100,000 instances) just from removing the id field in ArrowBuf.
    */
   @Benchmark
   @BenchmarkMode(Mode.SingleShotTime)
@@ -118,7 +120,8 @@ public class MemoryFootprintBenchmarks {
     System.out.printf(
         "Created %d ArrowBuf instances. Heap memory used: %d bytes (%.2f MB)%n",
         NUM_BUFFERS, memoryUsed, memoryUsed / (1024.0 * 1024.0));
-    System.out.printf("Average memory per ArrowBuf: %.2f bytes%n", (double) memoryUsed / NUM_BUFFERS);
+    System.out.printf(
+        "Average memory per ArrowBuf: %.2f bytes%n", (double) memoryUsed / NUM_BUFFERS);
 
     return memoryUsed;
   }
@@ -154,4 +157,3 @@ public class MemoryFootprintBenchmarks {
     new Runner(opt).run();
   }
 }
-

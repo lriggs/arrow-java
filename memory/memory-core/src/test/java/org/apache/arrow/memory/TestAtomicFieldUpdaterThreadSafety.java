@@ -149,4 +149,3 @@ public class TestAtomicFieldUpdaterThreadSafety {
     assertEquals(0, allocator.getAllocatedMemory(), "Memory leak detected");
   }
 }
-

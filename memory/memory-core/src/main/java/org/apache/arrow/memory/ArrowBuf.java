@@ -65,9 +65,7 @@ public final class ArrowBuf implements AutoCloseable {
   private final @Nullable HistoricalLog historicalLog =
       BaseAllocator.DEBUG
           ? new HistoricalLog(
-              BaseAllocator.DEBUG_LOG_LENGTH,
-              "ArrowBuf[%d]",
-              System.identityHashCode(this))
+              BaseAllocator.DEBUG_LOG_LENGTH, "ArrowBuf[%d]", System.identityHashCode(this))
           : null;
   private volatile long capacity;
 
