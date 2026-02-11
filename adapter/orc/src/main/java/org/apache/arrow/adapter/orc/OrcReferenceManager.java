@@ -16,7 +16,7 @@
  */
 package org.apache.arrow.adapter.orc;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.OwnershipTransferResult;
@@ -28,7 +28,10 @@ import org.apache.arrow.util.Preconditions;
  * memory will be released when reference count reach zero.
  */
 public class OrcReferenceManager implements ReferenceManager {
-  private final AtomicInteger bufRefCnt = new AtomicInteger(0);
+  // AtomicIntegerFieldUpdater for bufRefCnt to reduce memory overhead
+  private static final AtomicIntegerFieldUpdater<OrcReferenceManager> BUF_REF_CNT_UPDATER =
+      AtomicIntegerFieldUpdater.newUpdater(OrcReferenceManager.class, "bufRefCnt");
+  private volatile int bufRefCnt = 0;
 
   private OrcMemoryJniWrapper memory;
 
@@ -38,7 +41,7 @@ public class OrcReferenceManager implements ReferenceManager {
 
   @Override
   public int getRefCount() {
-    return bufRefCnt.get();
+    return bufRefCnt;
   }
 
   @Override
@@ -53,7 +56,7 @@ public class OrcReferenceManager implements ReferenceManager {
     // decrement the ref count
     final int refCnt;
     synchronized (this) {
-      refCnt = bufRefCnt.addAndGet(-decrement);
+      refCnt = BUF_REF_CNT_UPDATER.addAndGet(this, -decrement);
       if (refCnt == 0) {
         // refcount of this reference manager has dropped to 0
         // release the underlying memory
@@ -73,7 +76,7 @@ public class OrcReferenceManager implements ReferenceManager {
   @Override
   public void retain(int increment) {
     Preconditions.checkArgument(increment > 0, "retain(%s) argument is not positive", increment);
-    bufRefCnt.addAndGet(increment);
+    BUF_REF_CNT_UPDATER.addAndGet(this, increment);
   }
 
   @Override

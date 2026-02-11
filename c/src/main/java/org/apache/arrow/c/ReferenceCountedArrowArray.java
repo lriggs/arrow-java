@@ -16,7 +16,7 @@
  */
 package org.apache.arrow.c;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.ForeignAllocation;
@@ -31,22 +31,25 @@ import org.apache.arrow.memory.ForeignAllocation;
  * ForeignAllocation} instances.
  */
 final class ReferenceCountedArrowArray {
+  // AtomicIntegerFieldUpdater for refCnt to reduce memory overhead
+  private static final AtomicIntegerFieldUpdater<ReferenceCountedArrowArray> REF_CNT_UPDATER =
+      AtomicIntegerFieldUpdater.newUpdater(ReferenceCountedArrowArray.class, "refCnt");
+
   private final ArrowArray array;
-  private final AtomicInteger refCnt;
+  private volatile int refCnt = 1;
 
   ReferenceCountedArrowArray(ArrowArray array) {
     this.array = array;
-    this.refCnt = new AtomicInteger(1);
   }
 
   void retain() {
-    if (refCnt.addAndGet(1) - 1 <= 0) {
+    if (REF_CNT_UPDATER.addAndGet(this, 1) - 1 <= 0) {
       throw new IllegalStateException("Tried to retain a released ArrowArray");
     }
   }
 
   void release() {
-    int refcnt = refCnt.addAndGet(-1);
+    int refcnt = REF_CNT_UPDATER.addAndGet(this, -1);
     if (refcnt == 0) {
       array.release();
       array.close();
