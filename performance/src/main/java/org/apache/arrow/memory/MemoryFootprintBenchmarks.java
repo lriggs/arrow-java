@@ -58,13 +58,27 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 public class MemoryFootprintBenchmarks {
 
+  /** Number of ArrowBuf instances to create for memory footprint measurement. */
   private static final int NUM_BUFFERS = 100_000;
+
+  /** Size in bytes of each buffer allocation. */
   private static final int BUFFER_SIZE = 1024;
 
+  /** Root allocator used for all buffer allocations in the benchmark. */
   private RootAllocator allocator;
+
+  /** Array to hold references to allocated buffers, preventing garbage collection. */
   private ArrowBuf[] buffers;
+
+  /** JMX bean for querying heap memory usage statistics. */
   private MemoryMXBean memoryBean;
 
+  /**
+   * Sets up the benchmark state before each trial.
+   *
+   * <p>Initializes the memory monitoring bean, creates a root allocator with sufficient capacity,
+   * and allocates the buffer reference array.
+   */
   @Setup(Level.Trial)
   public void setup() {
     memoryBean = ManagementFactory.getMemoryMXBean();
@@ -72,6 +86,12 @@ public class MemoryFootprintBenchmarks {
     buffers = new ArrowBuf[NUM_BUFFERS];
   }
 
+  /**
+   * Cleans up resources after each trial.
+   *
+   * <p>Closes all allocated buffers and the root allocator to prevent memory leaks and ensure
+   * accurate measurements in subsequent trials.
+   */
   @TearDown(Level.Trial)
   public void tearDown() {
     for (int i = 0; i < NUM_BUFFERS; i++) {
@@ -85,9 +105,14 @@ public class MemoryFootprintBenchmarks {
   /**
    * Benchmark that measures heap memory usage when creating many ArrowBuf instances.
    *
-   * <p>This benchmark creates 100,000 ArrowBuf instances and measures the heap memory used. With
-   * the AtomicFieldUpdater optimizations, we expect to save approximately 800 KB of heap memory (8
-   * bytes × 100,000 instances) just from removing the id field in ArrowBuf.
+   * <p>This benchmark creates {@value #NUM_BUFFERS} ArrowBuf instances and measures the heap memory
+   * used. With the AtomicFieldUpdater optimizations, we expect to save approximately 800 KB of heap
+   * memory (8 bytes × 100,000 instances) just from removing the id field in ArrowBuf.
+   *
+   * <p>The benchmark performs garbage collection before and after allocation to ensure accurate
+   * measurement of heap memory delta. Results are printed to stdout for analysis.
+   *
+   * @return the total heap memory used by the allocated buffers in bytes
    */
   @Benchmark
   @BenchmarkMode(Mode.SingleShotTime)
@@ -130,7 +155,11 @@ public class MemoryFootprintBenchmarks {
    * Benchmark that measures allocation and deallocation performance.
    *
    * <p>This complements the memory footprint benchmark by measuring the time it takes to allocate
-   * and deallocate buffers.
+   * and deallocate 1,000 buffers in a tight loop. This helps identify any performance regressions
+   * introduced by memory optimizations.
+   *
+   * <p>Uses a local buffer array to avoid interference with the shared {@link #buffers} array used
+   * by other benchmarks.
    */
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
@@ -147,6 +176,19 @@ public class MemoryFootprintBenchmarks {
     }
   }
 
+  /**
+   * Main entry point for running the benchmarks standalone.
+   *
+   * <p>This allows running the benchmarks directly from the command line or IDE without using the
+   * Maven JMH plugin. Example usage:
+   *
+   * <pre>{@code
+   * java -cp target/benchmarks.jar org.apache.arrow.memory.MemoryFootprintBenchmarks
+   * }</pre>
+   *
+   * @param args command line arguments (not used)
+   * @throws RunnerException if the benchmark runner encounters an error
+   */
   public static void main(String[] args) throws RunnerException {
     Options opt =
         new OptionsBuilder()
