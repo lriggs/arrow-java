@@ -96,8 +96,10 @@ esac
 llvm_dir_arg=""
 gandiva_cxx_flags=""
 osx_sysroot_arg=""
+re2_source_arg="-Dre2_SOURCE=BUNDLED"
 if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
-  llvm_cmake_dir="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}/share/llvm"
+  vcpkg_installed="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}"
+  llvm_cmake_dir="${vcpkg_installed}/share/llvm"
   if [ -d "${llvm_cmake_dir}" ]; then
     llvm_dir_arg="-DLLVM_DIR=${llvm_cmake_dir}"
 
@@ -113,6 +115,14 @@ if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
     cxx_include_path="${xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
     if [ -d "${cxx_include_path}" ]; then
       gandiva_cxx_flags="-DARROW_GANDIVA_PC_CXX_FLAGS=-stdlib=libc++;-isystem;${cxx_include_path}"
+    fi
+
+    # Use vcpkg's RE2 since it's installed as a dependency of LLVM
+    # This ensures ABI compatibility - vcpkg's RE2 uses std::string_view API
+    # which matches what vcpkg's LLVM and Abseil expect
+    re2_cmake_dir="${vcpkg_installed}/share/re2"
+    if [ -d "${re2_cmake_dir}" ]; then
+      re2_source_arg="-Dre2_ROOT=${vcpkg_installed}"
     fi
   fi
 fi
@@ -145,7 +155,7 @@ cmake \
   -DPARQUET_BUILD_EXAMPLES=OFF \
   -DPARQUET_BUILD_EXECUTABLES=OFF \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
-  -Dre2_SOURCE=BUNDLED \
+  ${re2_source_arg} \
   -GNinja
 cmake --build "${build_dir}/cpp" --target install
 github_actions_group_end
@@ -167,7 +177,7 @@ if [ "${ARROW_RUN_TESTS:-}" == "ON" ]; then
   github_actions_group_end
 fi
 
-# Pass paths to bundled dependencies so the JNI build can find them
+# Pass paths to dependencies so the JNI build can find them
 # Build up the JNI CMake args based on what's available
 jni_cmake_args="${llvm_dir_arg}"
 
@@ -176,9 +186,14 @@ if [ -d "${build_dir}/cpp/protobuf_ep-install" ]; then
   jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install"
 fi
 
-# RE2 is bundled in libarrow_bundled_dependencies.a but the JNI build needs
-# to find the RE2 CMake config to satisfy Gandiva's transitive dependency
-if [ -d "${build_dir}/cpp/re2_ep-install" ]; then
+# RE2 path for the JNI build - prefer vcpkg's RE2 if we used it for the C++ build,
+# otherwise fall back to bundled RE2 if available
+if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
+  vcpkg_re2_dir="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}"
+  if [ -d "${vcpkg_re2_dir}/share/re2" ]; then
+    jni_cmake_args="${jni_cmake_args} -Dre2_ROOT=${vcpkg_re2_dir}"
+  fi
+elif [ -d "${build_dir}/cpp/re2_ep-install" ]; then
   jni_cmake_args="${jni_cmake_args} -Dre2_ROOT=${build_dir}/cpp/re2_ep-install"
 fi
 
