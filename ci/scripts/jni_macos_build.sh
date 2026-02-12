@@ -167,7 +167,7 @@ if [ "${ARROW_RUN_TESTS:-}" == "ON" ]; then
   github_actions_group_end
 fi
 
-export JAVA_JNI_CMAKE_ARGS="-DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install"
+export JAVA_JNI_CMAKE_ARGS="-DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install ${llvm_dir_arg}"
 "${source_dir}/ci/scripts/jni_build.sh" \
   "${source_dir}" \
   "${install_dir}" \
