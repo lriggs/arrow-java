@@ -167,7 +167,10 @@ if [ "${ARROW_RUN_TESTS:-}" == "ON" ]; then
   github_actions_group_end
 fi
 
-export JAVA_JNI_CMAKE_ARGS="-DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install ${llvm_dir_arg}"
+# Pass paths to bundled dependencies so the JNI build can find them
+# RE2 is needed by Gandiva but bundled in libarrow_bundled_dependencies.a
+# The JNI build needs to find RE2 to satisfy the transitive dependency
+export JAVA_JNI_CMAKE_ARGS="-DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install -Dre2_ROOT=${build_dir}/cpp/re2_ep-install ${llvm_dir_arg}"
 "${source_dir}/ci/scripts/jni_build.sh" \
   "${source_dir}" \
   "${install_dir}" \
