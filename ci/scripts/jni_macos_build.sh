@@ -168,9 +168,21 @@ if [ "${ARROW_RUN_TESTS:-}" == "ON" ]; then
 fi
 
 # Pass paths to bundled dependencies so the JNI build can find them
-# RE2 is needed by Gandiva but bundled in libarrow_bundled_dependencies.a
-# The JNI build needs to find RE2 to satisfy the transitive dependency
-export JAVA_JNI_CMAKE_ARGS="-DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install -Dre2_ROOT=${build_dir}/cpp/re2_ep-install ${llvm_dir_arg}"
+# Build up the JNI CMake args based on what's available
+jni_cmake_args="${llvm_dir_arg}"
+
+# Add Protobuf path if bundled, otherwise CMake will find system Protobuf
+if [ -d "${build_dir}/cpp/protobuf_ep-install" ]; then
+  jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install"
+fi
+
+# RE2 is bundled in libarrow_bundled_dependencies.a but the JNI build needs
+# to find the RE2 CMake config to satisfy Gandiva's transitive dependency
+if [ -d "${build_dir}/cpp/re2_ep-install" ]; then
+  jni_cmake_args="${jni_cmake_args} -Dre2_ROOT=${build_dir}/cpp/re2_ep-install"
+fi
+
+export JAVA_JNI_CMAKE_ARGS="${jni_cmake_args}"
 "${source_dir}/ci/scripts/jni_build.sh" \
   "${source_dir}" \
   "${install_dir}" \
