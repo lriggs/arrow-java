@@ -554,17 +554,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.commit_ids.outputs.release_tag }}" \
-            -m "Release ${{ steps.commit_ids.outputs.release_name }} RC${{ steps.commit_ids.outputs.rc }}" \
-            -m "Triggered by: ${{ github.actor }}" \
-            -m "Action URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          git push origin "${{ steps.commit_ids.outputs.release_tag }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create and push tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "${{ steps.commit_ids.outputs.release_tag }}" -m "Release ${{ steps.commit_ids.outputs.release_name }} RC${{ steps.commit_ids.outputs.rc }}" -m "Action URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           git push origin "${{ steps.commit_ids.outputs.release_tag }}"
         env:
