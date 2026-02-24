@@ -563,7 +563,7 @@ jobs:
           # GH-499: How to create release notes?
           echo "Creating release: ${{ steps.commit_ids.outputs.release_tag }}"
           gh release create "${{ steps.commit_ids.outputs.release_tag }}" \
-            -n "Release ${{ steps.commit_ids.outputs.release_name }} RC${{ steps.commit_ids.outputs.rc }}<br>Triggered by: ${{ github.actor }}<br>Action URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID<br>arrow_branch: ${{env.ARROW_BRANCH}}<br>arrow_repo: ${{env.ARROW_REPO}}<br>release_tag_name: ${{env.RELEASE_TAG_NAME}}<br>arrow-java branch: ${{github.ref_name}}" \
+            -n "Release ${{ steps.commit_ids.outputs.release_name }} RC${{ steps.commit_ids.outputs.rc }}<br>Triggered by: ${{ github.actor }}<br>Action URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID<br>arrow_branch: ${{github.event.inputs.ARROW_BRANCH}}<br>arrow_repo: ${{github.event.inputs.ARROW_REPO}}<br>release_tag_name: ${{github.event.inputs.RELEASE_TAG_NAME}}<br>arrow-java branch: ${{github.ref_name}}" \
             --prerelease \
             --repo ${GITHUB_REPOSITORY} \
             --title "Apache Arrow Java ${{ steps.commit_ids.outputs.version }} RC${{ steps.commit_ids.outputs.rc }} (arrow-java: ${{ steps.commit_ids.outputs.arrow_java_commit }}, arrow: ${{ steps.commit_ids.outputs.arrow_commit }})"
