@@ -78,6 +78,55 @@ export ARROW_TEST_DATA="${arrow_dir}/testing/data"
 export PARQUET_TEST_DATA="${arrow_dir}/cpp/submodules/parquet-testing/data"
 export AWS_EC2_METADATA_DISABLED=TRUE
 
+# Determine vcpkg triplet based on architecture
+vcpkg_arch="$(arch)"
+case "${vcpkg_arch}" in
+arm64)
+  vcpkg_triplet="arm64-osx"
+  ;;
+i386|x86_64)
+  vcpkg_triplet="x64-osx"
+  ;;
+*)
+  vcpkg_triplet="arm64-osx"
+  ;;
+esac
+
+# Set LLVM_DIR to point to vcpkg-installed LLVM if VCPKG_ROOT_LOCAL is set
+llvm_dir_arg=""
+gandiva_cxx_flags=""
+osx_sysroot_arg=""
+re2_source_arg="-Dre2_SOURCE=BUNDLED"
+if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
+  vcpkg_installed="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}"
+  llvm_cmake_dir="${vcpkg_installed}/share/llvm"
+  if [ -d "${llvm_cmake_dir}" ]; then
+    llvm_dir_arg="-DLLVM_DIR=${llvm_cmake_dir}"
+
+    # vcpkg's clang needs to know where to find system headers
+    # Arrow's GandivaAddBitcode.cmake uses CMAKE_OSX_SYSROOT to set SDKROOT env var
+    sdk_path="$(xcrun --show-sdk-path)"
+    if [ -d "${sdk_path}" ]; then
+      osx_sysroot_arg="-DCMAKE_OSX_SYSROOT=${sdk_path}"
+    fi
+
+    # Also pass the C++ standard library include path via ARROW_GANDIVA_PC_CXX_FLAGS
+    xcode_path="$(xcode-select -p)"
+    cxx_include_path="${xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"
+    if [ -d "${cxx_include_path}" ]; then
+      gandiva_cxx_flags="-DARROW_GANDIVA_PC_CXX_FLAGS=-stdlib=libc++;-isystem;${cxx_include_path}"
+    fi
+
+    # Use vcpkg's RE2 since it's installed as a dependency of LLVM
+    # This ensures ABI compatibility - vcpkg's RE2 uses std::string_view API
+    # which matches what vcpkg's LLVM and Abseil expect
+    re2_cmake_dir="${vcpkg_installed}/share/re2"
+    if [ -d "${re2_cmake_dir}" ]; then
+      re2_source_arg="-Dre2_ROOT=${vcpkg_installed}"
+    fi
+  fi
+fi
+
 cmake \
   -S "${arrow_dir}/cpp" \
   -B "${build_dir}/cpp" \
@@ -100,10 +149,13 @@ cmake \
   -DCMAKE_INSTALL_PREFIX="${install_dir}" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
   -DGTest_SOURCE=BUNDLED \
+  ${llvm_dir_arg} \
+  ${osx_sysroot_arg} \
+  ${gandiva_cxx_flags} \
   -DPARQUET_BUILD_EXAMPLES=OFF \
   -DPARQUET_BUILD_EXECUTABLES=OFF \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
-  -Dre2_SOURCE=BUNDLED \
+  ${re2_source_arg} \
   -GNinja
 cmake --build "${build_dir}/cpp" --target install
 github_actions_group_end
@@ -125,7 +177,27 @@ if [ "${ARROW_RUN_TESTS:-}" == "ON" ]; then
   github_actions_group_end
 fi
 
-export JAVA_JNI_CMAKE_ARGS="-DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install"
+# Pass paths to dependencies so the JNI build can find them
+# Build up the JNI CMake args based on what's available
+jni_cmake_args="${llvm_dir_arg}"
+
+# Add Protobuf path if bundled, otherwise CMake will find system Protobuf
+if [ -d "${build_dir}/cpp/protobuf_ep-install" ]; then
+  jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install"
+fi
+
+# RE2 path for the JNI build - prefer vcpkg's RE2 if we used it for the C++ build,
+# otherwise fall back to bundled RE2 if available
+if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
+  vcpkg_re2_dir="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}"
+  if [ -d "${vcpkg_re2_dir}/share/re2" ]; then
+    jni_cmake_args="${jni_cmake_args} -Dre2_ROOT=${vcpkg_re2_dir}"
+  fi
+elif [ -d "${build_dir}/cpp/re2_ep-install" ]; then
+  jni_cmake_args="${jni_cmake_args} -Dre2_ROOT=${build_dir}/cpp/re2_ep-install"
+fi
+
+export JAVA_JNI_CMAKE_ARGS="${jni_cmake_args}"
 "${source_dir}/ci/scripts/jni_build.sh" \
   "${source_dir}" \
   "${install_dir}" \
