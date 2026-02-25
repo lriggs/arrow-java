@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ReadOnlyBufferException;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.arrow.memory.BaseAllocator.Verbosity;
 import org.apache.arrow.memory.util.CommonUtil;
 import org.apache.arrow.memory.util.HistoricalLog;
@@ -68,6 +69,7 @@ public final class ArrowBuf implements AutoCloseable {
               BaseAllocator.DEBUG_LOG_LENGTH, "ArrowBuf[%d]", System.identityHashCode(this))
           : null;
   private volatile long capacity;
+  public static final AtomicLong ALLOCATION_COUNT = new AtomicLong(0);
 
   /**
    * Constructs a new ArrowBuf.
@@ -81,6 +83,7 @@ public final class ArrowBuf implements AutoCloseable {
       final @Nullable BufferManager bufferManager,
       final long capacity,
       final long memoryAddress) {
+    ALLOCATION_COUNT.incrementAndGet(); 
     this.referenceManager = referenceManager;
     this.bufferManager = bufferManager;
     this.addr = memoryAddress;

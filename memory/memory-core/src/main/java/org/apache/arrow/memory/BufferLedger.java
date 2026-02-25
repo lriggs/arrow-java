@@ -18,6 +18,7 @@ package org.apache.arrow.memory;
 
 import java.util.IdentityHashMap;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.arrow.memory.util.CommonUtil;
 import org.apache.arrow.memory.util.HistoricalLog;
 import org.apache.arrow.util.Preconditions;
@@ -46,10 +47,12 @@ public class BufferLedger implements ValueWithKeyIncluded<BufferAllocator>, Refe
           ? new HistoricalLog(BaseAllocator.DEBUG_LOG_LENGTH, "BufferLedger[%d]", 1)
           : null;
   private volatile long lDestructionTime = 0;
+  public static final AtomicLong ALLOCATION_COUNT = new AtomicLong(0);
 
   BufferLedger(final BufferAllocator allocator, final AllocationManager allocationManager) {
     this.allocator = allocator;
     this.allocationManager = allocationManager;
+    ALLOCATION_COUNT.incrementAndGet();
   }
 
   boolean isOwningLedger() {
