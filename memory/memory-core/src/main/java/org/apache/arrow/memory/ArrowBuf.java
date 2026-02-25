@@ -83,7 +83,7 @@ public final class ArrowBuf implements AutoCloseable {
       final @Nullable BufferManager bufferManager,
       final long capacity,
       final long memoryAddress) {
-    ALLOCATION_COUNT.incrementAndGet(); 
+    ALLOCATION_COUNT.incrementAndGet();
     this.referenceManager = referenceManager;
     this.bufferManager = bufferManager;
     this.addr = memoryAddress;
