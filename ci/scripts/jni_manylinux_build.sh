@@ -26,19 +26,19 @@ set -euo pipefail
 . "$(dirname "${0}")/util_log.sh"
 
 github_actions_group_begin "Update llvm"
-    vcpkg install \
-        --debug \
-        --clean-after-build \
-        --x-install-root=${VCPKG_ROOT}/installed \
-        --x-manifest-root=/arrow/ci/vcpkg \
-        --overlay-ports=/arrow/ci/vcpkg/overlay/llvm/ \
-        --x-feature=dev \
-        --x-feature=flight \
-        --x-feature=gcs \
-        --x-feature=json \
-        --x-feature=parquet \
-        --x-feature=gandiva \
-        --x-feature=s3
+vcpkg install \
+  --debug \
+  --clean-after-build \
+  --x-install-root="${VCPKG_ROOT}/installed" \
+  --x-manifest-root=/arrow/ci/vcpkg \
+  --overlay-ports=/arrow/ci/vcpkg/overlay/llvm/ \
+  --x-feature=dev \
+  --x-feature=flight \
+  --x-feature=gcs \
+  --x-feature=json \
+  --x-feature=parquet \
+  --x-feature=gandiva \
+  --x-feature=s3
 github_actions_group_end
 
 github_actions_group_begin "Prepare arguments"

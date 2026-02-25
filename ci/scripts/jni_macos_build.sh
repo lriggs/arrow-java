@@ -75,7 +75,7 @@ case "${vcpkg_arch}" in
 arm64)
   vcpkg_triplet="arm64-osx"
   ;;
-i386|x86_64)
+i386 | x86_64)
   vcpkg_triplet="x64-osx"
   ;;
 *)
@@ -140,13 +140,13 @@ cmake \
   -DCMAKE_INSTALL_PREFIX="${install_dir}" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
   -DGTest_SOURCE=BUNDLED \
-  ${llvm_dir_arg} \
-  ${osx_sysroot_arg} \
-  ${gandiva_cxx_flags} \
+  "${llvm_dir_arg}" \
+  "${osx_sysroot_arg}" \
+  "${gandiva_cxx_flags}" \
   -DPARQUET_BUILD_EXAMPLES=OFF \
   -DPARQUET_BUILD_EXECUTABLES=OFF \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
-  ${re2_source_arg} \
+  "${re2_source_arg}" \
   -GNinja
 cmake --build "${build_dir}/cpp" --target install
 github_actions_group_end
