@@ -56,15 +56,53 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Package</div>
 <div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.variant.extension">org.apache.arrow.variant.extension</a></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><a href="#org.apache.arrow.variant.impl">org.apache.arrow.variant.impl</a></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><a href="#org.apache.arrow.vector.complex">org.apache.arrow.vector.complex</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.complex.impl">org.apache.arrow.vector.complex.impl</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.types">org.apache.arrow.vector.types</a></div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.extension">org.apache.arrow.vector.extension</a></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.types">org.apache.arrow.vector.types</a></div>
+<div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.types.pojo">org.apache.arrow.vector.types.pojo</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
 <section class="class-uses">
 <ul class="block-list">
+<li>
+<section class="detail" id="org.apache.arrow.variant.extension">
+<h2>Uses of <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a> in <a href="../../../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/package-summary.html">org.apache.arrow.variant.extension</a></h2>
+<div class="caption"><span>Methods in <a href="../../../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/package-summary.html">org.apache.arrow.variant.extension</a> that return <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Method</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code><a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">VariantType.</span><code><a href="../../../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/VariantType.html#getNewFieldWriter(org.apache.arrow.vector.ValueVector)" class="member-name-link">getNewFieldWriter</a><wbr>(<a href="../../../ValueVector.html" title="interface in org.apache.arrow.vector">ValueVector</a>&nbsp;vector)</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="org.apache.arrow.variant.impl">
+<h2>Uses of <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a> in <a href="../../../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/impl/package-summary.html">org.apache.arrow.variant.impl</a></h2>
+<div class="caption"><span>Classes in <a href="../../../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/impl/package-summary.html">org.apache.arrow.variant.impl</a> that implement <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Class</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="../../../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/impl/VariantWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.variant.impl">VariantWriterImpl</a></code></div>
+<div class="col-last even-row-color">
+<div class="block">Writer implementation for VARIANT extension type vectors.</div>
+</div>
+</div>
+</section>
+</li>
 <li>
 <section class="detail" id="org.apache.arrow.vector.complex">
 <h2>Uses of <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a> in <a href="../../package-summary.html">org.apache.arrow.vector.complex</a></h2>
@@ -90,17 +128,6 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="org.apache.arrow.vector.complex.impl">
 <h2>Uses of <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a> in <a href="../../impl/package-summary.html">org.apache.arrow.vector.complex.impl</a></h2>
-<div class="caption"><span>Classes in <a href="../../impl/package-summary.html">org.apache.arrow.vector.complex.impl</a> with type parameters of type <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
-<div class="summary-table three-column-summary">
-<div class="table-header col-first">Modifier and Type</div>
-<div class="table-header col-second">Interface</div>
-<div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><code>interface&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="../../impl/ExtensionTypeWriterFactory.html" class="type-name-link" title="interface in org.apache.arrow.vector.complex.impl">ExtensionTypeWriterFactory</a>&lt;T extends <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a>&gt;</code></div>
-<div class="col-last even-row-color">
-<div class="block">A factory interface for creating instances of <code>ExtensionTypeWriter</code>.</div>
-</div>
-</div>
 <div class="caption"><span>Classes in <a href="../../impl/package-summary.html">org.apache.arrow.vector.complex.impl</a> that implement <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
 <div class="summary-table three-column-summary">
 <div class="table-header col-first">Modifier and Type</div>
@@ -276,17 +303,22 @@ loadScripts(document, 'script');</script>
 <div class="col-second even-row-color"><code><a href="../../impl/UnionWriter.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">UnionWriter</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><code>class&nbsp;</code></div>
-<div class="col-second odd-row-color"><code><a href="../../impl/VarBinaryWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">VarBinaryWriterImpl</a></code></div>
-<div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-second odd-row-color"><code><a href="../../impl/UuidWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">UuidWriterImpl</a></code></div>
+<div class="col-last odd-row-color">
+<div class="block">Writer implementation for <a href="../../../UuidVector.html" title="class in org.apache.arrow.vector"><code>UuidVector</code></a>.</div>
+</div>
 <div class="col-first even-row-color"><code>class&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="../../impl/VarCharWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">VarCharWriterImpl</a></code></div>
+<div class="col-second even-row-color"><code><a href="../../impl/VarBinaryWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">VarBinaryWriterImpl</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><code>class&nbsp;</code></div>
-<div class="col-second odd-row-color"><code><a href="../../impl/ViewVarBinaryWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">ViewVarBinaryWriterImpl</a></code></div>
+<div class="col-second odd-row-color"><code><a href="../../impl/VarCharWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">VarCharWriterImpl</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><code>class&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="../../impl/ViewVarCharWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">ViewVarCharWriterImpl</a></code></div>
+<div class="col-second even-row-color"><code><a href="../../impl/ViewVarBinaryWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">ViewVarBinaryWriterImpl</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code>class&nbsp;</code></div>
+<div class="col-second odd-row-color"><code><a href="../../impl/ViewVarCharWriterImpl.html" class="type-name-link" title="class in org.apache.arrow.vector.complex.impl">ViewVarCharWriterImpl</a></code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 <div class="caption"><span>Fields in <a href="../../impl/package-summary.html">org.apache.arrow.vector.complex.impl</a> declared as <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
 <div class="summary-table three-column-summary">
@@ -326,8 +358,8 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color"><code>static void</code></div>
-<div class="col-second even-row-color"><span class="type-name-label">ComplexCopier.</span><code><a href="../../impl/ComplexCopier.html#copy(org.apache.arrow.vector.complex.reader.FieldReader,org.apache.arrow.vector.complex.writer.FieldWriter)" class="member-name-link">copy</a><wbr>(<a href="../../reader/FieldReader.html" title="interface in org.apache.arrow.vector.complex.reader">FieldReader</a>&nbsp;input,
- <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a>&nbsp;output)</code></div>
+<div class="col-second even-row-color"><span class="type-name-label">ComplexCopier.</span><code><a href="../../impl/ComplexCopier.html#copy(org.apache.arrow.vector.complex.reader.FieldReader,org.apache.arrow.vector.complex.writer.FieldWriter)" class="member-name-link">copy</a><wbr>(<a href="../../reader/FieldReader.html" title="interface in org.apache.arrow.vector.complex.reader">FieldReader</a>&nbsp;reader,
+ <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a>&nbsp;writer)</code></div>
 <div class="col-last even-row-color">
 <div class="block">Do a deep copy of the value in input into output</div>
 </div>
@@ -452,6 +484,23 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
+<section class="detail" id="org.apache.arrow.vector.extension">
+<h2>Uses of <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a> in <a href="../../../extension/package-summary.html">org.apache.arrow.vector.extension</a></h2>
+<div class="caption"><span>Methods in <a href="../../../extension/package-summary.html">org.apache.arrow.vector.extension</a> that return <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Method</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code><a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">OpaqueType.</span><code><a href="../../../extension/OpaqueType.html#getNewFieldWriter(org.apache.arrow.vector.ValueVector)" class="member-name-link">getNewFieldWriter</a><wbr>(<a href="../../../ValueVector.html" title="interface in org.apache.arrow.vector">ValueVector</a>&nbsp;vector)</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code><a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">UuidType.</span><code><a href="../../../extension/UuidType.html#getNewFieldWriter(org.apache.arrow.vector.ValueVector)" class="member-name-link">getNewFieldWriter</a><wbr>(<a href="../../../ValueVector.html" title="interface in org.apache.arrow.vector">ValueVector</a>&nbsp;vector)</code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
+</div>
+</section>
+</li>
+<li>
 <section class="detail" id="org.apache.arrow.vector.types">
 <h2>Uses of <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a> in <a href="../../../types/package-summary.html">org.apache.arrow.vector.types</a></h2>
 <div class="caption"><span>Methods in <a href="../../../types/package-summary.html">org.apache.arrow.vector.types</a> that return <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
@@ -465,12 +514,26 @@ loadScripts(document, 'script');</script>
 </div>
 </section>
 </li>
+<li>
+<section class="detail" id="org.apache.arrow.vector.types.pojo">
+<h2>Uses of <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a> in <a href="../../../types/pojo/package-summary.html">org.apache.arrow.vector.types.pojo</a></h2>
+<div class="caption"><span>Methods in <a href="../../../types/pojo/package-summary.html">org.apache.arrow.vector.types.pojo</a> that return <a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Method</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code><a href="../FieldWriter.html" title="interface in org.apache.arrow.vector.complex.writer">FieldWriter</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">ArrowType.ExtensionType.</span><code><a href="../../../types/pojo/ArrowType.ExtensionType.html#getNewFieldWriter(org.apache.arrow.vector.ValueVector)" class="member-name-link">getNewFieldWriter</a><wbr>(<a href="../../../ValueVector.html" title="interface in org.apache.arrow.vector">ValueVector</a>&nbsp;vector)</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+</section>
+</li>
 </ul>
 </section>
 </main>
 <footer role="contentinfo">
 <hr>
-<p class="legal-copy"><small>Copyright &#169; 2025 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
+<p class="legal-copy"><small>Copyright &#169; 2023 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
 </footer>
 </div>
 </div>

@@ -168,6 +168,14 @@ loadScripts(document, 'script');</script>
  <a href="../../../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
  <a href="../../../../../../../../org.apache.arrow.c/org/apache/arrow/c/CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../../../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importSchema(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)"><code>importSchema(allocator, schema, provider, true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../Schema.html" title="class in org.apache.arrow.vector.types.pojo">Schema</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../../../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importSchema(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)" class="member-name-link">importSchema</a><wbr>(<a href="../../../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../../../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
+ <a href="../../../../../../../../org.apache.arrow.c/org/apache/arrow/c/CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Import Java Schema from the C data interface.</div>
 </div>
 </div>
@@ -856,7 +864,7 @@ loadScripts(document, 'script');</script>
 </main>
 <footer role="contentinfo">
 <hr>
-<p class="legal-copy"><small>Copyright &#169; 2025 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
+<p class="legal-copy"><small>Copyright &#169; 2023 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
 </footer>
 </div>
 </div>

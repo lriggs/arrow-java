@@ -70,22 +70,24 @@ loadScripts(document, 'script');</script>
 </div>
 <div class="col-first odd-row-color"><a href="#org.apache.arrow.c">org.apache.arrow.c</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="#org.apache.arrow.vector">org.apache.arrow.vector</a></div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.variant.extension">org.apache.arrow.variant.extension</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.complex">org.apache.arrow.vector.complex</a></div>
+<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector">org.apache.arrow.vector</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.dictionary">org.apache.arrow.vector.dictionary</a></div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.complex">org.apache.arrow.vector.complex</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.extension">org.apache.arrow.vector.extension</a></div>
+<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.dictionary">org.apache.arrow.vector.dictionary</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.table">org.apache.arrow.vector.table</a></div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.extension">org.apache.arrow.vector.extension</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.types">org.apache.arrow.vector.types</a></div>
+<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.table">org.apache.arrow.vector.table</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.types.pojo">org.apache.arrow.vector.types.pojo</a></div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.types">org.apache.arrow.vector.types</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.util">org.apache.arrow.vector.util</a></div>
+<div class="col-first odd-row-color"><a href="#org.apache.arrow.vector.types.pojo">org.apache.arrow.vector.types.pojo</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><a href="#org.apache.arrow.vector.util">org.apache.arrow.vector.util</a></div>
+<div class="col-last even-row-color">&nbsp;</div>
 </div>
 <section class="class-uses">
 <ul class="block-list">
@@ -100,6 +102,12 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color"><code>static <a href="../../../../../../org.apache.arrow.adapter.avro/org/apache/arrow/adapter/avro/producers/CompositeAvroProducer.html" title="class in org.apache.arrow.adapter.avro.producers">CompositeAvroProducer</a></code></div>
 <div class="col-second even-row-color"><span class="type-name-label">ArrowToAvroUtils.</span><code><a href="../../../../../../org.apache.arrow.adapter.avro/org/apache/arrow/adapter/avro/ArrowToAvroUtils.html#createCompositeProducer(java.util.List)" class="member-name-link">createCompositeProducer</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a>&gt;&nbsp;vectors)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Overload provided for convenience, sets dictionaries = null.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.adapter.avro/org/apache/arrow/adapter/avro/producers/CompositeAvroProducer.html" title="class in org.apache.arrow.adapter.avro.producers">CompositeAvroProducer</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">ArrowToAvroUtils.</span><code><a href="../../../../../../org.apache.arrow.adapter.avro/org/apache/arrow/adapter/avro/ArrowToAvroUtils.html#createCompositeProducer(java.util.List,org.apache.arrow.vector.dictionary.DictionaryProvider)" class="member-name-link">createCompositeProducer</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a>&gt;&nbsp;vectors,
+ <a href="../dictionary/DictionaryProvider.html" title="interface in org.apache.arrow.vector.dictionary">DictionaryProvider</a>&nbsp;dictionaries)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Create a composite Avro producer for a set of field vectors (typically the root set of a VSR).</div>
 </div>
 </div>
@@ -184,9 +192,15 @@ loadScripts(document, 'script');</script>
 <div class="col-last odd-row-color">
 <div class="block">Base class for avro producers.</div>
 </div>
-<div class="col-first even-row-color"><code>interface&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="../../../../../../org.apache.arrow.adapter.avro/org/apache/arrow/adapter/avro/producers/Producer.html" class="type-name-link" title="interface in org.apache.arrow.adapter.avro.producers">Producer</a>&lt;T extends <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a>&gt;</code></div>
+<div class="col-first even-row-color"><code>class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="../../../../../../org.apache.arrow.adapter.avro/org/apache/arrow/adapter/avro/producers/DictionaryDecodingProducer.html" class="type-name-link" title="class in org.apache.arrow.adapter.avro.producers">DictionaryDecodingProducer</a>&lt;T extends <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a>&gt;</code></div>
 <div class="col-last even-row-color">
+<div class="block">Producer that decodes values from a dictionary-encoded <a href="../FieldVector.html" title="interface in org.apache.arrow.vector"><code>FieldVector</code></a>, writes the resulting
+ values to an Avro encoder.</div>
+</div>
+<div class="col-first odd-row-color"><code>interface&nbsp;</code></div>
+<div class="col-second odd-row-color"><code><a href="../../../../../../org.apache.arrow.adapter.avro/org/apache/arrow/adapter/avro/producers/Producer.html" class="type-name-link" title="interface in org.apache.arrow.adapter.avro.producers">Producer</a>&lt;T extends <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a>&gt;</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Interface that is used to produce values to avro encoder.</div>
 </div>
 </div>
@@ -347,6 +361,15 @@ loadScripts(document, 'script');</script>
  <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
  <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importVector(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)"><code>importVector(allocator, array, schema, provider, true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importVector(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)" class="member-name-link">importVector</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowArray.html" title="class in org.apache.arrow.c">ArrowArray</a>&nbsp;array,
+ <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
+ <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Import Java vector and its type from the C data interface.</div>
 </div>
 </div>
@@ -378,8 +401,44 @@ loadScripts(document, 'script');</script>
  <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a>&nbsp;vector,
  <a href="../dictionary/DictionaryProvider.html" title="interface in org.apache.arrow.vector.dictionary">DictionaryProvider</a>&nbsp;provider)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importIntoVector(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.vector.FieldVector,org.apache.arrow.vector.dictionary.DictionaryProvider,boolean)"><code>Data.importIntoVector(BufferAllocator, ArrowArray, FieldVector, DictionaryProvider, boolean)</code></a> importIntoVector(allocator, array, vector, provider, true)}.</div>
+</div>
+<div class="col-first odd-row-color"><code>static void</code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importIntoVector(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.vector.FieldVector,org.apache.arrow.vector.dictionary.DictionaryProvider,boolean)" class="member-name-link">importIntoVector</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowArray.html" title="class in org.apache.arrow.c">ArrowArray</a>&nbsp;array,
+ <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a>&nbsp;vector,
+ <a href="../dictionary/DictionaryProvider.html" title="interface in org.apache.arrow.vector.dictionary">DictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Import Java vector from the C data interface.</div>
 </div>
+</div>
+</section>
+</li>
+<li>
+<section class="detail" id="org.apache.arrow.variant.extension">
+<h2>Uses of <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a> in <a href="../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/package-summary.html">org.apache.arrow.variant.extension</a></h2>
+<div class="caption"><span>Classes in <a href="../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/package-summary.html">org.apache.arrow.variant.extension</a> that implement <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Class</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/VariantVector.html" class="type-name-link" title="class in org.apache.arrow.variant.extension">VariantVector</a></code></div>
+<div class="col-last even-row-color">
+<div class="block">Arrow vector for storing <a href="../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/VariantType.html" title="class in org.apache.arrow.variant.extension"><code>VariantType</code></a> values.</div>
+</div>
+</div>
+<div class="caption"><span>Methods in <a href="../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/package-summary.html">org.apache.arrow.variant.extension</a> that return <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Method</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code><a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">VariantType.</span><code><a href="../../../../../../org.apache.arrow.variant/org/apache/arrow/variant/extension/VariantType.html#getNewVector(java.lang.String,org.apache.arrow.vector.types.pojo.FieldType,org.apache.arrow.memory.BufferAllocator)" class="member-name-link">getNewVector</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
+ <a href="../types/pojo/FieldType.html" title="class in org.apache.arrow.vector.types.pojo">FieldType</a>&nbsp;fieldType,
+ <a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator)</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -650,30 +709,35 @@ loadScripts(document, 'script');</script>
 <div class="col-last odd-row-color">
 <div class="block">UInt8Vector implements a fixed width vector (8 bytes) of integer values which could be null.</div>
 </div>
-<div class="col-first even-row-color"><code>final class&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="../VarBinaryVector.html" class="type-name-link" title="class in org.apache.arrow.vector">VarBinaryVector</a></code></div>
+<div class="col-first even-row-color"><code>class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="../UuidVector.html" class="type-name-link" title="class in org.apache.arrow.vector">UuidVector</a></code></div>
 <div class="col-last even-row-color">
+<div class="block">Vector implementation for UUID values using <a href="../extension/UuidType.html" title="class in org.apache.arrow.vector.extension"><code>UuidType</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>final class&nbsp;</code></div>
+<div class="col-second odd-row-color"><code><a href="../VarBinaryVector.html" class="type-name-link" title="class in org.apache.arrow.vector">VarBinaryVector</a></code></div>
+<div class="col-last odd-row-color">
 <div class="block">VarBinaryVector implements a variable width vector of binary values which could be NULL.</div>
 </div>
-<div class="col-first odd-row-color"><code>final class&nbsp;</code></div>
-<div class="col-second odd-row-color"><code><a href="../VarCharVector.html" class="type-name-link" title="class in org.apache.arrow.vector">VarCharVector</a></code></div>
-<div class="col-last odd-row-color">
+<div class="col-first even-row-color"><code>final class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="../VarCharVector.html" class="type-name-link" title="class in org.apache.arrow.vector">VarCharVector</a></code></div>
+<div class="col-last even-row-color">
 <div class="block">VarCharVector implements a variable width vector of VARCHAR values which could be NULL.</div>
 </div>
-<div class="col-first even-row-color"><code>final class&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="../ViewVarBinaryVector.html" class="type-name-link" title="class in org.apache.arrow.vector">ViewVarBinaryVector</a></code></div>
-<div class="col-last even-row-color">
+<div class="col-first odd-row-color"><code>final class&nbsp;</code></div>
+<div class="col-second odd-row-color"><code><a href="../ViewVarBinaryVector.html" class="type-name-link" title="class in org.apache.arrow.vector">ViewVarBinaryVector</a></code></div>
+<div class="col-last odd-row-color">
 <div class="block">ViewVarBinaryVector implements a variable width view vector of binary values which could be NULL.</div>
 </div>
-<div class="col-first odd-row-color"><code>final class&nbsp;</code></div>
-<div class="col-second odd-row-color"><code><a href="../ViewVarCharVector.html" class="type-name-link" title="class in org.apache.arrow.vector">ViewVarCharVector</a></code></div>
-<div class="col-last odd-row-color">
+<div class="col-first even-row-color"><code>final class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="../ViewVarCharVector.html" class="type-name-link" title="class in org.apache.arrow.vector">ViewVarCharVector</a></code></div>
+<div class="col-last even-row-color">
 <div class="block">ViewVarCharVector implements a view of a variable width vector of VARCHAR values which could be
  NULL.</div>
 </div>
-<div class="col-first even-row-color"><code>final class&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="../ZeroVector.html" class="type-name-link" title="class in org.apache.arrow.vector">ZeroVector</a></code></div>
-<div class="col-last even-row-color">
+<div class="col-first odd-row-color"><code>final class&nbsp;</code></div>
+<div class="col-second odd-row-color"><code><a href="../ZeroVector.html" class="type-name-link" title="class in org.apache.arrow.vector">ZeroVector</a></code></div>
+<div class="col-last odd-row-color">
 <div class="block">A zero length vector of any type.</div>
 </div>
 </div>
@@ -1171,6 +1235,11 @@ loadScripts(document, 'script');</script>
  <a href="../types/pojo/FieldType.html" title="class in org.apache.arrow.vector.types.pojo">FieldType</a>&nbsp;fieldType,
  <a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><code><a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">UuidType.</span><code><a href="../extension/UuidType.html#getNewVector(java.lang.String,org.apache.arrow.vector.types.pojo.FieldType,org.apache.arrow.memory.BufferAllocator)" class="member-name-link">getNewVector</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
+ <a href="../types/pojo/FieldType.html" title="class in org.apache.arrow.vector.types.pojo">FieldType</a>&nbsp;fieldType,
+ <a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator)</code></div>
+<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 <div class="caption"><span>Constructors in <a href="../extension/package-summary.html">org.apache.arrow.vector.extension</a> with parameters of type <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></span></div>
 <div class="summary-table three-column-summary">
@@ -1359,7 +1428,7 @@ loadScripts(document, 'script');</script>
 </main>
 <footer role="contentinfo">
 <hr>
-<p class="legal-copy"><small>Copyright &#169; 2025 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
+<p class="legal-copy"><small>Copyright &#169; 2023 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
 </footer>
 </div>
 </div>

@@ -95,7 +95,7 @@ Type Mapping
 The JDBC to Arrow type mapping can be obtained at runtime from
 `JdbcToArrowUtils.getArrowTypeFromJdbcType`_.
 
-.. _JdbcToArrowUtils.getArrowTypeFromJdbcType: https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrowUtils.html#getArrowTypeFromJdbcType-org.apache.arrow.adapter.jdbc.JdbcFieldInfo-java.util.Calendar-
+.. _JdbcToArrowUtils.getArrowTypeFromJdbcType: https://arrow.apache.org/java/current/reference/org.apache.arrow.adapter.jdbc/org/apache/arrow/adapter/jdbc/JdbcToArrowUtils.html#getArrowTypeFromJdbcType-org.apache.arrow.adapter.jdbc.JdbcFieldInfo-java.util.Calendar-
 
 +--------------------+--------------------+-------+
 | JDBC Type          | Arrow Type         | Notes |
@@ -171,8 +171,8 @@ The JDBC to Arrow type mapping can be obtained at runtime from
   timezone of the calendar, else it will be a timestamp without
   timezone.
 
-.. _setArraySubTypeByColumnIndexMap: https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrowConfigBuilder.html#setArraySubTypeByColumnIndexMap-java.util.Map-
-.. _setArraySubTypeByColumnNameMap: https://arrow.apache.org/docs/java/reference/org/apache/arrow/adapter/jdbc/JdbcToArrowConfigBuilder.html#setArraySubTypeByColumnNameMap-java.util.Map-
+.. _setArraySubTypeByColumnIndexMap: https://arrow.apache.org/java/current/reference/org.apache.arrow.adapter.jdbc/org/apache/arrow/adapter/jdbc/JdbcToArrowConfigBuilder.html#setArraySubTypeByColumnIndexMap-java.util.Map-
+.. _setArraySubTypeByColumnNameMap: https://arrow.apache.org/java/current/reference/org.apache.arrow.adapter.jdbc/org/apache/arrow/adapter/jdbc/JdbcToArrowConfigBuilder.html#setArraySubTypeByColumnNameMap-java.util.Map-
 .. _ARROW-17006: https://issues.apache.org/jira/browse/ARROW-17006
 
 VectorSchemaRoot to PreparedStatement Parameter Conversion
@@ -213,7 +213,8 @@ Type Mapping
 ------------
 
 The Arrow to JDBC type mapping can be obtained at runtime via
-a method on ColumnBinder.
+a method on ColumnBinder. The Flight SQL JDBC driver follows the same
+mapping, with additional support for the UUID extension type noted below.
 
 +----------------------------+----------------------------+-------+
 | Arrow Type                 | JDBC Type                  | Notes |
@@ -231,6 +232,8 @@ a method on ColumnBinder.
 | Decimal256                 | DECIMAL (setBigDecimal)    |       |
 +----------------------------+----------------------------+-------+
 | FixedSizeBinary            | BINARY (setBytes)          |       |
++----------------------------+----------------------------+-------+
+| Uuid (extension)           | OTHER (setObject)          | \(3)  |
 +----------------------------+----------------------------+-------+
 | Float32                    | REAL (setFloat)            |       |
 +----------------------------+----------------------------+-------+
@@ -276,3 +279,6 @@ a method on ColumnBinder.
   <https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/PreparedStatement.html#setTimestamp(int,java.sql.Timestamp)>`_,
   which will lead to the driver using the "default timezone" (that of
   the Java VM).
+* \(3) For the Flight SQL JDBC driver, the Arrow UUID extension type
+  (``arrow.uuid``) maps to JDBC ``OTHER`` and is surfaced as
+  ``java.util.UUID`` values.

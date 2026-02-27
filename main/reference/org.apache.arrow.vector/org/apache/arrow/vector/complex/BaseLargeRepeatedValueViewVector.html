@@ -134,16 +134,13 @@ implements <a href="RepeatedValueVector.html" title="interface in org.apache.arr
 <div class="col-first odd-row-color"><code>protected <a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/ArrowBuf.html" title="class in org.apache.arrow.memory">ArrowBuf</a></code></div>
 <div class="col-second odd-row-color"><code><a href="#sizeBuffer" class="member-name-link">sizeBuffer</a></code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>protected int</code></div>
-<div class="col-second even-row-color"><code><a href="#valueCount" class="member-name-link">valueCount</a></code></div>
+<div class="col-first even-row-color"><code>protected <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></code></div>
+<div class="col-second even-row-color"><code><a href="#vector" class="member-name-link">vector</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>protected <a href="../FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></code></div>
-<div class="col-second odd-row-color"><code><a href="#vector" class="member-name-link">vector</a></code></div>
-<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 <div class="inherited-list">
 <h3 id="fields-inherited-from-class-org.apache.arrow.vector.BaseValueVector">Fields inherited from class&nbsp;org.apache.arrow.vector.<a href="../BaseValueVector.html" title="class in org.apache.arrow.vector">BaseValueVector</a></h3>
-<code><a href="../BaseValueVector.html#allocator">allocator</a>, <a href="../BaseValueVector.html#fieldReader">fieldReader</a>, <a href="../BaseValueVector.html#INITIAL_VALUE_ALLOCATION">INITIAL_VALUE_ALLOCATION</a>, <a href="../BaseValueVector.html#MAX_ALLOCATION_SIZE">MAX_ALLOCATION_SIZE</a>, <a href="../BaseValueVector.html#MAX_ALLOCATION_SIZE_PROPERTY">MAX_ALLOCATION_SIZE_PROPERTY</a></code></div>
+<code><a href="../BaseValueVector.html#allocator">allocator</a>, <a href="../BaseValueVector.html#fieldReader">fieldReader</a>, <a href="../BaseValueVector.html#INITIAL_VALUE_ALLOCATION">INITIAL_VALUE_ALLOCATION</a>, <a href="../BaseValueVector.html#MAX_ALLOCATION_SIZE">MAX_ALLOCATION_SIZE</a>, <a href="../BaseValueVector.html#MAX_ALLOCATION_SIZE_PROPERTY">MAX_ALLOCATION_SIZE_PROPERTY</a>, <a href="../BaseValueVector.html#validityBuffer">validityBuffer</a>, <a href="../BaseValueVector.html#valueCount">valueCount</a></code></div>
 <div class="inherited-list">
 <h3 id="fields-inherited-from-class-org.apache.arrow.vector.complex.RepeatedValueVector">Fields inherited from interface&nbsp;org.apache.arrow.vector.complex.<a href="RepeatedValueVector.html" title="interface in org.apache.arrow.vector.complex">RepeatedValueVector</a></h3>
 <code><a href="RepeatedValueVector.html#DEFAULT_REPEAT_PER_RECORD">DEFAULT_REPEAT_PER_RECORD</a></code></div>
@@ -312,7 +309,7 @@ implements <a href="RepeatedValueVector.html" title="interface in org.apache.arr
 </div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-org.apache.arrow.vector.BaseValueVector">Methods inherited from class&nbsp;org.apache.arrow.vector.<a href="../BaseValueVector.html" title="class in org.apache.arrow.vector">BaseValueVector</a></h3>
-<code><a href="../BaseValueVector.html#checkBufRefs(org.apache.arrow.vector.ValueVector)">checkBufRefs</a>, <a href="../BaseValueVector.html#close()">close</a>, <a href="../BaseValueVector.html#copyFrom(int,int,org.apache.arrow.vector.ValueVector)">copyFrom</a>, <a href="../BaseValueVector.html#copyFromSafe(int,int,org.apache.arrow.vector.ValueVector)">copyFromSafe</a>, <a href="../BaseValueVector.html#getAllocator()">getAllocator</a>, <a href="../BaseValueVector.html#getReader()">getReader</a>, <a href="../BaseValueVector.html#getReaderImpl()">getReaderImpl</a>, <a href="../BaseValueVector.html#getTransferPair(org.apache.arrow.memory.BufferAllocator)">getTransferPair</a>, <a href="../BaseValueVector.html#getValidityBufferSizeFromCount(int)">getValidityBufferSizeFromCount</a>, <a href="../BaseValueVector.html#releaseBuffer(org.apache.arrow.memory.ArrowBuf)">releaseBuffer</a>, <a href="../BaseValueVector.html#toString()">toString</a>, <a href="../BaseValueVector.html#transferBuffer(org.apache.arrow.memory.ArrowBuf,org.apache.arrow.memory.BufferAllocator)">transferBuffer</a></code></div>
+<code><a href="../BaseValueVector.html#allocateValidityBuffer(long)">allocateValidityBuffer</a>, <a href="../BaseValueVector.html#checkBufRefs(org.apache.arrow.vector.ValueVector)">checkBufRefs</a>, <a href="../BaseValueVector.html#close()">close</a>, <a href="../BaseValueVector.html#copyFrom(int,int,org.apache.arrow.vector.ValueVector)">copyFrom</a>, <a href="../BaseValueVector.html#copyFromSafe(int,int,org.apache.arrow.vector.ValueVector)">copyFromSafe</a>, <a href="../BaseValueVector.html#copyValidityBuffer(int,int,org.apache.arrow.vector.BaseValueVector)">copyValidityBuffer</a>, <a href="../BaseValueVector.html#getAllocator()">getAllocator</a>, <a href="../BaseValueVector.html#getReader()">getReader</a>, <a href="../BaseValueVector.html#getReaderImpl()">getReaderImpl</a>, <a href="../BaseValueVector.html#getTransferPair(org.apache.arrow.memory.BufferAllocator)">getTransferPair</a>, <a href="../BaseValueVector.html#getValidityBufferSizeFromCount(int)">getValidityBufferSizeFromCount</a>, <a href="../BaseValueVector.html#releaseBuffer(org.apache.arrow.memory.ArrowBuf)">releaseBuffer</a>, <a href="../BaseValueVector.html#sliceAndTransferValidityBuffer(int,int,org.apache.arrow.vector.BaseValueVector)">sliceAndTransferValidityBuffer</a>, <a href="../BaseValueVector.html#splitAndTransferValidityBuffer(int,int,org.apache.arrow.vector.BaseValueVector)">splitAndTransferValidityBuffer</a>, <a href="../BaseValueVector.html#toString()">toString</a>, <a href="../BaseValueVector.html#transferBuffer(org.apache.arrow.memory.ArrowBuf,org.apache.arrow.memory.BufferAllocator)">transferBuffer</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
@@ -406,12 +403,6 @@ implements <a href="RepeatedValueVector.html" title="interface in org.apache.arr
 <section class="detail" id="repeatedCallBack">
 <h3>repeatedCallBack</h3>
 <div class="member-signature"><span class="modifiers">protected final</span>&nbsp;<span class="return-type"><a href="../util/CallBack.html" title="interface in org.apache.arrow.vector.util">CallBack</a></span>&nbsp;<span class="element-name">repeatedCallBack</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="valueCount">
-<h3>valueCount</h3>
-<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="return-type">int</span>&nbsp;<span class="element-name">valueCount</span></div>
 </section>
 </li>
 <li>
@@ -814,7 +805,7 @@ implements <a href="RepeatedValueVector.html" title="interface in org.apache.arr
 </main>
 <footer role="contentinfo">
 <hr>
-<p class="legal-copy"><small>Copyright &#169; 2025 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
+<p class="legal-copy"><small>Copyright &#169; 2023 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
 </footer>
 </div>
 </div>

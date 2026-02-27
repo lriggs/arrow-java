@@ -114,6 +114,13 @@ loadScripts(document, 'script');</script>
 <div class="col-second even-row-color"><span class="type-name-label">Data.</span><code><a href="../../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importArrayStream(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArrayStream)" class="member-name-link">importArrayStream</a><wbr>(<a href="../../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
  <a href="../../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowArrayStream.html" title="class in org.apache.arrow.c">ArrowArrayStream</a>&nbsp;stream)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importArrayStream(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArrayStream,boolean)"><code>importArrayStream(allocator, stream, true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../ArrowReader.html" title="class in org.apache.arrow.vector.ipc">ArrowReader</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../../../../../../../org.apache.arrow.c/org/apache/arrow/c/Data.html#importArrayStream(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArrayStream,boolean)" class="member-name-link">importArrayStream</a><wbr>(<a href="../../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../../../../../../../org.apache.arrow.c/org/apache/arrow/c/ArrowArrayStream.html" title="class in org.apache.arrow.c">ArrowArrayStream</a>&nbsp;stream,
+ boolean&nbsp;closeImportedStructs)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Import an ArrowArrayStream as an <a href="../ArrowReader.html" title="class in org.apache.arrow.vector.ipc"><code>ArrowReader</code></a>.</div>
 </div>
 </div>
@@ -330,7 +337,7 @@ loadScripts(document, 'script');</script>
 </main>
 <footer role="contentinfo">
 <hr>
-<p class="legal-copy"><small>Copyright &#169; 2025 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
+<p class="legal-copy"><small>Copyright &#169; 2023 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
 </footer>
 </div>
 </div>

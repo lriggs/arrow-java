@@ -140,12 +140,28 @@ loadScripts(document, 'script');</script>
  <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
  <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../Data.html#importField(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)"><code>importField(allocator, schema, provider, true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/types/pojo/Field.html" title="class in org.apache.arrow.vector.types.pojo">Field</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importField(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)" class="member-name-link">importField</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
+ <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Import Java Field from the C data interface.</div>
 </div>
-<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/types/pojo/Schema.html" title="class in org.apache.arrow.vector.types.pojo">Schema</a></code></div>
-<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importSchema(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider)" class="member-name-link">importSchema</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+<div class="col-first even-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/types/pojo/Schema.html" title="class in org.apache.arrow.vector.types.pojo">Schema</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importSchema(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider)" class="member-name-link">importSchema</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
  <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
  <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider)</code></div>
+<div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../Data.html#importSchema(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)"><code>importSchema(allocator, schema, provider, true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/types/pojo/Schema.html" title="class in org.apache.arrow.vector.types.pojo">Schema</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importSchema(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)" class="member-name-link">importSchema</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
+ <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
 <div class="col-last odd-row-color">
 <div class="block">Import Java Schema from the C data interface.</div>
 </div>
@@ -155,13 +171,32 @@ loadScripts(document, 'script');</script>
  <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
  <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../Data.html#importVector(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)"><code>importVector(allocator, array, schema, provider, true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/FieldVector.html" title="interface in org.apache.arrow.vector">FieldVector</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importVector(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)" class="member-name-link">importVector</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../ArrowArray.html" title="class in org.apache.arrow.c">ArrowArray</a>&nbsp;array,
+ <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
+ <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Import Java vector and its type from the C data interface.</div>
 </div>
-<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/VectorSchemaRoot.html" title="class in org.apache.arrow.vector">VectorSchemaRoot</a></code></div>
-<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importVectorSchemaRoot(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider)" class="member-name-link">importVectorSchemaRoot</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+<div class="col-first even-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/VectorSchemaRoot.html" title="class in org.apache.arrow.vector">VectorSchemaRoot</a></code></div>
+<div class="col-second even-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importVectorSchemaRoot(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider)" class="member-name-link">importVectorSchemaRoot</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
  <a href="../ArrowArray.html" title="class in org.apache.arrow.c">ArrowArray</a>&nbsp;array,
  <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
  <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider)</code></div>
+<div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../Data.html#importVectorSchemaRoot(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)"><code>importVectorSchemaRoot(allocator, array, schema, provider,
+ true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/VectorSchemaRoot.html" title="class in org.apache.arrow.vector">VectorSchemaRoot</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importVectorSchemaRoot(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowArray,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)" class="member-name-link">importVectorSchemaRoot</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../ArrowArray.html" title="class in org.apache.arrow.c">ArrowArray</a>&nbsp;array,
+ <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
+ <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
 <div class="col-last odd-row-color">
 <div class="block">Import Java vector schema root from the C data interface.</div>
 </div>
@@ -170,6 +205,14 @@ loadScripts(document, 'script');</script>
  <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
  <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider)</code></div>
 <div class="col-last even-row-color">
+<div class="block">Equivalent to calling <a href="../Data.html#importVectorSchemaRoot(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)"><code>importVectorSchemaRoot(allocator, schema, provider, true)</code></a>.</div>
+</div>
+<div class="col-first odd-row-color"><code>static <a href="../../../../../../org.apache.arrow.vector/org/apache/arrow/vector/VectorSchemaRoot.html" title="class in org.apache.arrow.vector">VectorSchemaRoot</a></code></div>
+<div class="col-second odd-row-color"><span class="type-name-label">Data.</span><code><a href="../Data.html#importVectorSchemaRoot(org.apache.arrow.memory.BufferAllocator,org.apache.arrow.c.ArrowSchema,org.apache.arrow.c.CDataDictionaryProvider,boolean)" class="member-name-link">importVectorSchemaRoot</a><wbr>(<a href="../../../../../../org.apache.arrow.memory.core/org/apache/arrow/memory/BufferAllocator.html" title="interface in org.apache.arrow.memory">BufferAllocator</a>&nbsp;allocator,
+ <a href="../ArrowSchema.html" title="class in org.apache.arrow.c">ArrowSchema</a>&nbsp;schema,
+ <a href="../CDataDictionaryProvider.html" title="class in org.apache.arrow.c">CDataDictionaryProvider</a>&nbsp;provider,
+ boolean&nbsp;closeImportedStructs)</code></div>
+<div class="col-last odd-row-color">
 <div class="block">Import Java vector schema root from a C data interface Schema.</div>
 </div>
 </div>
@@ -203,7 +246,7 @@ loadScripts(document, 'script');</script>
 </main>
 <footer role="contentinfo">
 <hr>
-<p class="legal-copy"><small>Copyright &#169; 2025 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
+<p class="legal-copy"><small>Copyright &#169; 2023 <a href="https://www.apache.org/">The Apache Software Foundation</a>. All rights reserved.</small></p>
 </footer>
 </div>
 </div>
