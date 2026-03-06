@@ -202,6 +202,28 @@ under the License.
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>codegen-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>codegen</classifier>
+              <classesDirectory>${basedir}/src/main/codegen</classesDirectory>
+              <includes>
+                <include>**/*.tdd</include>
+                <include>**/*.fmpp</include>
+                <include>**/*.ftl</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
