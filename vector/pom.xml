@@ -200,10 +200,10 @@ under the License.
         <executions>
           <execution>
             <id>codegen-jar</id>
-            <phase>package</phase>
             <goals>
               <goal>jar</goal>
             </goals>
+            <phase>package</phase>
             <configuration>
               <classifier>codegen</classifier>
               <classesDirectory>${basedir}/src/main/codegen</classesDirectory>
