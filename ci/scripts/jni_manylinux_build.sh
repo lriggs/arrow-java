@@ -90,6 +90,7 @@ cmake \
   -S "${arrow_dir}/cpp" \
   -B "${build_dir}/cpp" \
   --preset=ninja-release-jni-linux \
+  -DORC_SOURCE=BUNDLED \
   -DCMAKE_INSTALL_PREFIX="${install_dir}"
 cmake --build "${build_dir}/cpp"
 cmake --install "${build_dir}/cpp"
