@@ -16,6 +16,7 @@
  */
 package org.apache.arrow.vector;
 
+import static org.apache.arrow.vector.BitVectorHelper.getValidityBufferSizeFromCount;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -23,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,17 +37,18 @@ import org.apache.arrow.vector.complex.impl.UnionListReader;
 import org.apache.arrow.vector.complex.impl.UnionListWriter;
 import org.apache.arrow.vector.complex.reader.FieldReader;
 import org.apache.arrow.vector.complex.writer.BaseWriter.ExtensionWriter;
-import org.apache.arrow.vector.holder.UuidHolder;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.holders.DurationHolder;
 import org.apache.arrow.vector.holders.FixedSizeBinaryHolder;
+import org.apache.arrow.vector.holders.NullableUuidHolder;
 import org.apache.arrow.vector.holders.TimeStampMilliTZHolder;
 import org.apache.arrow.vector.types.TimeUnit;
 import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
-import org.apache.arrow.vector.types.pojo.UuidType;
 import org.apache.arrow.vector.util.TransferPair;
+import org.apache.arrow.vector.util.UuidUtility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -1129,7 +1130,7 @@ public class TestListVector {
       int[] indices = new int[] {0, 2, 4, 6, 10, 14};
 
       for (int valueCount = 1; valueCount <= 5; valueCount++) {
-        int validityBufferSize = BitVectorHelper.getValidityBufferSize(valueCount);
+        int validityBufferSize = getValidityBufferSizeFromCount(valueCount);
         int offsetBufferSize = (valueCount + 1) * BaseRepeatedValueVector.OFFSET_WIDTH;
 
         int expectedSize =
@@ -1206,7 +1207,7 @@ public class TestListVector {
 
   @Test
   public void testListVectorWithExtensionType() throws Exception {
-    final FieldType type = FieldType.nullable(new UuidType());
+    final FieldType type = FieldType.nullable(UuidType.INSTANCE);
     try (final ListVector inVector = new ListVector("list", allocator, type, null)) {
       UnionListWriter writer = inVector.getWriter();
       writer.allocate();
@@ -1214,7 +1215,7 @@ public class TestListVector {
       UUID u1 = UUID.randomUUID();
       UUID u2 = UUID.randomUUID();
       writer.startList();
-      ExtensionWriter extensionWriter = writer.extension(new UuidType());
+      ExtensionWriter extensionWriter = writer.extension(UuidType.INSTANCE);
       extensionWriter.writeExtension(u1);
       extensionWriter.writeExtension(u2);
       writer.endList();
@@ -1233,7 +1234,7 @@ public class TestListVector {
 
   @Test
   public void testListVectorReaderForExtensionType() throws Exception {
-    final FieldType type = FieldType.nullable(new UuidType());
+    final FieldType type = FieldType.nullable(UuidType.INSTANCE);
     try (final ListVector inVector = new ListVector("list", allocator, type, null)) {
       UnionListWriter writer = inVector.getWriter();
       writer.allocate();
@@ -1241,9 +1242,9 @@ public class TestListVector {
       UUID u1 = UUID.randomUUID();
       UUID u2 = UUID.randomUUID();
       writer.startList();
-      ExtensionWriter extensionWriter = writer.extension(new UuidType());
-      extensionWriter.writeExtension(u1, new UuidType());
-      extensionWriter.writeExtension(u2, new UuidType());
+      ExtensionWriter extensionWriter = writer.extension(UuidType.INSTANCE);
+      extensionWriter.writeExtension(u1);
+      extensionWriter.writeExtension(u2);
       writer.endList();
 
       writer.setValueCount(1);
@@ -1253,16 +1254,14 @@ public class TestListVector {
       reader.setPosition(0);
       reader.next();
       FieldReader uuidReader = reader.reader();
-      UuidHolder holder = new UuidHolder();
+      NullableUuidHolder holder = new NullableUuidHolder();
       uuidReader.read(holder);
-      ByteBuffer bb = ByteBuffer.wrap(holder.value);
-      UUID actualUuid = new UUID(bb.getLong(), bb.getLong());
+      UUID actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u1, actualUuid);
       reader.next();
       uuidReader = reader.reader();
       uuidReader.read(holder);
-      bb = ByteBuffer.wrap(holder.value);
-      actualUuid = new UUID(bb.getLong(), bb.getLong());
+      actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u2, actualUuid);
     }
   }
@@ -1278,8 +1277,8 @@ public class TestListVector {
       UUID u2 = UUID.randomUUID();
       writer.startList();
 
-      writer.extension(new UuidType()).writeExtension(u1, new UuidType());
-      writer.writeExtension(u2, new UuidType());
+      writer.extension(UuidType.INSTANCE).writeExtension(u1);
+      writer.writeExtension(u2);
       writer.writeNull();
       writer.endList();
 
@@ -1295,16 +1294,14 @@ public class TestListVector {
       reader.setPosition(0);
       reader.next();
       FieldReader uuidReader = reader.reader();
-      UuidHolder holder = new UuidHolder();
+      NullableUuidHolder holder = new NullableUuidHolder();
       uuidReader.read(holder);
-      ByteBuffer bb = ByteBuffer.wrap(holder.value);
-      UUID actualUuid = new UUID(bb.getLong(), bb.getLong());
+      UUID actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u1, actualUuid);
       reader.next();
       uuidReader = reader.reader();
       uuidReader.read(holder);
-      bb = ByteBuffer.wrap(holder.value);
-      actualUuid = new UUID(bb.getLong(), bb.getLong());
+      actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u2, actualUuid);
     }
   }
@@ -1321,7 +1318,7 @@ public class TestListVector {
       UUID u1 = UUID.randomUUID();
       UUID u2 = UUID.randomUUID();
       writer.startList();
-      ExtensionWriter extensionWriter = writer.extension(new UuidType());
+      ExtensionWriter extensionWriter = writer.extension(UuidType.INSTANCE);
       extensionWriter.writeExtension(u1);
       extensionWriter.writeExtension(u2);
       writer.endList();
@@ -1331,7 +1328,7 @@ public class TestListVector {
       UUID u3 = UUID.randomUUID();
       UUID u4 = UUID.randomUUID();
       writer.startList();
-      extensionWriter = writer.extension(new UuidType());
+      extensionWriter = writer.extension(UuidType.INSTANCE);
       extensionWriter.writeExtension(u3);
       extensionWriter.writeExtension(u4);
       extensionWriter.writeNull();
@@ -1353,16 +1350,14 @@ public class TestListVector {
       assertTrue(reader.isSet(), "first list shouldn't be null");
       reader.next();
       FieldReader uuidReader = reader.reader();
-      UuidHolder holder = new UuidHolder();
+      NullableUuidHolder holder = new NullableUuidHolder();
       uuidReader.read(holder);
-      ByteBuffer bb = ByteBuffer.wrap(holder.value);
-      UUID actualUuid = new UUID(bb.getLong(), bb.getLong());
+      UUID actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u1, actualUuid);
       reader.next();
       uuidReader = reader.reader();
       uuidReader.read(holder);
-      bb = ByteBuffer.wrap(holder.value);
-      actualUuid = new UUID(bb.getLong(), bb.getLong());
+      actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u2, actualUuid);
 
       // Verify second list
@@ -1371,18 +1366,36 @@ public class TestListVector {
       reader.next();
       uuidReader = reader.reader();
       uuidReader.read(holder);
-      bb = ByteBuffer.wrap(holder.value);
-      actualUuid = new UUID(bb.getLong(), bb.getLong());
+      actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u3, actualUuid);
       reader.next();
       uuidReader = reader.reader();
       uuidReader.read(holder);
-      bb = ByteBuffer.wrap(holder.value);
-      actualUuid = new UUID(bb.getLong(), bb.getLong());
+      actualUuid = UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start);
       assertEquals(u4, actualUuid);
       reader.next();
       uuidReader = reader.reader();
       assertFalse(uuidReader.isSet(), "third element should be null");
+    }
+  }
+
+  @Test
+  public void testEmptyListOffsetBuffer() {
+    // Test that ListVector has correct readableBytes after allocation.
+    // According to Arrow spec, offset buffer must have N+1 entries.
+    // Even when N=0, it should contain [0].
+    try (ListVector list = ListVector.empty("list", allocator)) {
+      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      list.allocateNew();
+      list.setValueCount(0);
+
+      List<ArrowBuf> buffers = list.getFieldBuffers();
+      assertTrue(
+          buffers.get(1).readableBytes() >= BaseRepeatedValueVector.OFFSET_WIDTH,
+          "Offset buffer should have at least "
+              + BaseRepeatedValueVector.OFFSET_WIDTH
+              + " bytes for offset[0]");
+      assertEquals(0, list.getOffsetBuffer().getInt(0));
     }
   }
 

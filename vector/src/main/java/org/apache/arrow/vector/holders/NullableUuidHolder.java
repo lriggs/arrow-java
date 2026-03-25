@@ -14,17 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.arrow.vector.holder;
+package org.apache.arrow.vector.holders;
 
-import org.apache.arrow.vector.holders.ExtensionHolder;
+import org.apache.arrow.memory.ArrowBuf;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.types.pojo.ArrowType;
-import org.apache.arrow.vector.types.pojo.UuidType;
 
-public class UuidHolder extends ExtensionHolder {
-  public byte[] value;
+/**
+ * Value holder for nullable UUID values.
+ *
+ * <p>The {@code isSet} field controls nullability: when {@code isSet = 1}, the holder contains a
+ * valid UUID in {@code buffer}; when {@code isSet = 0}, the holder represents a null value and
+ * {@code buffer} should not be accessed.
+ *
+ * @see UuidHolder
+ * @see org.apache.arrow.vector.UuidVector
+ * @see org.apache.arrow.vector.extension.UuidType
+ */
+public class NullableUuidHolder extends ExtensionHolder {
+  /** Buffer containing 16-byte UUID data. */
+  public ArrowBuf buffer;
+
+  /** Offset in the buffer where the UUID data starts. */
+  public int start = 0;
 
   @Override
   public ArrowType type() {
-    return new UuidType();
+    return UuidType.INSTANCE;
   }
 }
