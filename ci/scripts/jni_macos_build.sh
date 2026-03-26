@@ -62,10 +62,14 @@ install_dir="${build_dir}/cpp-install"
 
 export ARROW_BUILD_TESTS=OFF
 
+: "${ARROW_ACERO:=ON}"
+export ARROW_ACERO
 export ARROW_DATASET=ON
 export ARROW_GANDIVA=ON
 export ARROW_ORC=ON
 export ARROW_PARQUET=ON
+: "${ARROW_S3:=ON}"
+export ARROW_S3
 
 export AWS_EC2_METADATA_DISABLED=TRUE
 
