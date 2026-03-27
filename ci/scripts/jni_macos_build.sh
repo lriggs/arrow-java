@@ -156,6 +156,11 @@ cmake \
   "${re2_source_arg}" \
   -GNinja
 cmake --build "${build_dir}/cpp" --target install
+# Arrow 23+ builds Protobuf via FetchContent. The protobuf_fc target installs it
+# to protobuf_fc-install so the separate JNI CMake invocation can find it.
+# This target is NOT in the install dependency chain (Ninja skips ALL-only targets
+# when building --target install), so we must trigger it explicitly.
+cmake --build "${build_dir}/cpp" --target protobuf_fc || true
 github_actions_group_end
 
 if [ "${ARROW_RUN_TESTS:-}" == "ON" ]; then
