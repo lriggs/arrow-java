@@ -51,6 +51,8 @@ build_dir="$(cd "${build_dir}" && pwd)"
 github_actions_group_end
 
 : "${ARROW_USE_CCACHE:=ON}"
+: "${CMAKE_BUILD_TYPE:=release}"
+: "${CMAKE_UNITY_BUILD:=ON}"
 if [ "${ARROW_USE_CCACHE}" == "ON" ]; then
   github_actions_group_begin "ccache statistics before build"
   ccache -sv 2>/dev/null || ccache -s
