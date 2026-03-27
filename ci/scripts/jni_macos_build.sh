@@ -179,8 +179,11 @@ fi
 # Build up the JNI CMake args based on what's available
 jni_cmake_args="${llvm_dir_arg}"
 
-# Add Protobuf path if bundled, otherwise CMake will find system Protobuf
-if [ -d "${build_dir}/cpp/protobuf_ep-install" ]; then
+# Add Protobuf path if bundled, otherwise CMake will find system Protobuf.
+# Arrow 23+ uses FetchContent (protobuf_fc-install); older versions used ExternalProject (protobuf_ep-install).
+if [ -d "${build_dir}/cpp/protobuf_fc-install" ]; then
+  jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/protobuf_fc-install"
+elif [ -d "${build_dir}/cpp/protobuf_ep-install" ]; then
   jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install"
 fi
 
