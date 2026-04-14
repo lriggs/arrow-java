@@ -50,7 +50,7 @@ dist_dir="${4}"
 github_actions_group_end
 
 github_actions_group_begin "Install Archery"
-pip install -e "${arrow_dir}/dev/archery[all]" "pandas<2.3"
+pip install -e "${arrow_dir}/dev/archery"
 github_actions_group_end
 
 github_actions_group_begin "Clear output directories and leftovers"
