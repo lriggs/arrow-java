@@ -37,7 +37,7 @@ public class JniWrapper {
    * @return A moduleId that is passed to the evaluateProjector() and closeProjector() methods
    */
   native long buildProjector(
-      byte[] schemaBuf, byte[] exprListBuf, int selectionVectorType, long configId)
+      byte[] schemaBuf, byte[] exprListBuf, int selectionVectorType, long configId, long sessionId)
       throws GandivaException;
 
   /**
@@ -86,8 +86,24 @@ public class JniWrapper {
    * @param configId Configuration to gandiva.
    * @return A moduleId that is passed to the evaluateFilter() and closeFilter() methods
    */
-  native long buildFilter(byte[] schemaBuf, byte[] conditionBuf, long configId)
+  native long buildFilter(byte[] schemaBuf, byte[] conditionBuf, long configId, long sessionId)
       throws GandivaException;
+
+  /**
+   * Creates a long-lived JIT session that compiles Gandiva base IR once and exposes a shared LLJIT
+   * instance for reuse across many Projector/Filter builds.
+   *
+   * @param configId configuration handle to use for the session
+   * @return a sessionId handle to pass to buildProjector/buildFilter
+   */
+  native long buildJITSession(long configId) throws GandivaException;
+
+  /**
+   * Releases the JIT session referenced by sessionId.
+   *
+   * @param sessionId the session to release
+   */
+  native void closeJITSession(long sessionId);
 
   /**
    * Evaluate the filter represented by the moduleId on a record batch and store the output in

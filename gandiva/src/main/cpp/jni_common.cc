@@ -41,6 +41,7 @@
 #include "config_holder.h"
 #include "env_helper.h"
 #include "id_to_module_map.h"
+#include "jit_session_holder.h"
 #include "module_holder.h"
 
 using gandiva::ConditionPtr;
@@ -62,6 +63,8 @@ using gandiva::ConfigHolder;
 using gandiva::Configuration;
 using gandiva::ConfigurationBuilder;
 using gandiva::FilterHolder;
+using gandiva::JITSession;
+using gandiva::JITSessionHolder;
 using gandiva::ProjectorHolder;
 
 // forward declarations
@@ -129,6 +132,29 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
   env->DeleteGlobalRef(gandiva_exception_);
   env->DeleteGlobalRef(vector_expander_class_);
   env->DeleteGlobalRef(vector_expander_ret_class_);
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_apache_arrow_gandiva_evaluator_JniWrapper_buildJITSession(
+    JNIEnv* env, jobject obj, jlong configuration_id) {
+  std::shared_ptr<Configuration> config = ConfigHolder::MapLookup(configuration_id);
+  if (config == nullptr) {
+    env->ThrowNew(gandiva_exception_, "configuration is mandatory for JITSession.");
+    return 0LL;
+  }
+  auto result = JITSession::Make(config);
+  if (!result.ok()) {
+    std::string msg = "Failed to create JITSession: " + result.status().message();
+    env->ThrowNew(gandiva_exception_, msg.c_str());
+    return 0LL;
+  }
+  return static_cast<jlong>(JITSessionHolder::MapInsert(result.MoveValueUnsafe()));
+}
+
+JNIEXPORT void JNICALL
+Java_org_apache_arrow_gandiva_evaluator_JniWrapper_closeJITSession(
+    JNIEnv* env, jobject obj, jlong session_id) {
+  JITSessionHolder::MapErase(static_cast<int64_t>(session_id));
 }
 
 DataTypePtr ProtoTypeToTime32(const gandiva::types::ExtGandivaType& ext_type) {
@@ -603,7 +629,7 @@ void releaseProjectorInput(jbyteArray schema_arr, jbyte* schema_bytes,
 
 JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_buildProjector(
     JNIEnv* env, jobject obj, jbyteArray schema_arr, jbyteArray exprs_arr,
-    jint selection_vector_type, jlong configuration_id) {
+    jint selection_vector_type, jlong configuration_id, jlong session_id) {
   jlong module_id = 0LL;
   std::shared_ptr<Projector> projector;
   std::shared_ptr<ProjectorHolder> holder;
@@ -677,7 +703,18 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
       break;
   }
   // good to invoke the evaluator now
-  status = Projector::Make(schema_ptr, expr_vector, mode, config, &projector);
+  if (session_id != -1LL) {
+    std::shared_ptr<JITSession> session =
+        JITSessionHolder::MapLookup(static_cast<int64_t>(session_id));
+    if (session == nullptr) {
+      ss << "Unknown session id " << session_id;
+      releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+      goto err_out;
+    }
+    status = Projector::Make(schema_ptr, expr_vector, config, session, &projector);
+  } else {
+    status = Projector::Make(schema_ptr, expr_vector, mode, config, &projector);
+  }
 
   if (!status.ok()) {
     ss << "Failed to make LLVM module due to " << status.message() << "\n";
@@ -904,7 +941,7 @@ void releaseFilterInput(jbyteArray schema_arr, jbyte* schema_bytes,
 
 JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_buildFilter(
     JNIEnv* env, jobject obj, jbyteArray schema_arr, jbyteArray condition_arr,
-    jlong configuration_id) {
+    jlong configuration_id, jlong session_id) {
   jlong module_id = 0LL;
   std::shared_ptr<Filter> filter;
   std::shared_ptr<FilterHolder> holder;
@@ -959,7 +996,18 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
   }
 
   // good to invoke the filter builder now
-  status = Filter::Make(schema_ptr, condition_ptr, config, &filter);
+  if (session_id != -1LL) {
+    std::shared_ptr<JITSession> session =
+        JITSessionHolder::MapLookup(static_cast<int64_t>(session_id));
+    if (session == nullptr) {
+      ss << "Unknown session id " << session_id;
+      releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+      goto err_out;
+    }
+    status = Filter::Make(schema_ptr, condition_ptr, config, session, &filter);
+  } else {
+    status = Filter::Make(schema_ptr, condition_ptr, config, &filter);
+  }
   if (!status.ok()) {
     ss << "Failed to make LLVM module due to " << status.message() << "\n";
     releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);

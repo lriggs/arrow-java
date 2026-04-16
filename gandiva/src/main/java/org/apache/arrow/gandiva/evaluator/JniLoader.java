@@ -40,6 +40,7 @@ class JniLoader {
 
   private static volatile JniLoader INSTANCE;
   private static volatile long defaultConfiguration = 0L;
+  private static volatile long defaultSessionId = -1L;
   private static final ConcurrentMap<ConfigurationBuilder.ConfigOptions, Long> configurationMap =
       new ConcurrentHashMap<>();
 
@@ -171,6 +172,23 @@ class JniLoader {
       }
     }
     return defaultConfiguration;
+  }
+
+  /**
+   * Returns the session ID of the default JIT session, creating it lazily on first call. The
+   * session is tied to the default configuration and lives for the lifetime of the JniLoader
+   * singleton (i.e., the JVM process).
+   */
+  static long getDefaultSessionId() throws GandivaException {
+    if (defaultSessionId == -1L) {
+      synchronized (JniLoader.class) {
+        if (defaultSessionId == -1L) {
+          long configId = getDefaultConfiguration(); // ensures lib is loaded
+          defaultSessionId = getInstance().getWrapper().buildJITSession(configId);
+        }
+      }
+    }
+    return defaultSessionId;
   }
 
   /** Remove the configuration. */

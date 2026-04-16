@@ -208,7 +208,8 @@ public class Projector {
             schemaBuf.toByteArray(),
             builder.build().toByteArray(),
             selectionVectorType.getNumber(),
-            configurationId);
+            configurationId,
+            JniLoader.getDefaultSessionId());
     logger.debug("Created module for the projector with id {}", moduleId);
     return new Projector(wrapper, moduleId, schema, exprs.size());
   }

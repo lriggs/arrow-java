@@ -118,7 +118,11 @@ public class Filter {
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
     JniWrapper wrapper = JniLoader.getInstance().getWrapper();
     long moduleId =
-        wrapper.buildFilter(schemaBuf.toByteArray(), conditionBuf.toByteArray(), configurationId);
+        wrapper.buildFilter(
+            schemaBuf.toByteArray(),
+            conditionBuf.toByteArray(),
+            configurationId,
+            JniLoader.getDefaultSessionId());
     logger.debug("Created module for the filter with id {}", moduleId);
     return new Filter(wrapper, moduleId, schema);
   }

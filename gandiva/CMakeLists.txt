@@ -51,6 +51,7 @@ add_library(arrow_java_jni_gandiva SHARED
             src/main/cpp/config_builder.cc
             src/main/cpp/config_holder.cc
             src/main/cpp/expression_registry_helper.cc
+            src/main/cpp/jit_session_holder.cc
             src/main/cpp/jni_common.cc
             ${GANDIVA_PROTO_OUTPUT_FILES})
 set_property(TARGET arrow_java_jni_gandiva PROPERTY OUTPUT_NAME "gandiva_jni")
