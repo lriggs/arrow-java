@@ -199,6 +199,8 @@ public class Projector {
     for (ExpressionTree expr : exprs) {
       builder.addExprs(expr.toProtobuf());
     }
+    GandivaTypes.ExpressionList exprList = builder.build();
+    ExpressionGuard.check(exprList);
 
     // Invoke the JNI layer to create the LLVM module representing the expressions
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
@@ -206,7 +208,7 @@ public class Projector {
     long moduleId =
         wrapper.buildProjector(
             schemaBuf.toByteArray(),
-            builder.build().toByteArray(),
+            exprList.toByteArray(),
             selectionVectorType.getNumber(),
             configurationId);
     logger.debug("Created module for the projector with id {}", moduleId);

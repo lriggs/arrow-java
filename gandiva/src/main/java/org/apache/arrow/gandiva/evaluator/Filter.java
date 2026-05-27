@@ -115,6 +115,7 @@ public class Filter {
       throws GandivaException {
     // Invoke the JNI layer to create the LLVM module representing the filter.
     GandivaTypes.Condition conditionBuf = condition.toProtobuf();
+    ExpressionGuard.check(conditionBuf);
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
     JniWrapper wrapper = JniLoader.getInstance().getWrapper();
     long moduleId =
