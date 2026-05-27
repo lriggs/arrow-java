@@ -70,7 +70,13 @@ final class ExpressionGuard {
     }
   }
 
-  /** Validates every expression root in an ExpressionList. */
+  /**
+   * Validates every expression root in an ExpressionList <em>independently</em>. Gandiva's
+   * {@code LLVMGenerator::Add} compiles each {@code Projector} expression into its own LLVM
+   * function ({@code expr_<idx>_<mode>}), so the per-function spill-slot budget — which is what
+   * the node-count limit defends — applies per expression, not in aggregate. A Projector with
+   * many small expressions is fine even if their combined node count exceeds the limit.
+   */
   static void check(GandivaTypes.ExpressionList exprs) throws GandivaException {
     for (GandivaTypes.ExpressionRoot root : exprs.getExprsList()) {
       if (root.hasRoot()) {
@@ -91,7 +97,6 @@ final class ExpressionGuard {
     stack.push(new Frame(root, 1));
 
     int nodes = 0;
-    int observedMaxDepth = 0;
     while (!stack.isEmpty()) {
       Frame frame = stack.pop();
       nodes++;
@@ -102,9 +107,6 @@ final class ExpressionGuard {
                 + " nodes (override with -D"
                 + MAX_NODES_PROPERTY
                 + "=N)");
-      }
-      if (frame.depth > observedMaxDepth) {
-        observedMaxDepth = frame.depth;
       }
       if (frame.depth > maxDepth) {
         throw new GandivaException(
