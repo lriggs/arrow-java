@@ -235,8 +235,13 @@ public class ListVector extends BaseRepeatedValueVector
     List<ArrowBuf> result = new ArrayList<>(2);
     setReaderAndWriterIndex();
     result.add(validityBuffer);
-    result.add(offsetBuffer);
-
+    if (offsetBuffer.capacity() == 0 && offsetBuffer.writerIndex() > 0) {
+      ArrowBuf tempOffset = allocateOffsetBuffer(offsetBuffer.writerIndex());
+      tempOffset.writerIndex(offsetBuffer.writerIndex());
+      result.add(tempOffset);
+    } else {
+      result.add(offsetBuffer);
+    }
     return result;
   }
 
@@ -274,13 +279,7 @@ public class ListVector extends BaseRepeatedValueVector
     // Both are set to 0 means 0 bytes are written to the IPC stream which will crash IPC readers
     // in other libraries. According to Arrow spec, we should still output the offset buffer which
     // is [0].
-    final long requiredOffsetBufferSize = (long) (valueCount + 1) * OFFSET_WIDTH;
-    if (offsetBuffer.capacity() == 0) {
-      ArrowBuf newOffsetBuffer = allocateOffsetBuffer(requiredOffsetBufferSize);
-      offsetBuffer.getReferenceManager().release();
-      offsetBuffer = newOffsetBuffer;
-    }
-    offsetBuffer.writerIndex(requiredOffsetBufferSize);
+    offsetBuffer.writerIndex((long) (valueCount + 1) * OFFSET_WIDTH);
   }
 
   /**
