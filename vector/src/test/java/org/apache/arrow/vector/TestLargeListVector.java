@@ -1160,9 +1160,7 @@ public class TestLargeListVector {
       List<ArrowBuf> fieldBuffers = list.getFieldBuffers();
       assertTrue(
           fieldBuffers.get(1).readableBytes() >= LargeListVector.OFFSET_WIDTH,
-          "Offset buffer should be readable for >= "
-              + LargeListVector.OFFSET_WIDTH
-              + " bytes");
+          "Offset buffer should be readable for >= " + LargeListVector.OFFSET_WIDTH + " bytes");
       assertEquals(0L, fieldBuffers.get(1).getLong(0));
     }
   }
