@@ -1123,35 +1123,47 @@ public class TestLargeListVector {
   @Test
   public void testEmptyLargeListOffsetBufferWithoutAllocate() {
     // Regression test for the Arrow 19 IOOBE: a never-allocated LargeListVector must still produce
-    // a valid offset buffer after setValueCount(0). Without the realloc guard in
-    // setReaderAndWriterIndex(), this sets writerIndex=8 on a capacity-0 buffer.
+    // a valid offset buffer for serialization after setValueCount(0). getFieldBuffers() substitutes
+    // a properly sized temporary offset buffer (holding offset[0] = 0) without mutating the
+    // vector's own capacity-0 offset buffer.
     try (LargeListVector list = LargeListVector.empty("list", allocator)) {
       list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
       list.setValueCount(0); // no allocateNew() — offset buffer starts at capacity 0
 
       List<ArrowBuf> buffers = list.getFieldBuffers();
+      ArrowBuf offsetBuffer = buffers.get(1);
       assertTrue(
-          buffers.get(1).readableBytes() >= LargeListVector.OFFSET_WIDTH,
+          offsetBuffer.readableBytes() >= LargeListVector.OFFSET_WIDTH,
           "Offset buffer should have at least "
               + LargeListVector.OFFSET_WIDTH
               + " bytes for offset[0]");
-      assertEquals(0L, list.getOffsetBuffer().getLong(0));
+      assertEquals(0L, offsetBuffer.getLong(0));
+      // The vector's own offset buffer is left untouched so subsequent writes still work.
+      assertEquals(0, list.getOffsetBuffer().capacity());
     }
   }
 
   @Test
   public void testEmptyLargeListGetBuffersWithoutAllocate() {
-    // Exercises the getBuffers(false) entry point — the IPC serialization path.
+    // Exercises the IPC serialization entry points — getBuffers(false) and getFieldBuffers(), the
+    // latter being the path that produced the original Netty IOOBE.
     try (LargeListVector list = LargeListVector.empty("list", allocator)) {
       list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
       list.setValueCount(0);
 
+      // getBufferSize() returns 0 for valueCount==0, so getBuffers returns an empty array and must
+      // not crash on the never-allocated offset buffer.
       ArrowBuf[] bufs = list.getBuffers(false);
+      assertEquals(0, bufs.length);
+
+      // getFieldBuffers() must hand serializers a readable offset buffer holding offset[0] = 0.
+      List<ArrowBuf> fieldBuffers = list.getFieldBuffers();
       assertTrue(
-          list.getOffsetBuffer().capacity() >= LargeListVector.OFFSET_WIDTH,
-          "Offset buffer capacity should be >= "
+          fieldBuffers.get(1).readableBytes() >= LargeListVector.OFFSET_WIDTH,
+          "Offset buffer should be readable for >= "
               + LargeListVector.OFFSET_WIDTH
-              + " after setReaderAndWriterIndex");
+              + " bytes");
+      assertEquals(0L, fieldBuffers.get(1).getLong(0));
     }
   }
 

@@ -1402,38 +1402,48 @@ public class TestListVector {
   @Test
   public void testEmptyListOffsetBufferWithoutAllocate() {
     // Regression test for the Arrow 19 IOOBE: a never-allocated ListVector must still produce
-    // a valid offset buffer after setValueCount(0). Without the realloc guard in
-    // setReaderAndWriterIndex(), this sets writerIndex=4 on a capacity-0 buffer.
+    // a valid offset buffer for serialization after setValueCount(0). getFieldBuffers() substitutes
+    // a properly sized temporary offset buffer (holding offset[0] = 0) without mutating the
+    // vector's own capacity-0 offset buffer.
     try (ListVector list = ListVector.empty("list", allocator)) {
       list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
       list.setValueCount(0); // no allocateNew() — offset buffer starts at capacity 0
 
       List<ArrowBuf> buffers = list.getFieldBuffers();
+      ArrowBuf offsetBuffer = buffers.get(1);
       assertTrue(
-          buffers.get(1).readableBytes() >= BaseRepeatedValueVector.OFFSET_WIDTH,
+          offsetBuffer.readableBytes() >= BaseRepeatedValueVector.OFFSET_WIDTH,
           "Offset buffer should have at least "
               + BaseRepeatedValueVector.OFFSET_WIDTH
               + " bytes for offset[0]");
-      assertEquals(0, list.getOffsetBuffer().getInt(0));
+      assertEquals(0, offsetBuffer.getInt(0));
+      // The vector's own offset buffer is left untouched so subsequent writes still work.
+      assertEquals(0, list.getOffsetBuffer().capacity());
     }
   }
 
   @Test
   public void testEmptyListGetBuffersWithoutAllocate() {
-    // Exercises the getBuffers(false) entry point — the IPC serialization path that produced the
-    // original Netty IOOBE via VectorUnloader -> NettyArrowBuf.unwrapBuffer().
+    // Exercises the IPC serialization entry points — getBuffers(false) and getFieldBuffers(), the
+    // latter being the path that produced the original Netty IOOBE via
+    // VectorUnloader -> NettyArrowBuf.unwrapBuffer().
     try (ListVector list = ListVector.empty("list", allocator)) {
       list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
       list.setValueCount(0);
 
+      // getBufferSize() returns 0 for valueCount==0, so getBuffers returns an empty array and must
+      // not crash on the never-allocated offset buffer.
       ArrowBuf[] bufs = list.getBuffers(false);
-      // getBufferSize() returns 0 for valueCount==0, so getBuffers returns empty array.
-      // But the offset buffer on the vector itself must have been grown to valid capacity.
+      assertEquals(0, bufs.length);
+
+      // getFieldBuffers() must hand serializers a readable offset buffer holding offset[0] = 0.
+      List<ArrowBuf> fieldBuffers = list.getFieldBuffers();
       assertTrue(
-          list.getOffsetBuffer().capacity() >= BaseRepeatedValueVector.OFFSET_WIDTH,
-          "Offset buffer capacity should be >= "
+          fieldBuffers.get(1).readableBytes() >= BaseRepeatedValueVector.OFFSET_WIDTH,
+          "Offset buffer should be readable for >= "
               + BaseRepeatedValueVector.OFFSET_WIDTH
-              + " after setReaderAndWriterIndex");
+              + " bytes");
+      assertEquals(0, fieldBuffers.get(1).getInt(0));
     }
   }
 

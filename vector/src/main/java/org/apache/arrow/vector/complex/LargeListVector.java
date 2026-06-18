@@ -106,6 +106,13 @@ public class LargeListVector extends BaseValueVector
   private int lastSet;
 
   /**
+   * Temporary offset buffer used only for serialization of a never-allocated vector (see {@link
+   * #getFieldBuffers()}). Owned by this vector so it is released in {@link #clear()} rather than
+   * leaked.
+   */
+  private ArrowBuf serializationOffsetBuffer;
+
+  /**
    * Constructs a new instance.
    *
    * @param name The name of the instance.
@@ -134,6 +141,7 @@ public class LargeListVector extends BaseValueVector
         BitVectorHelper.getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION);
     this.lastSet = -1;
     this.offsetBuffer = allocator.getEmpty();
+    this.serializationOffsetBuffer = allocator.getEmpty();
     this.vector = vector == null ? DEFAULT_DATA_VECTOR : vector;
     this.valueCount = 0;
   }
@@ -277,10 +285,23 @@ public class LargeListVector extends BaseValueVector
     List<ArrowBuf> result = new ArrayList<>(2);
     setReaderAndWriterIndex();
     result.add(validityBuffer);
+    // A never-allocated vector has an empty (capacity 0) offset buffer, yet setReaderAndWriterIndex
+    // marks OFFSET_WIDTH bytes as written so that serializers still emit offset[0] = 0 (an empty
+    // offset buffer would crash IPC readers in other libraries). Serializers read `writerIndex`
+    // bytes, so we must hand them a properly sized buffer. Mirror exportCDataBuffers() by
+    // substituting a temporary buffer instead of mutating this.offsetBuffer, which validation and
+    // subsequent writes still rely on being empty. The temporary is owned by this vector and
+    // released in clear()/close(), so it is not leaked.
     if (offsetBuffer.capacity() == 0 && offsetBuffer.writerIndex() > 0) {
-      ArrowBuf tempOffset = allocateOffsetBuffer(offsetBuffer.writerIndex());
-      tempOffset.writerIndex(offsetBuffer.writerIndex());
-      result.add(tempOffset);
+      // Allocate directly rather than via allocateOffsetBuffer(), which would overwrite
+      // offsetAllocationSizeInBytes and shrink a later allocateNew()'s offset buffer.
+      final long size = offsetBuffer.writerIndex();
+      serializationOffsetBuffer = releaseBuffer(serializationOffsetBuffer);
+      serializationOffsetBuffer = allocator.buffer(size);
+      serializationOffsetBuffer.readerIndex(0);
+      serializationOffsetBuffer.setZero(0, serializationOffsetBuffer.capacity());
+      serializationOffsetBuffer.writerIndex(size);
+      result.add(serializationOffsetBuffer);
     } else {
       result.add(offsetBuffer);
     }
@@ -810,6 +831,7 @@ public class LargeListVector extends BaseValueVector
     valueCount = 0;
     super.clear();
     validityBuffer = releaseBuffer(validityBuffer);
+    serializationOffsetBuffer = releaseBuffer(serializationOffsetBuffer);
     lastSet = -1;
   }
 
