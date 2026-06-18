@@ -317,11 +317,8 @@ public class LargeListVector extends BaseValueVector
     // in other libraries. According to Arrow spec, we should still output the offset buffer which
     // is [0].
     final long requiredOffsetBufferSize = (long) (valueCount + 1) * OFFSET_WIDTH;
-    if (offsetBuffer.capacity() < requiredOffsetBufferSize) {
+    if (offsetBuffer.capacity() == 0) {
       ArrowBuf newOffsetBuffer = allocateOffsetBuffer(requiredOffsetBufferSize);
-      if (offsetBuffer.capacity() > 0) {
-        newOffsetBuffer.setBytes(0, offsetBuffer, 0, offsetBuffer.capacity());
-      }
       offsetBuffer.getReferenceManager().release();
       offsetBuffer = newOffsetBuffer;
     }
