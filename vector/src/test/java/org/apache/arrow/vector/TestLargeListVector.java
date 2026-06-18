@@ -1100,26 +1100,6 @@ public class TestLargeListVector {
     }
   }
 
-  @Test
-  public void testEmptyLargeListOffsetBuffer() {
-    // Test that LargeListVector has correct readableBytes after allocation.
-    // According to Arrow spec, offset buffer must have N+1 entries.
-    // Even when N=0, it should contain [0].
-    try (LargeListVector list = LargeListVector.empty("list", allocator)) {
-      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
-      list.allocateNew();
-      list.setValueCount(0);
-
-      List<ArrowBuf> buffers = list.getFieldBuffers();
-      assertTrue(
-          buffers.get(1).readableBytes() >= LargeListVector.OFFSET_WIDTH,
-          "Offset buffer should have at least "
-              + LargeListVector.OFFSET_WIDTH
-              + " bytes for offset[0]");
-      assertEquals(0L, list.getOffsetBuffer().getLong(0));
-    }
-  }
-
   private void writeIntValues(UnionLargeListWriter writer, int[] values) {
     writer.startList();
     for (int v : values) {

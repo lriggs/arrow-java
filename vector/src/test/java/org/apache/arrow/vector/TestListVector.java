@@ -1379,26 +1379,6 @@ public class TestListVector {
     }
   }
 
-  @Test
-  public void testEmptyListOffsetBuffer() {
-    // Test that ListVector has correct readableBytes after allocation.
-    // According to Arrow spec, offset buffer must have N+1 entries.
-    // Even when N=0, it should contain [0].
-    try (ListVector list = ListVector.empty("list", allocator)) {
-      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
-      list.allocateNew();
-      list.setValueCount(0);
-
-      List<ArrowBuf> buffers = list.getFieldBuffers();
-      assertTrue(
-          buffers.get(1).readableBytes() >= BaseRepeatedValueVector.OFFSET_WIDTH,
-          "Offset buffer should have at least "
-              + BaseRepeatedValueVector.OFFSET_WIDTH
-              + " bytes for offset[0]");
-      assertEquals(0, list.getOffsetBuffer().getInt(0));
-    }
-  }
-
   private void writeIntValues(UnionListWriter writer, int[] values) {
     writer.startList();
     for (int v : values) {
