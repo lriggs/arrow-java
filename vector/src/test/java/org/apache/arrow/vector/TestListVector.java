@@ -1399,6 +1399,44 @@ public class TestListVector {
     }
   }
 
+  @Test
+  public void testEmptyListOffsetBufferWithoutAllocate() {
+    // Regression test for the Arrow 19 IOOBE: a never-allocated ListVector must still produce
+    // a valid offset buffer after setValueCount(0). Without the realloc guard in
+    // setReaderAndWriterIndex(), this sets writerIndex=4 on a capacity-0 buffer.
+    try (ListVector list = ListVector.empty("list", allocator)) {
+      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      list.setValueCount(0); // no allocateNew() — offset buffer starts at capacity 0
+
+      List<ArrowBuf> buffers = list.getFieldBuffers();
+      assertTrue(
+          buffers.get(1).readableBytes() >= BaseRepeatedValueVector.OFFSET_WIDTH,
+          "Offset buffer should have at least "
+              + BaseRepeatedValueVector.OFFSET_WIDTH
+              + " bytes for offset[0]");
+      assertEquals(0, list.getOffsetBuffer().getInt(0));
+    }
+  }
+
+  @Test
+  public void testEmptyListGetBuffersWithoutAllocate() {
+    // Exercises the getBuffers(false) entry point — the IPC serialization path that produced the
+    // original Netty IOOBE via VectorUnloader -> NettyArrowBuf.unwrapBuffer().
+    try (ListVector list = ListVector.empty("list", allocator)) {
+      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      list.setValueCount(0);
+
+      ArrowBuf[] bufs = list.getBuffers(false);
+      // getBufferSize() returns 0 for valueCount==0, so getBuffers returns empty array.
+      // But the offset buffer on the vector itself must have been grown to valid capacity.
+      assertTrue(
+          list.getOffsetBuffer().capacity() >= BaseRepeatedValueVector.OFFSET_WIDTH,
+          "Offset buffer capacity should be >= "
+              + BaseRepeatedValueVector.OFFSET_WIDTH
+              + " after setReaderAndWriterIndex");
+    }
+  }
+
   private void writeIntValues(UnionListWriter writer, int[] values) {
     writer.startList();
     for (int v : values) {

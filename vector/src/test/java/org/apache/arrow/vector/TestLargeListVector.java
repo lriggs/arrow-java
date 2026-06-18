@@ -1120,6 +1120,41 @@ public class TestLargeListVector {
     }
   }
 
+  @Test
+  public void testEmptyLargeListOffsetBufferWithoutAllocate() {
+    // Regression test for the Arrow 19 IOOBE: a never-allocated LargeListVector must still produce
+    // a valid offset buffer after setValueCount(0). Without the realloc guard in
+    // setReaderAndWriterIndex(), this sets writerIndex=8 on a capacity-0 buffer.
+    try (LargeListVector list = LargeListVector.empty("list", allocator)) {
+      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      list.setValueCount(0); // no allocateNew() — offset buffer starts at capacity 0
+
+      List<ArrowBuf> buffers = list.getFieldBuffers();
+      assertTrue(
+          buffers.get(1).readableBytes() >= LargeListVector.OFFSET_WIDTH,
+          "Offset buffer should have at least "
+              + LargeListVector.OFFSET_WIDTH
+              + " bytes for offset[0]");
+      assertEquals(0L, list.getOffsetBuffer().getLong(0));
+    }
+  }
+
+  @Test
+  public void testEmptyLargeListGetBuffersWithoutAllocate() {
+    // Exercises the getBuffers(false) entry point — the IPC serialization path.
+    try (LargeListVector list = LargeListVector.empty("list", allocator)) {
+      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      list.setValueCount(0);
+
+      ArrowBuf[] bufs = list.getBuffers(false);
+      assertTrue(
+          list.getOffsetBuffer().capacity() >= LargeListVector.OFFSET_WIDTH,
+          "Offset buffer capacity should be >= "
+              + LargeListVector.OFFSET_WIDTH
+              + " after setReaderAndWriterIndex");
+    }
+  }
+
   private void writeIntValues(UnionLargeListWriter writer, int[] values) {
     writer.startList();
     for (int v : values) {
