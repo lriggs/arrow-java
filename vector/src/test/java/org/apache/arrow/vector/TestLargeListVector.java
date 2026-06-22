@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import io.netty.buffer.NettyArrowBuf;
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
@@ -953,6 +954,38 @@ public class TestLargeListVector {
         assertEquals(expectedSize, vector.getBufferSizeFor(valueCount));
       }
     }
+  }
+
+  @Test
+  public void testEmptyLargeListOffsetBuffer() {
+    try (LargeListVector list = LargeListVector.empty("list", allocator)) {
+      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      list.allocateNew();
+      list.setValueCount(0);
+
+      assertEmptyLargeListOffsetBuffer(list);
+    }
+  }
+
+  @Test
+  public void testUnallocatedEmptyLargeListOffsetBufferCanBeUnwrappedAsNettyBuffer() {
+    try (LargeListVector list = LargeListVector.empty("list", allocator)) {
+      list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      list.setValueCount(0);
+
+      ArrowBuf offsetBuffer = assertEmptyLargeListOffsetBuffer(list);
+      NettyArrowBuf nettyBuffer = NettyArrowBuf.unwrapBuffer(offsetBuffer);
+      assertEquals(LargeListVector.OFFSET_WIDTH, nettyBuffer.readableBytes());
+    }
+  }
+
+  private ArrowBuf assertEmptyLargeListOffsetBuffer(LargeListVector list) {
+    List<ArrowBuf> buffers = list.getFieldBuffers();
+    ArrowBuf offsetBuffer = buffers.get(1);
+    assertEquals(LargeListVector.OFFSET_WIDTH, offsetBuffer.readableBytes());
+    assertTrue(offsetBuffer.capacity() >= LargeListVector.OFFSET_WIDTH);
+    assertEquals(0L, offsetBuffer.getLong(0));
+    return offsetBuffer;
   }
 
   @Test

@@ -263,15 +263,27 @@ public class ListVector extends BaseRepeatedValueVector
 
   /** Set the reader and writer indexes for the inner buffers. */
   private void setReaderAndWriterIndex() {
+    final long requiredOffsetBufferCapacity = (long) (valueCount + 1) * OFFSET_WIDTH;
     validityBuffer.readerIndex(0);
     offsetBuffer.readerIndex(0);
     if (valueCount == 0) {
       validityBuffer.writerIndex(0);
-      offsetBuffer.writerIndex(0);
+      ensureEmptyOffsetBufferCapacity(requiredOffsetBufferCapacity);
     } else {
       validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
-      offsetBuffer.writerIndex((valueCount + 1) * OFFSET_WIDTH);
     }
+    // IPC serializers use readerIndex and writerIndex to determine readable bytes. Even when the
+    // list is empty, the Arrow layout requires the offset buffer to contain offset[0].
+    offsetBuffer.writerIndex(requiredOffsetBufferCapacity);
+  }
+
+  private void ensureEmptyOffsetBufferCapacity(long requiredCapacity) {
+    if (offsetBuffer.capacity() >= requiredCapacity) {
+      return;
+    }
+    ArrowBuf oldOffsetBuffer = offsetBuffer;
+    offsetBuffer = allocateOffsetBuffer(requiredCapacity);
+    oldOffsetBuffer.getReferenceManager().release();
   }
 
   /**
