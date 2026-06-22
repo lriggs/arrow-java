@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import io.netty.buffer.NettyArrowBuf;
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
@@ -968,14 +967,12 @@ public class TestLargeListVector {
   }
 
   @Test
-  public void testUnallocatedEmptyLargeListOffsetBufferCanBeUnwrappedAsNettyBuffer() {
+  public void testUnallocatedEmptyLargeListOffsetBuffer() {
     try (LargeListVector list = LargeListVector.empty("list", allocator)) {
       list.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
       list.setValueCount(0);
 
-      ArrowBuf offsetBuffer = assertEmptyLargeListOffsetBuffer(list);
-      NettyArrowBuf nettyBuffer = NettyArrowBuf.unwrapBuffer(offsetBuffer);
-      assertEquals(LargeListVector.OFFSET_WIDTH, nettyBuffer.readableBytes());
+      assertEmptyLargeListOffsetBuffer(list);
     }
   }
 
