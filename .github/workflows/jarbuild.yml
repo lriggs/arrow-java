@@ -16,7 +16,7 @@
 # under the License.
 
 name: JarBuild
-on: 
+on:
   workflow_dispatch:
     inputs:
       arrow_branch:
