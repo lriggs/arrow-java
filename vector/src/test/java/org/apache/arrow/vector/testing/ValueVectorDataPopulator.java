@@ -633,10 +633,9 @@ public class ValueVectorDataPopulator {
 
   /** Populate values for {@link ListVector}. */
   public static void setVector(ListVector vector, List<Integer>... values) {
+    vector.allocateNewSafe();
     Types.MinorType type = Types.MinorType.INT;
     vector.addOrGetVector(FieldType.nullable(type.getType()));
-    vector.setInitialCapacity(values.length);
-    vector.allocateNewSafe();
 
     IntVector dataVector = (IntVector) vector.getDataVector();
     dataVector.allocateNew();
@@ -663,10 +662,9 @@ public class ValueVectorDataPopulator {
 
   /** Populate values for {@link LargeListVector}. */
   public static void setVector(LargeListVector vector, List<Integer>... values) {
+    vector.allocateNewSafe();
     Types.MinorType type = Types.MinorType.INT;
     vector.addOrGetVector(FieldType.nullable(type.getType()));
-    vector.setInitialCapacity(values.length);
-    vector.allocateNewSafe();
 
     IntVector dataVector = (IntVector) vector.getDataVector();
     dataVector.allocateNew();
