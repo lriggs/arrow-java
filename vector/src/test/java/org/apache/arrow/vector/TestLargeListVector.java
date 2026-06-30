@@ -976,6 +976,22 @@ public class TestLargeListVector {
     }
   }
 
+  @Test
+  public void testSplitAndTransferEmptyLargeListOffsetBuffer() {
+    try (LargeListVector source = LargeListVector.empty("source", allocator);
+        LargeListVector target = LargeListVector.empty("target", allocator)) {
+      source.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      target.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      source.allocateNew();
+      source.setValueCount(0);
+
+      TransferPair transferPair = source.makeTransferPair(target);
+      transferPair.splitAndTransfer(0, 0);
+
+      assertEmptyLargeListOffsetBuffer(target);
+    }
+  }
+
   private ArrowBuf assertEmptyLargeListOffsetBuffer(LargeListVector list) {
     List<ArrowBuf> buffers = list.getFieldBuffers();
     ArrowBuf offsetBuffer = buffers.get(1);

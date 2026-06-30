@@ -1156,6 +1156,22 @@ public class TestListVector {
     }
   }
 
+  @Test
+  public void testSplitAndTransferEmptyListOffsetBuffer() {
+    try (ListVector source = ListVector.empty("source", allocator);
+        ListVector target = ListVector.empty("target", allocator)) {
+      source.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      target.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      source.allocateNew();
+      source.setValueCount(0);
+
+      TransferPair transferPair = source.makeTransferPair(target);
+      transferPair.splitAndTransfer(0, 0);
+
+      assertEmptyListOffsetBuffer(target);
+    }
+  }
+
   private ArrowBuf assertEmptyListOffsetBuffer(ListVector list) {
     List<ArrowBuf> buffers = list.getFieldBuffers();
     ArrowBuf offsetBuffer = buffers.get(1);
