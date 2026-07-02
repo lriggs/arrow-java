@@ -28,8 +28,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.complex.BaseRepeatedValueVector;
 import org.apache.arrow.vector.complex.DenseUnionVector;
 import org.apache.arrow.vector.complex.FixedSizeListVector;
 import org.apache.arrow.vector.complex.LargeListViewVector;
@@ -115,6 +117,8 @@ public class TestSplitAndTransfer {
     TransferPair transferPair = listVector.getTransferPair(allocator);
     transferPair.splitAndTransfer(0, 0);
     assertEquals(0, transferPair.getTo().getValueCount());
+    transferPair.getTo().clear();
+    listVector.clear();
     // BaseFixedWidthVector
     IntVector intVector = new IntVector("", allocator);
     transferPair = intVector.getTransferPair(allocator);
@@ -911,6 +915,11 @@ public class TestSplitAndTransfer {
 
       tp.splitAndTransfer(0, 0);
       assertEquals(valueCount, newListVector.getValueCount());
+      List<ArrowBuf> buffers = newListVector.getFieldBuffers();
+      ArrowBuf offsetBuffer = buffers.get(1);
+      assertEquals(BaseRepeatedValueVector.OFFSET_WIDTH, offsetBuffer.readableBytes());
+      assertTrue(offsetBuffer.capacity() >= BaseRepeatedValueVector.OFFSET_WIDTH);
+      assertEquals(0, offsetBuffer.getInt(0));
 
       newListVector.clear();
     }
