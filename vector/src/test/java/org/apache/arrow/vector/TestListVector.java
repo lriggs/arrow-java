@@ -1172,6 +1172,39 @@ public class TestListVector {
     }
   }
 
+  @Test
+  public void testSplitAndTransferEmptyListAllocatesOffsetBuffer() {
+    try (ListVector fromVector = ListVector.empty("fromVector", allocator);
+        ListVector toVector = ListVector.empty("toVector", allocator)) {
+      fromVector.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      fromVector.allocateNew();
+      fromVector.setValueCount(0);
+
+      TransferPair transferPair = fromVector.makeTransferPair(toVector);
+      transferPair.splitAndTransfer(0, 0);
+
+      assertAllocatedEmptyListOffsetBuffer(toVector);
+    }
+  }
+
+  @Test
+  public void testSplitAndTransferEmptyNestedListAllocatesOffsetBuffers() {
+    try (ListVector fromVector = ListVector.empty("fromVector", allocator);
+        ListVector toVector = ListVector.empty("toVector", allocator)) {
+      fromVector.addOrGetVector(FieldType.nullable(MinorType.LIST.getType()));
+      ListVector childVector = (ListVector) fromVector.getDataVector();
+      childVector.addOrGetVector(FieldType.nullable(MinorType.INT.getType()));
+      fromVector.allocateNew();
+      fromVector.setValueCount(0);
+
+      TransferPair transferPair = fromVector.makeTransferPair(toVector);
+      transferPair.splitAndTransfer(0, 0);
+
+      assertAllocatedEmptyListOffsetBuffer(toVector);
+      assertAllocatedEmptyListOffsetBuffer((ListVector) toVector.getDataVector());
+    }
+  }
+
   private ArrowBuf assertEmptyListOffsetBuffer(ListVector list) {
     List<ArrowBuf> buffers = list.getFieldBuffers();
     ArrowBuf offsetBuffer = buffers.get(1);
@@ -1179,6 +1212,12 @@ public class TestListVector {
     assertTrue(offsetBuffer.capacity() >= BaseRepeatedValueVector.OFFSET_WIDTH);
     assertEquals(0, offsetBuffer.getInt(0));
     return offsetBuffer;
+  }
+
+  private void assertAllocatedEmptyListOffsetBuffer(ListVector list) {
+    ArrowBuf offsetBuffer = list.getOffsetBuffer();
+    assertTrue(offsetBuffer.capacity() >= BaseRepeatedValueVector.OFFSET_WIDTH);
+    assertEquals(0, offsetBuffer.getInt(0));
   }
 
   @Test
