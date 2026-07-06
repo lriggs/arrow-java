@@ -284,6 +284,8 @@ public class ListVector extends BaseRepeatedValueVector
     long previousOffsetAllocationSizeInBytes = offsetAllocationSizeInBytes;
     ArrowBuf oldOffsetBuffer = offsetBuffer;
     offsetBuffer = allocateOffsetBuffer(requiredCapacity);
+    offsetBuffer.setBytes(
+        0, oldOffsetBuffer, 0, Math.min(oldOffsetBuffer.capacity(), requiredCapacity));
     offsetAllocationSizeInBytes = previousOffsetAllocationSizeInBytes;
     oldOffsetBuffer.getReferenceManager().release();
   }
