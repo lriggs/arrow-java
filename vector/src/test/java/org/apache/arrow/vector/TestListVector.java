@@ -1465,7 +1465,7 @@ public class TestListVector {
   }
 
   @Test
-  public void testEmptyListOffsetBuffer() {
+  public void testEmptyListOffsetBufferSize() {
     // Test that ListVector has correct readableBytes after allocation.
     // According to Arrow spec, offset buffer must have N+1 entries.
     // Even when N=0, it should contain [0].
