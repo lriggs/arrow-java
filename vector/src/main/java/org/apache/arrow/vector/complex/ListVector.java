@@ -263,10 +263,12 @@ public class ListVector extends BaseRepeatedValueVector
 
   /** Set the reader and writer indexes for the inner buffers. */
   private void setReaderAndWriterIndex() {
+    final long requiredOffsetBufferCapacity = (long) (valueCount + 1) * OFFSET_WIDTH;
     validityBuffer.readerIndex(0);
     offsetBuffer.readerIndex(0);
     if (valueCount == 0) {
       validityBuffer.writerIndex(0);
+      ensureEmptyOffsetBufferCapacity(requiredOffsetBufferCapacity);
     } else {
       validityBuffer.writerIndex(BitVectorHelper.getValidityBufferSizeFromCount(valueCount));
     }
@@ -275,6 +277,19 @@ public class ListVector extends BaseRepeatedValueVector
     // in other libraries. According to Arrow spec, we should still output the offset buffer which
     // is [0].
     offsetBuffer.writerIndex((long) (valueCount + 1) * OFFSET_WIDTH);
+  }
+
+  private void ensureEmptyOffsetBufferCapacity(long requiredCapacity) {
+    if (offsetBuffer.capacity() >= requiredCapacity) {
+      return;
+    }
+    long previousOffsetAllocationSizeInBytes = offsetAllocationSizeInBytes;
+    ArrowBuf oldOffsetBuffer = offsetBuffer;
+    offsetBuffer = allocateOffsetBuffer(requiredCapacity);
+    offsetBuffer.setBytes(
+        0, oldOffsetBuffer, 0, Math.min(oldOffsetBuffer.capacity(), requiredCapacity));
+    offsetAllocationSizeInBytes = previousOffsetAllocationSizeInBytes;
+    oldOffsetBuffer.getReferenceManager().release();
   }
 
   /**
@@ -572,6 +587,10 @@ public class ListVector extends BaseRepeatedValueVector
         dataTransferPair.splitAndTransfer(startPoint, sliceLength);
         to.lastSet = length - 1;
         to.setValueCount(length);
+      } else {
+        to.ensureEmptyOffsetBufferCapacity(OFFSET_WIDTH);
+        dataTransferPair.splitAndTransfer(0, 0);
+        to.setValueCount(0);
       }
     }
 
