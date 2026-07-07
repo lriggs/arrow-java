@@ -45,6 +45,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -75,18 +76,23 @@ import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.ipc.ReadChannel;
 import org.apache.arrow.vector.ipc.message.MessageSerializer;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.ExtensionTypeRegistry;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.Text;
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaDatabaseMetaData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Arrow Flight JDBC's implementation of {@link DatabaseMetaData}. */
 public class ArrowDatabaseMetadata extends AvaticaDatabaseMetaData {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ArrowDatabaseMetadata.class);
   private static final String JAVA_REGEX_SPECIALS = "[]()|^-+*?{}$\\.";
   private static final Charset CHARSET = StandardCharsets.UTF_8;
   private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
@@ -164,6 +170,9 @@ public class ArrowDatabaseMetadata extends AvaticaDatabaseMetaData {
         LONGNVARCHAR, SqlSupportsConvert.SQL_CONVERT_LONGVARCHAR_VALUE);
     sqlTypesToFlightEnumConvertTypes.put(DATE, SqlSupportsConvert.SQL_CONVERT_DATE_VALUE);
     sqlTypesToFlightEnumConvertTypes.put(TIMESTAMP, SqlSupportsConvert.SQL_CONVERT_TIMESTAMP_VALUE);
+
+    // Register the UUID extension type so it is always available for the driver
+    ExtensionTypeRegistry.register(UuidType.INSTANCE);
   }
 
   ArrowDatabaseMetadata(final AvaticaConnection connection) {
@@ -769,7 +778,34 @@ public class ArrowDatabaseMetadata extends AvaticaDatabaseMetaData {
         }
       }
     }
-    return desiredType.cast(cachedSqlInfo.get(sqlInfoCommand));
+    T value = desiredType.cast(cachedSqlInfo.get(sqlInfoCommand));
+    if (value != null) {
+      return value;
+    }
+    LOGGER.debug(
+        "SqlInfo {} not provided by server, returning default for type {}",
+        sqlInfoCommand.name(),
+        desiredType.getSimpleName());
+
+    // Return sensible defaults when SqlInfo is unavailable
+    if (desiredType == Long.class) {
+      return desiredType.cast(0L);
+    } else if (desiredType == Integer.class) {
+      return desiredType.cast(0);
+    } else if (desiredType == Boolean.class) {
+      return desiredType.cast(false);
+    } else if (desiredType == String.class) {
+      return desiredType.cast("");
+    } else if (desiredType == Map.class) {
+      return desiredType.cast(Collections.emptyMap());
+    } else if (desiredType == List.class) {
+      return desiredType.cast(Collections.emptyList());
+    }
+
+    throw new SQLException(
+        String.format(
+            "The value of the SqlInfo %s is null and it could not be cast to %s.",
+            sqlInfoCommand.name(), desiredType.getName()));
   }
 
   private Optional<String> convertListSqlInfoToString(final List<?> sqlInfoList) {
@@ -1066,6 +1102,7 @@ public class ArrowDatabaseMetadata extends AvaticaDatabaseMetaData {
         (VarCharVector) currentRoot.getVector("IS_AUTOINCREMENT");
     final VarCharVector isGeneratedColumnVector =
         (VarCharVector) currentRoot.getVector("IS_GENERATEDCOLUMN");
+    final VarCharVector remarksVector = (VarCharVector) currentRoot.getVector("REMARKS");
 
     for (int i = 0; i < tableColumnsSize; i++, ordinalIndex++) {
       final Field field = tableColumns.get(i);
@@ -1137,6 +1174,11 @@ public class ArrowDatabaseMetadata extends AvaticaDatabaseMetaData {
         isAutoincrementVector.setSafe(insertIndex, booleanToYesOrNo(autoIncrement));
       } else {
         isAutoincrementVector.setSafe(insertIndex, EMPTY_BYTE_ARRAY);
+      }
+
+      String remarks = columnMetadata.getRemarks();
+      if (remarks != null) {
+        remarksVector.setSafe(insertIndex, remarks.getBytes(CHARSET));
       }
 
       // Fields also don't hold information about IS_AUTOINCREMENT and IS_GENERATEDCOLUMN,

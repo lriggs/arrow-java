@@ -16,6 +16,7 @@
  */
 package org.apache.arrow.vector.types.pojo;
 
+import static org.apache.arrow.vector.TestUtils.ensureRegistered;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,11 +42,15 @@ import org.apache.arrow.vector.ExtensionTypeVector;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.FixedSizeBinaryVector;
 import org.apache.arrow.vector.Float4Vector;
+import org.apache.arrow.vector.UuidVector;
 import org.apache.arrow.vector.ValueIterableVector;
+import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.compare.Range;
 import org.apache.arrow.vector.compare.RangeEqualsVisitor;
 import org.apache.arrow.vector.complex.StructVector;
+import org.apache.arrow.vector.complex.writer.FieldWriter;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.ipc.ArrowFileReader;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
 import org.apache.arrow.vector.types.FloatingPointPrecision;
@@ -58,9 +63,9 @@ public class TestExtensionType {
   /** Test that a custom UUID type can be round-tripped through a temporary file. */
   @Test
   public void roundtripUuid() throws IOException {
-    ExtensionTypeRegistry.register(new UuidType());
+    ensureRegistered(UuidType.INSTANCE);
     final Schema schema =
-        new Schema(Collections.singletonList(Field.nullable("a", new UuidType())));
+        new Schema(Collections.singletonList(Field.nullable("a", UuidType.INSTANCE)));
     try (final BufferAllocator allocator = new RootAllocator(Integer.MAX_VALUE);
         final VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator)) {
       UUID u1 = UUID.randomUUID();
@@ -88,7 +93,7 @@ public class TestExtensionType {
         assertEquals(root.getSchema(), readerRoot.getSchema());
 
         final Field field = readerRoot.getSchema().getFields().get(0);
-        final UuidType expectedType = new UuidType();
+        final UuidType expectedType = UuidType.INSTANCE;
         assertEquals(
             field.getMetadata().get(ExtensionType.EXTENSION_METADATA_KEY_NAME),
             expectedType.extensionName());
@@ -112,9 +117,9 @@ public class TestExtensionType {
   /** Test that a custom UUID type can be read as its underlying type. */
   @Test
   public void readUnderlyingType() throws IOException {
-    ExtensionTypeRegistry.register(new UuidType());
+    ensureRegistered(UuidType.INSTANCE);
     final Schema schema =
-        new Schema(Collections.singletonList(Field.nullable("a", new UuidType())));
+        new Schema(Collections.singletonList(Field.nullable("a", UuidType.INSTANCE)));
     try (final BufferAllocator allocator = new RootAllocator(Integer.MAX_VALUE);
         final VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator)) {
       UUID u1 = UUID.randomUUID();
@@ -134,7 +139,7 @@ public class TestExtensionType {
         writer.end();
       }
 
-      ExtensionTypeRegistry.unregister(new UuidType());
+      ExtensionTypeRegistry.unregister(UuidType.INSTANCE);
 
       try (final SeekableByteChannel channel =
               Files.newByteChannel(Paths.get(file.getAbsolutePath()));
@@ -152,7 +157,7 @@ public class TestExtensionType {
                 .getByteWidth());
 
         final Field field = readerRoot.getSchema().getFields().get(0);
-        final UuidType expectedType = new UuidType();
+        final UuidType expectedType = UuidType.INSTANCE;
         assertEquals(
             field.getMetadata().get(ExtensionType.EXTENSION_METADATA_KEY_NAME),
             expectedType.extensionName());
@@ -253,7 +258,7 @@ public class TestExtensionType {
 
   @Test
   public void testVectorCompare() {
-    UuidType uuidType = new UuidType();
+    UuidType uuidType = UuidType.INSTANCE;
     ExtensionTypeRegistry.register(uuidType);
     try (final BufferAllocator allocator = new RootAllocator(Integer.MAX_VALUE);
         UuidVector a1 =
@@ -295,75 +300,6 @@ public class TestExtensionType {
     }
   }
 
-  static class UuidType extends ExtensionType {
-
-    @Override
-    public ArrowType storageType() {
-      return new ArrowType.FixedSizeBinary(16);
-    }
-
-    @Override
-    public String extensionName() {
-      return "uuid";
-    }
-
-    @Override
-    public boolean extensionEquals(ExtensionType other) {
-      return other instanceof UuidType;
-    }
-
-    @Override
-    public ArrowType deserialize(ArrowType storageType, String serializedData) {
-      if (!storageType.equals(storageType())) {
-        throw new UnsupportedOperationException(
-            "Cannot construct UuidType from underlying type " + storageType);
-      }
-      return new UuidType();
-    }
-
-    @Override
-    public String serialize() {
-      return "";
-    }
-
-    @Override
-    public FieldVector getNewVector(String name, FieldType fieldType, BufferAllocator allocator) {
-      return new UuidVector(name, allocator, new FixedSizeBinaryVector(name, allocator, 16));
-    }
-  }
-
-  static class UuidVector extends ExtensionTypeVector<FixedSizeBinaryVector>
-      implements ValueIterableVector<UUID> {
-
-    public UuidVector(
-        String name, BufferAllocator allocator, FixedSizeBinaryVector underlyingVector) {
-      super(name, allocator, underlyingVector);
-    }
-
-    @Override
-    public UUID getObject(int index) {
-      final ByteBuffer bb = ByteBuffer.wrap(getUnderlyingVector().getObject(index));
-      return new UUID(bb.getLong(), bb.getLong());
-    }
-
-    @Override
-    public int hashCode(int index) {
-      return hashCode(index, null);
-    }
-
-    @Override
-    public int hashCode(int index, ArrowBufHasher hasher) {
-      return getUnderlyingVector().hashCode(index, hasher);
-    }
-
-    public void set(int index, UUID uuid) {
-      ByteBuffer bb = ByteBuffer.allocate(16);
-      bb.putLong(uuid.getMostSignificantBits());
-      bb.putLong(uuid.getLeastSignificantBits());
-      getUnderlyingVector().set(index, bb.array());
-    }
-  }
-
   static class LocationType extends ExtensionType {
 
     @Override
@@ -398,6 +334,11 @@ public class TestExtensionType {
     @Override
     public FieldVector getNewVector(String name, FieldType fieldType, BufferAllocator allocator) {
       return new LocationVector(name, allocator);
+    }
+
+    @Override
+    public FieldWriter getNewFieldWriter(ValueVector vector) {
+      throw new UnsupportedOperationException("Not yet implemented.");
     }
   }
 

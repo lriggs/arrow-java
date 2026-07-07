@@ -16,10 +16,12 @@
  */
 package org.apache.arrow.driver.jdbc.accessor;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.function.IntSupplier;
 import org.apache.arrow.driver.jdbc.accessor.impl.binary.ArrowFlightJdbcBinaryVectorAccessor;
+import org.apache.arrow.driver.jdbc.accessor.impl.binary.ArrowFlightJdbcUuidVectorAccessor;
 import org.apache.arrow.driver.jdbc.accessor.impl.calendar.ArrowFlightJdbcDateVectorAccessor;
 import org.apache.arrow.driver.jdbc.accessor.impl.calendar.ArrowFlightJdbcDurationVectorAccessor;
 import org.apache.arrow.driver.jdbc.accessor.impl.calendar.ArrowFlightJdbcIntervalVectorAccessor;
@@ -46,6 +48,8 @@ import org.apache.arrow.vector.IntervalYearVector;
 import org.apache.arrow.vector.LargeVarCharVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.ViewVarBinaryVector;
+import org.apache.arrow.vector.ViewVarCharVector;
 import org.apache.arrow.vector.complex.DenseUnionVector;
 import org.apache.arrow.vector.complex.MapVector;
 import org.apache.arrow.vector.complex.StructVector;
@@ -240,6 +244,18 @@ public class ArrowFlightJdbcAccessorFactoryTest {
   }
 
   @Test
+  public void createAccessorForViewVarBinaryVector() {
+    try (ValueVector valueVector =
+        new ViewVarBinaryVector("", rootAllocatorTestExtension.getRootAllocator())) {
+      ArrowFlightJdbcAccessor accessor =
+          ArrowFlightJdbcAccessorFactory.createAccessor(
+              valueVector, GET_CURRENT_ROW, (boolean wasNull) -> {});
+
+      assertTrue(accessor instanceof ArrowFlightJdbcBinaryVectorAccessor);
+    }
+  }
+
+  @Test
   public void createAccessorForTimeStampVector() {
     try (ValueVector valueVector = rootAllocatorTestExtension.createTimeStampMilliVector()) {
       ArrowFlightJdbcAccessor accessor =
@@ -332,6 +348,18 @@ public class ArrowFlightJdbcAccessorFactoryTest {
   public void createAccessorForLargeVarCharVector() {
     try (ValueVector valueVector =
         new LargeVarCharVector("", rootAllocatorTestExtension.getRootAllocator())) {
+      ArrowFlightJdbcAccessor accessor =
+          ArrowFlightJdbcAccessorFactory.createAccessor(
+              valueVector, GET_CURRENT_ROW, (boolean wasNull) -> {});
+
+      assertTrue(accessor instanceof ArrowFlightJdbcVarCharVectorAccessor);
+    }
+  }
+
+  @Test
+  public void createAccessorForViewVarCharVector() {
+    try (ValueVector valueVector =
+        new ViewVarCharVector("", rootAllocatorTestExtension.getRootAllocator())) {
       ArrowFlightJdbcAccessor accessor =
           ArrowFlightJdbcAccessorFactory.createAccessor(
               valueVector, GET_CURRENT_ROW, (boolean wasNull) -> {});
@@ -469,6 +497,17 @@ public class ArrowFlightJdbcAccessorFactoryTest {
               valueVector, GET_CURRENT_ROW, (boolean wasNull) -> {});
 
       assertTrue(accessor instanceof ArrowFlightJdbcMapVectorAccessor);
+    }
+  }
+
+  @Test
+  public void createAccessorForUuidVector() {
+    try (ValueVector valueVector = rootAllocatorTestExtension.createUuidVector()) {
+      ArrowFlightJdbcAccessor accessor =
+          ArrowFlightJdbcAccessorFactory.createAccessor(
+              valueVector, GET_CURRENT_ROW, (boolean wasNull) -> {});
+
+      assertInstanceOf(ArrowFlightJdbcUuidVectorAccessor.class, accessor);
     }
   }
 }

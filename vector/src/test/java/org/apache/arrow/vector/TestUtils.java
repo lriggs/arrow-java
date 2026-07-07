@@ -18,8 +18,10 @@ package org.apache.arrow.vector;
 
 import java.util.Random;
 import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.vector.holders.FixedSizeBinaryHolder;
 import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.ExtensionTypeRegistry;
 import org.apache.arrow.vector.types.pojo.FieldType;
 
 public class TestUtils {
@@ -61,5 +63,27 @@ public class TestUtils {
       sb.append(random.nextInt(10)); // 0-9
     }
     return sb.toString();
+  }
+
+  /*
+   * Ensure the extension type is registered, as there might other tests trying to unregister the
+   * type. ex.: TestExtensionType#readUnderlyingType
+   */
+  public static void ensureRegistered(ArrowType.ExtensionType type) {
+    if (ExtensionTypeRegistry.lookup(type.extensionName()) == null) {
+      ExtensionTypeRegistry.register(type);
+    }
+  }
+
+  public static FixedSizeBinaryHolder fixedSizeBinaryHolder(
+      BufferAllocator allocator, byte[] array) {
+    FixedSizeBinaryHolder holder = new FixedSizeBinaryHolder();
+    holder.byteWidth = array.length;
+    holder.buffer = allocator.buffer(array.length);
+    for (int i = 0; i < array.length; i++) {
+      holder.buffer.setByte(i, array[i]);
+    }
+
+    return holder;
   }
 }

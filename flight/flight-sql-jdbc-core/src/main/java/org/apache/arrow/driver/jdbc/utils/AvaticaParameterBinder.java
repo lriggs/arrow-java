@@ -19,6 +19,7 @@ package org.apache.arrow.driver.jdbc.utils;
 import java.util.List;
 import org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.PreparedStatement;
 import org.apache.arrow.driver.jdbc.converter.impl.BinaryAvaticaParameterConverter;
+import org.apache.arrow.driver.jdbc.converter.impl.BinaryViewAvaticaParameterConverter;
 import org.apache.arrow.driver.jdbc.converter.impl.BoolAvaticaParameterConverter;
 import org.apache.arrow.driver.jdbc.converter.impl.DateAvaticaParameterConverter;
 import org.apache.arrow.driver.jdbc.converter.impl.DecimalAvaticaParameterConverter;
@@ -39,11 +40,17 @@ import org.apache.arrow.driver.jdbc.converter.impl.TimeAvaticaParameterConverter
 import org.apache.arrow.driver.jdbc.converter.impl.TimestampAvaticaParameterConverter;
 import org.apache.arrow.driver.jdbc.converter.impl.UnionAvaticaParameterConverter;
 import org.apache.arrow.driver.jdbc.converter.impl.Utf8AvaticaParameterConverter;
+import org.apache.arrow.driver.jdbc.converter.impl.Utf8ViewAvaticaParameterConverter;
+import org.apache.arrow.driver.jdbc.converter.impl.UuidAvaticaParameterConverter;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.ArrowType.ArrowTypeVisitor;
+import org.apache.arrow.vector.types.pojo.ArrowType.ExtensionType;
 import org.apache.calcite.avatica.remote.TypedValue;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Convert Avatica PreparedStatement parameters from a list of TypedValue to Arrow and bind them to
@@ -108,9 +115,9 @@ public class AvaticaParameterBinder {
    * @param typedValue TypedValue to bind to the vector.
    * @param index Vector index to bind the value at.
    */
-  private void bind(FieldVector vector, TypedValue typedValue, int index) {
+  private void bind(FieldVector vector, @Nullable TypedValue typedValue, int index) {
     try {
-      if (typedValue.value == null) {
+      if (typedValue == null || typedValue.value == null) {
         if (vector.getField().isNullable()) {
           vector.setNull(index);
         } else {
@@ -127,7 +134,7 @@ public class AvaticaParameterBinder {
       throw new UnsupportedOperationException(
           String.format(
               "Binding value of type %s is not yet supported for expected Arrow type %s",
-              typedValue.type, vector.getField().getType()));
+              typedValue == null ? "null" : typedValue.type, vector.getField().getType()));
     }
   }
 
@@ -207,7 +214,7 @@ public class AvaticaParameterBinder {
 
     @Override
     public Boolean visit(ArrowType.Utf8View type) {
-      throw new UnsupportedOperationException("Utf8View is unsupported");
+      return new Utf8ViewAvaticaParameterConverter(type).bindParameter(vector, typedValue, index);
     }
 
     @Override
@@ -222,7 +229,7 @@ public class AvaticaParameterBinder {
 
     @Override
     public Boolean visit(ArrowType.BinaryView type) {
-      throw new UnsupportedOperationException("BinaryView is unsupported");
+      return new BinaryViewAvaticaParameterConverter(type).bindParameter(vector, typedValue, index);
     }
 
     @Override
@@ -286,6 +293,16 @@ public class AvaticaParameterBinder {
     public Boolean visit(ArrowType.RunEndEncoded type) {
       throw new UnsupportedOperationException(
           "No Avatica parameter binder implemented for type " + type);
+    }
+
+    @Override
+    public Boolean visit(ExtensionType type) {
+      if (type instanceof UuidType) {
+        return new UuidAvaticaParameterConverter().bindParameter(vector, typedValue, index);
+      }
+
+      // fallback to default implementation
+      return ArrowTypeVisitor.super.visit(type);
     }
   }
 }

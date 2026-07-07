@@ -22,7 +22,7 @@ import org.apache.arrow.vector.TimeStampMicroVector;
 import org.apache.avro.io.Decoder;
 
 /**
- * Consumer which consume date timestamp-micro values from avro decoder. Write the data to {@link
+ * Consumer which consumes local-timestamp-micros values from avro decoder. Write the data to {@link
  * TimeStampMicroVector}.
  */
 public class AvroTimestampMicrosConsumer extends BaseAvroConsumer<TimeStampMicroVector> {

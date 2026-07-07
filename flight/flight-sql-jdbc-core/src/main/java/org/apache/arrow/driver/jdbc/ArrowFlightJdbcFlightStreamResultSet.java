@@ -54,6 +54,7 @@ public final class ArrowFlightJdbcFlightStreamResultSet
   private VectorSchemaRoot currentVectorSchemaRoot;
 
   private Schema schema;
+  private Integer id = null; // used for metadata result sets only
 
   /** Public constructor used by ArrowFlightJdbcFactory. */
   ArrowFlightJdbcFlightStreamResultSet(
@@ -82,6 +83,7 @@ public final class ArrowFlightJdbcFlightStreamResultSet
     super(null, state, signature, resultSetMetaData, timeZone, firstFrame);
     this.connection = connection;
     this.flightInfo = flightInfo;
+    this.id = connection.getNewMetadataResultSetId(this);
   }
 
   /**
@@ -234,7 +236,12 @@ public final class ArrowFlightJdbcFlightStreamResultSet
 
   @Override
   public synchronized void close() {
+
     try {
+      if (isClosed()) {
+        return;
+      }
+      this.connection.onResultSetClose(id);
       if (flightEndpointDataQueue != null) {
         // flightStreamQueue should close currentFlightStream internally
         flightEndpointDataQueue.close();

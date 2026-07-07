@@ -111,7 +111,7 @@ public class Filter {
    * @param configurationId Custom configuration created through config builder.
    * @return A native evaluator object that can be used to invoke these projections on a RecordBatch
    */
-  public static Filter make(Schema schema, Condition condition, long configurationId)
+  public static synchronized Filter make(Schema schema, Condition condition, long configurationId)
       throws GandivaException {
     // Invoke the JNI layer to create the LLVM module representing the filter.
     GandivaTypes.Condition conditionBuf = condition.toProtobuf();
@@ -158,7 +158,7 @@ public class Filter {
     evaluate(numRows, buffers, buffersLayout, selectionVector);
   }
 
-  private void evaluate(
+  private synchronized void evaluate(
       int numRows,
       List<ArrowBuf> buffers,
       List<ArrowBuffer> buffersLayout,

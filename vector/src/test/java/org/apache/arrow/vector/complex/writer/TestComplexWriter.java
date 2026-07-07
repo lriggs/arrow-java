@@ -19,6 +19,7 @@ package org.apache.arrow.vector.complex.writer;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
@@ -71,9 +73,11 @@ import org.apache.arrow.vector.complex.reader.Float4Reader;
 import org.apache.arrow.vector.complex.reader.Float8Reader;
 import org.apache.arrow.vector.complex.reader.IntReader;
 import org.apache.arrow.vector.complex.writer.BaseWriter.ComplexWriter;
+import org.apache.arrow.vector.complex.writer.BaseWriter.ExtensionWriter;
 import org.apache.arrow.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.arrow.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.arrow.vector.complex.writer.BaseWriter.StructWriter;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.holders.DecimalHolder;
 import org.apache.arrow.vector.holders.DurationHolder;
 import org.apache.arrow.vector.holders.FixedSizeBinaryHolder;
@@ -82,8 +86,11 @@ import org.apache.arrow.vector.holders.NullableDurationHolder;
 import org.apache.arrow.vector.holders.NullableFixedSizeBinaryHolder;
 import org.apache.arrow.vector.holders.NullableTimeStampMilliTZHolder;
 import org.apache.arrow.vector.holders.NullableTimeStampNanoTZHolder;
+import org.apache.arrow.vector.holders.NullableUuidHolder;
 import org.apache.arrow.vector.holders.TimeStampMilliTZHolder;
+import org.apache.arrow.vector.holders.UuidHolder;
 import org.apache.arrow.vector.types.TimeUnit;
+import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.ArrowType.ArrowTypeID;
 import org.apache.arrow.vector.types.pojo.ArrowType.Int;
@@ -99,6 +106,7 @@ import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.JsonStringHashMap;
 import org.apache.arrow.vector.util.Text;
 import org.apache.arrow.vector.util.TransferPair;
+import org.apache.arrow.vector.util.UuidUtility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -1098,6 +1106,13 @@ public class TestComplexWriter {
         new UnionVector("union", allocator, /* field type */ null, /* call-back */ null);
     UnionWriter unionWriter = new UnionWriter(vector);
     unionWriter.allocate();
+
+    UUID uuid = UUID.randomUUID();
+    ByteBuffer bb = ByteBuffer.allocate(16);
+    bb.putLong(uuid.getMostSignificantBits());
+    bb.putLong(uuid.getLeastSignificantBits());
+    byte[] uuidByte = bb.array();
+
     for (int i = 0; i < COUNT; i++) {
       unionWriter.setPosition(i);
       if (i % 5 == 0) {
@@ -1120,6 +1135,12 @@ public class TestComplexWriter {
         holder.buffer = buf;
         unionWriter.write(holder);
         bufs.add(buf);
+      } else if (i % 5 == 4) {
+        UuidHolder holder = new UuidHolder();
+        holder.buffer = allocator.buffer(UuidType.UUID_BYTE_WIDTH);
+        holder.buffer.setBytes(0, uuidByte);
+        unionWriter.write(holder);
+        allocator.releaseBytes(UuidType.UUID_BYTE_WIDTH);
       } else {
         unionWriter.writeFloat4((float) i);
       }
@@ -1145,6 +1166,10 @@ public class TestComplexWriter {
         unionReader.read(holder);
         assertEquals(i, holder.buffer.getInt(0));
         assertEquals(4, holder.byteWidth);
+      } else if (i % 5 == 4) {
+        NullableUuidHolder holder = new NullableUuidHolder();
+        unionReader.read(holder);
+        assertEquals(UuidUtility.uuidFromArrowBuf(holder.buffer, holder.start), uuid);
       } else {
         assertEquals((float) i, unionReader.readFloat(), 1e-12);
       }
@@ -2487,6 +2512,81 @@ public class TestComplexWriter {
           "row11", new String(vector.getLargeVarBinaryVector().get(10), StandardCharsets.UTF_8));
       assertEquals(
           "row12", new String(vector.getLargeVarBinaryVector().get(11), StandardCharsets.UTF_8));
+    }
+  }
+
+  @Test
+  public void extensionWriterReader() throws Exception {
+    // test values
+    UUID u1 = UUID.randomUUID();
+
+    try (NonNullableStructVector parent = NonNullableStructVector.empty("parent", allocator)) {
+      // write
+
+      ComplexWriter writer = new ComplexWriterImpl("root", parent);
+      StructWriter rootWriter = writer.rootAsStruct();
+
+      {
+        ExtensionWriter extensionWriter = rootWriter.extension("uuid1", UuidType.INSTANCE);
+        extensionWriter.setPosition(0);
+        extensionWriter.writeExtension(u1, UuidType.INSTANCE);
+      }
+      // read
+      StructReader rootReader = new SingleStructReaderImpl(parent).reader("root");
+      {
+        FieldReader uuidReader = rootReader.reader("uuid1");
+        uuidReader.setPosition(0);
+        NullableUuidHolder uuidHolder = new NullableUuidHolder();
+        uuidReader.read(uuidHolder);
+        UUID actualUuid = UuidUtility.uuidFromArrowBuf(uuidHolder.buffer, 0);
+        assertEquals(u1, actualUuid);
+        assertTrue(uuidReader.isSet());
+        assertEquals(uuidReader.getMinorType(), MinorType.EXTENSIONTYPE);
+        assertInstanceOf(UuidType.class, uuidReader.getField().getFieldType().getType());
+      }
+    }
+  }
+
+  @Test
+  void testListOfDenseUnionWriterNPE() {
+    // Regression test for https://github.com/apache/arrow-java/issues/399
+    try (ListVector listVector = ListVector.empty("list", allocator)) {
+      listVector.addOrGetVector(FieldType.nullable(MinorType.DENSEUNION.getType()));
+      UnionListWriter listWriter = listVector.getWriter();
+
+      listWriter.startList();
+      listWriter.endList();
+    }
+  }
+
+  @Test
+  void testListOfDenseUnionWriterWithData() {
+    try (ListVector listVector = ListVector.empty("list", allocator)) {
+      listVector.addOrGetVector(FieldType.nullable(MinorType.DENSEUNION.getType()));
+
+      UnionListWriter listWriter = listVector.getWriter();
+      listWriter.startList();
+      listWriter.writeInt(100);
+      listWriter.writeBigInt(200L);
+      listWriter.endList();
+
+      listWriter.startList();
+      listWriter.writeFloat4(3.14f);
+      listWriter.endList();
+
+      listVector.setValueCount(2);
+
+      assertEquals(2, listVector.getValueCount());
+
+      List<?> value0 = (List<?>) listVector.getObject(0);
+      List<?> value1 = (List<?>) listVector.getObject(1);
+
+      assertEquals(2, value0.size());
+      assertEquals(100, value0.get(0));
+      assertEquals(200L, value0.get(1));
+
+      assertEquals(1, value1.size());
+      assertEquals(3.14f, value1.get(0));
     }
   }
 }

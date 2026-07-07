@@ -62,21 +62,25 @@ public class ArrowFlightMetaImpl extends MetaImpl {
         parameterSchema == null
             ? new ArrayList<>()
             : ConvertUtils.convertArrowFieldsToAvaticaParameters(parameterSchema.getFields());
-
+    StatementType statementType =
+        resultSetSchema == null || resultSetSchema.getFields().isEmpty()
+            ? StatementType.IS_DML
+            : StatementType.SELECT;
     return new Signature(
         columnMetaData,
         sql,
         parameters,
         Collections.emptyMap(),
         null, // unnecessary, as SQL requests use ArrowFlightJdbcCursor
-        StatementType.SELECT);
+        statementType);
   }
 
   @Override
   public void closeStatement(final StatementHandle statementHandle) {
     PreparedStatement preparedStatement =
         statementHandlePreparedStatementMap.remove(new StatementHandleKey(statementHandle));
-    // Testing if the prepared statement was created because the statement can be not created until
+    // Testing if the prepared statement was created because the statement can be
+    // not created until
     // this moment
     if (preparedStatement != null) {
       preparedStatement.close();
@@ -105,7 +109,8 @@ public class ArrowFlightMetaImpl extends MetaImpl {
             preparedStatement, ((ArrowFlightConnection) connection).getBufferAllocator())
         .bind(typedValues);
 
-    if (statementHandle.signature == null) {
+    if (statementHandle.signature == null
+        || statementHandle.signature.statementType == StatementType.IS_DML) {
       // Update query
       long updatedCount = preparedStatement.executeUpdate();
       return new ExecuteResult(
@@ -220,7 +225,8 @@ public class ArrowFlightMetaImpl extends MetaImpl {
           MetaResultSet.create(handle.connectionId, handle.id, false, handle.signature, null);
       return new ExecuteResult(Collections.singletonList(metaResultSet));
     } catch (SQLTimeoutException e) {
-      // So far AvaticaStatement(executeInternal) only handles NoSuchStatement and Runtime
+      // So far AvaticaStatement(executeInternal) only handles NoSuchStatement and
+      // Runtime
       // Exceptions.
       throw new RuntimeException(e);
     } catch (SQLException e) {
@@ -249,6 +255,20 @@ public class ArrowFlightMetaImpl extends MetaImpl {
     return false;
   }
 
+  @Override
+  public ConnectionProperties connectionSync(ConnectionHandle ch, ConnectionProperties connProps) {
+    final ConnectionProperties result = super.connectionSync(ch, connProps);
+    final String newCatalog = this.connProps.getCatalog();
+    if (newCatalog != null) {
+      try {
+        ((ArrowFlightConnection) connection).getClientHandler().setCatalog(newCatalog);
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return result;
+  }
+
   void setDefaultConnectionProperties() {
     // TODO Double-check this.
     connProps
@@ -264,7 +284,8 @@ public class ArrowFlightMetaImpl extends MetaImpl {
     return statementHandlePreparedStatementMap.get(new StatementHandleKey(statementHandle));
   }
 
-  // Helper used to look up prepared statement instances later. Avatica doesn't give us the
+  // Helper used to look up prepared statement instances later. Avatica doesn't
+  // give us the
   // signature in
   // an UPDATE code path so we can't directly use StatementHandle as a map key.
   private static final class StatementHandleKey {

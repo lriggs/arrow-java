@@ -44,16 +44,35 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Trim workflow inputs
+        run: |
+          echo "ARROW_BRANCH=$(echo '${{github.event.inputs.arrow_branch}}' | xargs)" >> $GITHUB_ENV
+          echo "ARROW_REPO=$(echo '${{github.event.inputs.arrow_repo}}' | xargs)" >> $GITHUB_ENV
+          echo "RELEASE_TAG_NAME=$(echo '${{github.event.inputs.release_tag_name}}' | xargs)" >> $GITHUB_ENV
+      - name: Print workflow input parameters
+        run: |
+          echo "=========================================="
+          echo "Workflow Input Parameters"
+          echo "=========================================="
+          echo "arrow_branch: ${{env.ARROW_BRANCH}}"
+          echo "arrow_repo: ${{env.ARROW_REPO}}"
+          echo "release_tag_name: ${{env.RELEASE_TAG_NAME}}"
+          echo "arrow-java branch: ${{github.ref_name}}"
+          echo ""
+          echo "Direct Links:"
+          echo "----------------------------------------"
+          echo "Arrow C++ repo/branch: https://github.com/${{env.ARROW_REPO}}/tree/${{env.ARROW_BRANCH}}"
+          echo "Arrow Java repo/branch: https://github.com/${{github.repository}}/tree/${{github.ref_name}}"
+          echo "Release tag: https://github.com/${{github.repository}}/releases/tag/${{env.RELEASE_TAG_NAME}}"
+          echo "=========================================="
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: recursive
-      - name: Set env
-        run: echo "release_tag_name=$(echo $release_tag_name)" >> $GITHUB_ENV
       - name: Prepare for tag
         run: |
-          echo "${{github.event.inputs.release_tag_name}}"
-          ver=$(echo ${{github.event.inputs.release_tag_name}})
+          echo "${{env.RELEASE_TAG_NAME}}"
+          ver=$(echo ${{env.RELEASE_TAG_NAME}})
           version=${ver%-rc*}
           version=${version#v}
           rc=${ver#*-rc}
@@ -81,7 +100,7 @@ jobs:
   jni-linux:
     name: JNI ${{ matrix.platform.runs_on }} ${{ matrix.platform.arch }}
     runs-on: ${{ matrix.platform.runs_on }}
-    timeout-minutes: 120
+    timeout-minutes: 240
     needs:
       - source
     strategy:
@@ -158,17 +177,16 @@ jobs:
   jni-macos:
     name: JNI ${{ matrix.platform.runs_on }} ${{ matrix.platform.arch }}
     runs-on: ${{ matrix.platform.runs_on }}
-    timeout-minutes: 45
+    timeout-minutes: 445
     needs:
       - source
     strategy:
       fail-fast: false
       matrix:
         platform:
-          - { runs_on: macos-13, arch: "x86_64"}
-          - { runs_on: macos-14, arch: "aarch_64" }
+          - { runs_on: macos-15, arch: "aarch_64" }
     env:
-      MACOSX_DEPLOYMENT_TARGET: "14.0"
+      MACOSX_DEPLOYMENT_TARGET: "15.0"
     steps:
       - name: Download source archive
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
@@ -205,20 +223,42 @@ jobs:
           python-version: 3.12
       - name: Install Archery
         run: pip install -e arrow/dev/archery[all]
+      - name: Checkout vcpkg
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Microsoft/vcpkg
+          path: arrow/vcpkg
+          fetch-depth: 0
+      - name: Install vcpkg
+        run: |
+          cd arrow/vcpkg
+          ./bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT_LOCAL=${PWD}" >> ${GITHUB_ENV}
+          echo "${PWD}" >> ${GITHUB_PATH}
+      - name: Clean up disk space
+        run: |
+          echo "=== Free disk space before cleanup ==="
+          df -h /
+
+          echo ""
+          echo "=== Removing Xcode simulators ==="
+          sudo rm -rf /Library/Developer/CoreSimulator/Caches || :
+          echo "Removed /Library/Developer/CoreSimulator/Caches"
+
+          echo ""
+          echo "=== Removing user simulator data ==="
+          rm -rf ~/Library/Developer/CoreSimulator || :
+          echo "Removed ~/Library/Developer/CoreSimulator"
+
+          echo ""
+          echo "=== Free disk space after cleanup ==="
+          df -h /
       - name: Install dependencies
         run: |
-          # We want to use llvm@14 to avoid shared z3
-          # dependency. llvm@14 doesn't depend on z3 and llvm depends
-          # on z3. And Homebrew's z3 provides only shared library. It
-          # doesn't provides static z3 because z3's CMake doesn't accept
-          # building both shared and static libraries at once.
-          # See also: Z3_BUILD_LIBZ3_SHARED in
-          # https://github.com/Z3Prover/z3/blob/master/README-CMake.md
-          #
-          # If llvm is installed, Apache Arrow C++ uses llvm rather than
-          # llvm@14 because llvm is newer than llvm@14.
-          brew uninstall llvm || :
+          echo "=== Free disk space at start of dependency installation ==="
+          df -h /
 
+          echo ""
           # Ensure updating python@XXX with the "--overwrite" option.
           # If python@XXX is updated without "--overwrite", it causes
           # a conflict error. Because Python 3 installed not by
@@ -240,25 +280,53 @@ jobs:
             brew uninstall pkg-config@0.29.2 || :
           fi
 
+          # Install basic build tools via brew (vcpkg needs these)
+          brew install cmake ninja pkg-config
           brew bundle --file=arrow/cpp/Brewfile
+
+          # Clean up any existing LLVM installations in favor of vcpkg.
+          # Need to uninstall all versioned LLVM packages (llvm@18, llvm@17, etc.)
+          for llvm_pkg in $(brew list | grep -E '^llvm(@[0-9]+)?$'); do
+            brew uninstall "${llvm_pkg}" || :
+          done
+
           # We want to link aws-sdk-cpp statically but Homebrew's
           # aws-sdk-cpp provides only shared library. If we have
           # Homebrew's aws-sdk-cpp, our build mix Homebrew's
           # aws-sdk-cpp and bundled aws-sdk-cpp. We uninstall Homebrew's
           # aws-sdk-cpp to ensure using only bundled aws-sdk-cpp.
-          brew uninstall aws-sdk-cpp
+          brew uninstall aws-sdk-cpp || :
           # We want to use bundled RE2 for static linking. If
           # Homebrew's RE2 is installed, its header file may be used.
           # We uninstall Homebrew's RE2 to ensure using bundled RE2.
           brew uninstall grpc || : # gRPC depends on RE2
           brew uninstall grpc@1.54 || : # gRPC 1.54 may be installed too
-          brew uninstall re2
+          brew uninstall re2 || :
           # We want to use bundled Protobuf for static linking. If
           # Homebrew's Protobuf is installed, its library file may be
           # used on test  We uninstall Homebrew's Protobuf to ensure using
           # bundled Protobuf.
-          brew uninstall protobuf
+          brew uninstall protobuf || :
 
+          echo ""
+          echo "=== Free disk space before LLVM build ==="
+          df -h /
+
+          echo ""
+          # Use vcpkg to install LLVM.
+          vcpkg install \
+            --clean-after-build \
+            --vcpkg-root=${VCPKG_ROOT_LOCAL} \
+            --x-install-root=${VCPKG_ROOT_LOCAL}/installed \
+            --x-manifest-root=arrow/ci/vcpkg \
+            --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
+            --x-feature=gandiva-llvm
+
+          echo ""
+          echo "=== Free disk space after LLVM build ==="
+          df -h /
+
+          echo ""
           brew bundle --file=Brewfile
       - name: Prepare ccache
         run: |
@@ -271,10 +339,18 @@ jobs:
           restore-keys: jni-macos-${{ matrix.platform.arch }}-
       - name: Build
         run: |
+          echo "=== Free disk space at start of build ==="
+          df -h /
+
+          echo ""
           set -e
           # make brew Java available to CMake
           export JAVA_HOME=$(brew --prefix openjdk@11)/libexec/openjdk.jdk/Contents/Home
           ci/scripts/jni_macos_build.sh . arrow build jni
+
+          echo ""
+          echo "=== Free disk space at end of build ==="
+          df -h /
       - name: Compress into single artifact to keep directory structure
         run: tar -cvzf jni-macos-${{ matrix.platform.arch }}.tar.gz jni/
       - name: Upload artifacts
@@ -282,92 +358,12 @@ jobs:
         with:
           name: jni-macos-${{ matrix.platform.arch }}
           path: jni-macos-${{ matrix.platform.arch }}.tar.gz
-  jni-windows:
-    name: JNI ${{ matrix.platform.runs_on }} ${{ matrix.platform.arch }}
-    runs-on: ${{ matrix.platform.runs_on }}
-    timeout-minutes: 45
-    needs:
-      - source
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - runs_on: windows-2019
-            arch: "x86_64"
-    steps:
-      - name: Download source archive
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
-        with:
-          name: release-source
-      - name: Extract source archive
-        shell: bash
-        run: |
-          tar -xf apache-arrow-java-*.tar.gz --strip-components=1
-      # - name: Download the latest Apache Arrow C++
-      #   if: github.event_name != 'schedule'
-      #   shell: bash
-      #   run: |
-      #     ci/scripts/download_cpp.sh
-      - name: Checkout Apache Arrow C++
-        # if: github.event_name == 'schedule'
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          repository: ${{github.event.inputs.arrow_repo}}
-          ref: ${{github.event.inputs.arrow_branch}}
-          path: arrow
-      - name: Set up Java
-        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-      - name: Download Timezone Database
-        shell: bash
-        run: |
-          arrow/ci/scripts/download_tz_database.sh
-      - name: Install ccache
-        shell: bash
-        run: |
-          env | sort
-          version=4.10.2
-          base_name="ccache-${version}-windows-x86_64"
-          url="https://github.com/ccache/ccache/releases/download/v${version}/${base_name}.zip"
-          curl --fail --location --remote-name "${url}"
-          unzip "${base_name}.zip"
-          chmod +x "${base_name}/ccache.exe"
-          mv "${base_name}/ccache.exe" /usr/bin/
-          rm -rf "${base_name}"{,.zip}
-      - name: Prepare ccache
-        shell: bash
-        run: |
-          echo "CCACHE_DIR=${PWD}/ccache" >> ${GITHUB_ENV}
-      - name: Cache ccache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
-        with:
-          path: ccache
-          key: jni-windows-${{ matrix.platform.arch }}-${{ hashFiles('arrow/cpp/**') }}
-          restore-keys: jni-windows-${{ matrix.platform.arch }}-
-      - name: Build
-        shell: cmd
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
-          REM For ORC
-          set TZDIR=/c/msys64/usr/share/zoneinfo
-          bash -c "ci/scripts/jni_windows_build.sh . arrow build jni"
-      - name: Compress into single artifact to keep directory structure
-        shell: bash
-        run: tar -cvzf jni-windows-${{ matrix.platform.arch }}.tar.gz jni/
-      - name: Upload artifacts
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
-        with:
-          name: jni-windows-${{ matrix.platform.arch }}
-          path: jni-windows-${{ matrix.platform.arch }}.tar.gz
   binaries:
     name: Binaries
     runs-on: ubuntu-latest
     needs:
       - jni-linux
       - jni-macos
-      - jni-windows
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
@@ -379,9 +375,7 @@ jobs:
           tar -xf apache-arrow-java-*.tar.gz --strip-components=1
           tar -xvzf jni-linux-x86_64.tar.gz
           tar -xvzf jni-linux-aarch_64.tar.gz
-          tar -xvzf jni-macos-x86_64.tar.gz
           tar -xvzf jni-macos-aarch_64.tar.gz
-          tar -xvzf jni-windows-x86_64.tar.gz
       - name: Test that shared libraries exist
         run: |
           set -x
@@ -396,19 +390,11 @@ jobs:
           test -f jni/arrow_orc_jni/aarch_64/libarrow_orc_jni.so
           test -f jni/gandiva_jni/aarch_64/libgandiva_jni.so
 
-          test -f jni/arrow_cdata_jni/x86_64/libarrow_cdata_jni.dylib
-          test -f jni/arrow_dataset_jni/x86_64/libarrow_dataset_jni.dylib
-          test -f jni/arrow_orc_jni/x86_64/libarrow_orc_jni.dylib
-          test -f jni/gandiva_jni/x86_64/libgandiva_jni.dylib
-
           test -f jni/arrow_cdata_jni/aarch_64/libarrow_cdata_jni.dylib
           test -f jni/arrow_dataset_jni/aarch_64/libarrow_dataset_jni.dylib
           test -f jni/arrow_orc_jni/aarch_64/libarrow_orc_jni.dylib
           test -f jni/gandiva_jni/aarch_64/libgandiva_jni.dylib
 
-          test -f jni/arrow_cdata_jni/x86_64/arrow_cdata_jni.dll
-          test -f jni/arrow_dataset_jni/x86_64/arrow_dataset_jni.dll
-          test -f jni/arrow_orc_jni/x86_64/arrow_orc_jni.dll
       - name: Checkout apache/arrow-testing
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -521,30 +507,71 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout arrow-java repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout Apache Arrow C++ repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{github.event.inputs.arrow_repo}}
+          ref: ${{github.event.inputs.arrow_branch}}
+          path: arrow
+      - name: Get commit IDs
+        id: commit_ids
+        run: |
+          # Get short commit ID for arrow-java
+          arrow_java_commit=$(git rev-parse --short HEAD)
+          echo "arrow_java_commit=${arrow_java_commit}" >> $GITHUB_OUTPUT
+
+          # Get short commit ID for arrow
+          cd arrow
+          arrow_commit=$(git rev-parse --short HEAD)
+          echo "arrow_commit=${arrow_commit}" >> $GITHUB_OUTPUT
+          cd ..
+
+          # Parse version from release tag
+          ver=$(echo ${{github.event.inputs.release_tag_name}})
+          version=${ver%-rc*}
+          version=${version#v}
+          rc=${ver#*-rc}
+
+          # Create release name with both commit IDs
+          release_name="${version}-${arrow_java_commit}-${arrow_commit}"
+          release_tag="v${release_name}"
+          echo "release_name=${release_name}" >> $GITHUB_OUTPUT
+          echo "release_tag=${release_tag}" >> $GITHUB_OUTPUT
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "rc=${rc}" >> $GITHUB_OUTPUT
+
+          echo "Arrow Java commit: ${arrow_java_commit}"
+          echo "Arrow commit: ${arrow_commit}"
+          echo "Release tag: ${release_tag}"
       - name: Download release artifacts
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           pattern: release-*
           path: artifacts
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.commit_ids.outputs.release_tag }}" -m "Release ${{ steps.commit_ids.outputs.release_name }} RC${{ steps.commit_ids.outputs.rc }}" -m "Action URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          git push origin "${{ steps.commit_ids.outputs.release_tag }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload
         run: |
           # GH-499: How to create release notes?
-          echo "${{github.event.inputs.release_tag_name}}"
-          ver=$(echo ${{github.event.inputs.release_tag_name}})
-          version=${ver%-rc*}
-          version=${version#v}
-          rc=${ver#*-rc}
-          gh release create ${{github.event.inputs.release_tag_name}} \
-            --generate-notes \
+          echo "Creating release: ${{ steps.commit_ids.outputs.release_tag }}"
+          gh release create "${{ steps.commit_ids.outputs.release_tag }}" \
+            -n "Release ${{ steps.commit_ids.outputs.release_name }} RC${{ steps.commit_ids.outputs.rc }}<br>Triggered by: ${{ github.actor }}<br>Action URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID<br>arrow_branch: ${{github.event.inputs.ARROW_BRANCH}}<br>arrow_repo: ${{github.event.inputs.ARROW_REPO}}<br>arrow-java branch: ${{github.ref_name}}<br>release_tag_name: ${{ steps.commit_ids.outputs.release_tag }}" \
             --prerelease \
             --repo ${GITHUB_REPOSITORY} \
-            --title "Apache Arrow Java ${version} RC${rc}" \
-            --verify-tag
+            --title "Apache Arrow Java ${{ steps.commit_ids.outputs.version }} RC${{ steps.commit_ids.outputs.rc }} (arrow-java: ${{ steps.commit_ids.outputs.arrow_java_commit }}, arrow: ${{ steps.commit_ids.outputs.arrow_commit }})"
           # GitHub CLI does not respect their own rate limits
           # https://github.com/cli/cli/issues/9586
           for artifact in artifacts/*/*; do
             sleep 1
-            gh release upload ${{github.event.inputs.release_tag_name}} \
+            gh release upload "${{ steps.commit_ids.outputs.release_tag }}" \
               --repo ${GITHUB_REPOSITORY} \
               $artifact
           done

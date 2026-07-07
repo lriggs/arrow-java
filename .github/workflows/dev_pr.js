@@ -122,15 +122,20 @@ module.exports = {
         const title = context.payload.pull_request.title;
         if (title.startsWith("MINOR: ")) {
             console.log("PR is a minor PR");
-            return {"issue": null};
+            return {"issue": null, "type": "minor"};
         }
 
-        const match = title.match(/^GH-([0-9]+): .*$/);
+        const match = title.match(/^(GH|DX)-([0-9]+): .*$/);
         if (match === null) {
-            core.setFailed("Invalid PR title format. Must either be MINOR: or GH-NNN:");
-            return {"issue": null};
+            core.setFailed("Invalid PR title format. Must either be MINOR:, GH-NNN:, or DX-NNN:");
+            return {"issue": null, "type": null};
         }
-        return {"issue": parseInt(match[1], 10)};
+
+        const issueType = match[1]; // "GH" or "DX"
+        const issueNumber = parseInt(match[2], 10);
+
+        console.log(`PR references ${issueType}-${issueNumber}`);
+        return {"issue": issueNumber, "type": issueType};
     },
 
     apply_labels: async function({core, github, context}) {
@@ -203,9 +208,28 @@ See [CONTRIBUTING.md](https://github.com/apache/arrow-java/blob/main/CONTRIBUTIN
             console.log("This is a MINOR PR");
             return;
         }
-        const expected = `https://github.com/apache/arrow-java/issues/${issue.issue}`;
 
-        const query = `
+        // Handle Jira tickets (DX-NNN)
+        if (issue.type === "DX") {
+            const jiraUrl = `https://dremio.atlassian.net/browse/DX-${issue.issue}`;
+            console.log(`This PR references Jira ticket: ${jiraUrl}`);
+
+            // Add a comment with the Jira link
+            const comment_tag = "jira_link_comment";
+            const maybe_comment_id = await have_comment(github, context, context.payload.pull_request.number, comment_tag);
+            const body_text = `<!-- ${comment_tag} -->
+**Related Jira Ticket:** [DX-${issue.issue}](${jiraUrl})`;
+
+            await upsert_comment(github, maybe_comment_id, body_text, true);
+            console.log("Added/updated Jira link comment");
+            return;
+        }
+
+        // Handle GitHub issues (GH-NNN)
+        if (issue.type === "GH") {
+            const expected = `https://github.com/apache/arrow-java/issues/${issue.issue}`;
+
+            const query = `
 query($owner: String!, $name: String!, $number: Int!) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) {
@@ -220,22 +244,23 @@ query($owner: String!, $name: String!, $number: Int!) {
   }
 }`;
 
-        const result = await github.graphql(query, {
-            owner: context.repo.owner,
-            name: context.repo.repo,
-            number: context.payload.pull_request.number,
-        });
-        const issues = result.repository.pullRequest.closingIssuesReferences.edges;
-        console.log(issues);
+            const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                name: context.repo.repo,
+                number: context.payload.pull_request.number,
+            });
+            const issues = result.repository.pullRequest.closingIssuesReferences.edges;
+            console.log(issues);
 
-        for (const link of issues) {
-            console.log(`PR is linked to ${link.node.number}`);
-            if (link.node.number === issue.issue) {
-                console.log(`Found link to ${expected}`);
-                return;
+            for (const link of issues) {
+                console.log(`PR is linked to ${link.node.number}`);
+                if (link.node.number === issue.issue) {
+                    console.log(`Found link to ${expected}`);
+                    return;
+                }
             }
+            console.log(`Did not find link to ${expected}`);
+            core.setFailed("Missing link to issue in title");
         }
-        console.log(`Did not find link to ${expected}`);
-        core.setFailed("Missing link to issue in title");
     },
 };

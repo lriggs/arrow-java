@@ -16,24 +16,42 @@
  */
 package org.apache.arrow.driver.jdbc;
 
+import static java.lang.String.format;
+import static java.util.stream.IntStream.range;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.google.protobuf.Message;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Map;
 import java.util.Properties;
+import java.util.function.Consumer;
 import org.apache.arrow.driver.jdbc.authentication.UserPasswordAuthentication;
 import org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler;
 import org.apache.arrow.driver.jdbc.utils.ArrowFlightConnectionConfigImpl.ArrowFlightConnectionProperty;
 import org.apache.arrow.driver.jdbc.utils.MockFlightSqlProducer;
+import org.apache.arrow.flight.FlightMethod;
+import org.apache.arrow.flight.FlightProducer.ServerStreamListener;
+import org.apache.arrow.flight.NoOpSessionOptionValueVisitor;
+import org.apache.arrow.flight.SessionOptionValue;
+import org.apache.arrow.flight.sql.FlightSqlProducer.Schemas;
+import org.apache.arrow.flight.sql.impl.FlightSql.CommandGetTableTypes;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.util.AutoCloseables;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.util.Text;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -574,6 +592,180 @@ public class ConnectionTest {
                 "jdbc:arrow-flight-sql://localhost:%s", FLIGHT_SERVER_TEST_EXTENSION.getPort()),
             properties)) {
       assertTrue(connection.isValid(0));
+    }
+  }
+
+  /**
+   * Test that the JDBC driver properly integrates driver version into client handler.
+   *
+   * @throws Exception on error.
+   */
+  @Test
+  public void testJdbcDriverVersionIntegration() throws Exception {
+    final Properties properties = new Properties();
+    properties.put(
+        ArrowFlightConnectionProperty.HOST.camelName(), FLIGHT_SERVER_TEST_EXTENSION.getHost());
+    properties.put(
+        ArrowFlightConnectionProperty.PORT.camelName(), FLIGHT_SERVER_TEST_EXTENSION.getPort());
+    properties.put(ArrowFlightConnectionProperty.USER.camelName(), userTest);
+    properties.put(ArrowFlightConnectionProperty.PASSWORD.camelName(), passTest);
+    properties.put(ArrowFlightConnectionProperty.USE_ENCRYPTION.camelName(), false);
+
+    // Create a driver instance and connect
+    ArrowFlightJdbcDriver driverVersion = new ArrowFlightJdbcDriver();
+
+    try (Connection connection =
+        ArrowFlightConnection.createNewConnection(
+            driverVersion,
+            new ArrowFlightJdbcFactory(),
+            "jdbc:arrow-flight-sql://localhost:" + FLIGHT_SERVER_TEST_EXTENSION.getPort(),
+            properties,
+            allocator)) {
+
+      assertTrue(connection.isValid(0));
+
+      var actualUserAgent =
+          FLIGHT_SERVER_TEST_EXTENSION
+              .getInterceptorFactory()
+              .getHeader(FlightMethod.HANDSHAKE, "user-agent");
+
+      var expectedUserAgent =
+          "JDBC Flight SQL Driver " + driverVersion.getDriverVersion().versionString;
+      // Driver appends version to grpc user-agent header. Assert the header starts
+      // with the
+      // expected
+      // value and ignored grpc version.
+      assertTrue(
+          actualUserAgent.startsWith(expectedUserAgent),
+          "Expected: " + expectedUserAgent + " but found: " + actualUserAgent);
+    }
+  }
+
+  @Test
+  public void testSetCatalogShouldUpdateSessionOptions() throws Exception {
+    final Properties properties = new Properties();
+    properties.put(ArrowFlightConnectionProperty.USER.camelName(), userTest);
+    properties.put(ArrowFlightConnectionProperty.PASSWORD.camelName(), passTest);
+    properties.put("useEncryption", false);
+
+    try (Connection connection =
+        DriverManager.getConnection(
+            "jdbc:arrow-flight-sql://"
+                + FLIGHT_SERVER_TEST_EXTENSION.getHost()
+                + ":"
+                + FLIGHT_SERVER_TEST_EXTENSION.getPort(),
+            properties)) {
+      final String catalog = "new_catalog";
+      connection.setCatalog(catalog);
+
+      final Map<String, SessionOptionValue> options = PRODUCER.getSessionOptions();
+      assertTrue(options.containsKey("catalog"));
+      String actualCatalog =
+          options
+              .get("catalog")
+              .acceptVisitor(
+                  new NoOpSessionOptionValueVisitor<String>() {
+                    @Override
+                    public String visit(String value) {
+                      return value;
+                    }
+                  });
+      assertEquals(catalog, actualCatalog);
+    }
+  }
+
+  @Test
+  public void testStatementsClosedOnConnectionClose() throws Exception {
+    // create a connection
+    final Properties properties = new Properties();
+    properties.put(ArrowFlightConnectionProperty.HOST.camelName(), "localhost");
+    properties.put(
+        ArrowFlightConnectionProperty.PORT.camelName(), FLIGHT_SERVER_TEST_EXTENSION.getPort());
+    properties.put(ArrowFlightConnectionProperty.USER.camelName(), userTest);
+    properties.put(ArrowFlightConnectionProperty.PASSWORD.camelName(), passTest);
+    properties.put("useEncryption", false);
+
+    Connection connection =
+        DriverManager.getConnection(
+            "jdbc:arrow-flight-sql://"
+                + FLIGHT_SERVER_TEST_EXTENSION.getHost()
+                + ":"
+                + FLIGHT_SERVER_TEST_EXTENSION.getPort(),
+            properties);
+
+    // create some statements
+    int numStatements = 3;
+    Statement[] statements = new Statement[numStatements];
+    for (int i = 0; i < numStatements; i++) {
+      statements[i] = connection.createStatement();
+      assertFalse(statements[i].isClosed());
+    }
+
+    // close the connection
+    connection.close();
+
+    // assert the statements are closed
+    for (int i = 0; i < numStatements; i++) {
+      assertTrue(statements[i].isClosed());
+    }
+  }
+
+  @Test
+  public void testResultSetsFromDatabaseMetadataClosedOnConnectionClose() throws Exception {
+    // set up the FlightProducer to respond to metadata queries
+    // getTableTypes() is being used, but any other method would work
+    int rowCount = 3;
+    final Message commandGetTableTypes = CommandGetTableTypes.getDefaultInstance();
+    final Consumer<ServerStreamListener> commandGetTableTypesResultProducer =
+        listener -> {
+          try (final BufferAllocator allocator = new RootAllocator();
+              final VectorSchemaRoot root =
+                  VectorSchemaRoot.create(Schemas.GET_TABLE_TYPES_SCHEMA, allocator)) {
+            final VarCharVector tableType = (VarCharVector) root.getVector("table_type");
+            range(0, rowCount)
+                .forEach(i -> tableType.setSafe(i, new Text(format("table_type #%d", i))));
+            root.setRowCount(rowCount);
+            listener.start(root);
+            listener.putNext();
+          } catch (final Throwable throwable) {
+            listener.error(throwable);
+          } finally {
+            listener.completed();
+          }
+        };
+    PRODUCER.addCatalogQuery(commandGetTableTypes, commandGetTableTypesResultProducer);
+
+    // create a connection
+    final Properties properties = new Properties();
+    properties.put(ArrowFlightConnectionProperty.HOST.camelName(), "localhost");
+    properties.put(
+        ArrowFlightConnectionProperty.PORT.camelName(), FLIGHT_SERVER_TEST_EXTENSION.getPort());
+    properties.put(ArrowFlightConnectionProperty.USER.camelName(), userTest);
+    properties.put(ArrowFlightConnectionProperty.PASSWORD.camelName(), passTest);
+    properties.put("useEncryption", false);
+
+    Connection connection =
+        DriverManager.getConnection(
+            "jdbc:arrow-flight-sql://"
+                + FLIGHT_SERVER_TEST_EXTENSION.getHost()
+                + ":"
+                + FLIGHT_SERVER_TEST_EXTENSION.getPort(),
+            properties);
+
+    // create ResultSets from DatabaseMetadata
+    int numResultSets = 3;
+    ResultSet[] resultSets = new ResultSet[numResultSets];
+    for (int i = 0; i < numResultSets; i++) {
+      resultSets[i] = connection.getMetaData().getTableTypes();
+      assertFalse(resultSets[i].isClosed());
+    }
+
+    // close the connection
+    connection.close();
+
+    // assert the ResultSets are closed
+    for (int i = 0; i < numResultSets; i++) {
+      assertTrue(resultSets[i].isClosed());
     }
   }
 }

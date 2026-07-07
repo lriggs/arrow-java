@@ -69,12 +69,10 @@ public class FixedSizeListVector extends BaseValueVector
   }
 
   private FieldVector vector;
-  private ArrowBuf validityBuffer;
   private final int listSize;
   private Field field;
 
   private UnionFixedSizeListReader reader;
-  private int valueCount;
   private int validityAllocationSizeInBytes;
 
   /**
@@ -110,7 +108,8 @@ public class FixedSizeListVector extends BaseValueVector
     this.listSize = ((ArrowType.FixedSizeList) field.getFieldType().getType()).getListSize();
     Preconditions.checkArgument(listSize >= 0, "list size must be non-negative");
     this.valueCount = 0;
-    this.validityAllocationSizeInBytes = getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION);
+    this.validityAllocationSizeInBytes =
+        BitVectorHelper.getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION);
   }
 
   @Override
@@ -189,7 +188,7 @@ public class FixedSizeListVector extends BaseValueVector
 
   private void setReaderAndWriterIndex() {
     validityBuffer.readerIndex(0);
-    validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
+    validityBuffer.writerIndex(BitVectorHelper.getValidityBufferSizeFromCount(valueCount));
   }
 
   /**
@@ -247,12 +246,10 @@ public class FixedSizeListVector extends BaseValueVector
     return success;
   }
 
-  private void allocateValidityBuffer(final long size) {
-    final int curSize = (int) size;
-    validityBuffer = allocator.buffer(curSize);
-    validityBuffer.readerIndex(0);
-    validityAllocationSizeInBytes = curSize;
-    validityBuffer.setZero(0, validityBuffer.capacity());
+  @Override
+  protected void allocateValidityBuffer(final long size) {
+    super.allocateValidityBuffer(size);
+    validityAllocationSizeInBytes = (int) size;
   }
 
   @Override
@@ -268,7 +265,8 @@ public class FixedSizeListVector extends BaseValueVector
       if (validityAllocationSizeInBytes > 0) {
         newAllocationSize = validityAllocationSizeInBytes;
       } else {
-        newAllocationSize = getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION) * 2L;
+        newAllocationSize =
+            BitVectorHelper.getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION) * 2L;
       }
     }
 
@@ -311,7 +309,7 @@ public class FixedSizeListVector extends BaseValueVector
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    validityAllocationSizeInBytes = getValidityBufferSizeFromCount(numRecords);
+    validityAllocationSizeInBytes = BitVectorHelper.getValidityBufferSizeFromCount(numRecords);
     vector.setInitialCapacity(numRecords * listSize);
   }
 
@@ -328,7 +326,7 @@ public class FixedSizeListVector extends BaseValueVector
     if (getValueCount() == 0) {
       return 0;
     }
-    return getValidityBufferSizeFromCount(valueCount) + vector.getBufferSize();
+    return BitVectorHelper.getValidityBufferSizeFromCount(valueCount) + vector.getBufferSize();
   }
 
   @Override
@@ -336,7 +334,7 @@ public class FixedSizeListVector extends BaseValueVector
     if (valueCount == 0) {
       return 0;
     }
-    return getValidityBufferSizeFromCount(valueCount)
+    return BitVectorHelper.getValidityBufferSizeFromCount(valueCount)
         + vector.getBufferSizeFor(valueCount * listSize);
   }
 
@@ -645,71 +643,6 @@ public class FixedSizeListVector extends BaseValueVector
       /* splitAndTransfer data buffer */
       dataPair.splitAndTransfer(startPoint, sliceLength);
       to.setValueCount(length);
-    }
-
-    /*
-     * transfer the validity.
-     */
-    private void splitAndTransferValidityBuffer(
-        int startIndex, int length, FixedSizeListVector target) {
-      int firstByteSource = BitVectorHelper.byteIndex(startIndex);
-      int lastByteSource = BitVectorHelper.byteIndex(valueCount - 1);
-      int byteSizeTarget = getValidityBufferSizeFromCount(length);
-      int offset = startIndex % 8;
-
-      if (length > 0) {
-        if (offset == 0) {
-          // slice
-          if (target.validityBuffer != null) {
-            target.validityBuffer.getReferenceManager().release();
-          }
-          target.validityBuffer = validityBuffer.slice(firstByteSource, byteSizeTarget);
-          target.validityBuffer.getReferenceManager().retain(1);
-        } else {
-          /* Copy data
-           * When the first bit starts from the middle of a byte (offset != 0),
-           * copy data from src BitVector.
-           * Each byte in the target is composed by a part in i-th byte,
-           * another part in (i+1)-th byte.
-           */
-          target.allocateValidityBuffer(byteSizeTarget);
-
-          for (int i = 0; i < byteSizeTarget - 1; i++) {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(validityBuffer, firstByteSource + i, offset);
-            byte b2 =
-                BitVectorHelper.getBitsFromNextByte(
-                    validityBuffer, firstByteSource + i + 1, offset);
-
-            target.validityBuffer.setByte(i, (b1 + b2));
-          }
-
-          /* Copying the last piece is done in the following manner:
-           * if the source vector has 1 or more bytes remaining, we copy
-           * the last piece as a byte formed by shifting data
-           * from the current byte and the next byte.
-           *
-           * if the source vector has no more bytes remaining
-           * (we are at the last byte), we copy the last piece as a byte
-           * by shifting data from the current byte.
-           */
-          if ((firstByteSource + byteSizeTarget - 1) < lastByteSource) {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(
-                    validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-            byte b2 =
-                BitVectorHelper.getBitsFromNextByte(
-                    validityBuffer, firstByteSource + byteSizeTarget, offset);
-
-            target.validityBuffer.setByte(byteSizeTarget - 1, b1 + b2);
-          } else {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(
-                    validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-            target.validityBuffer.setByte(byteSizeTarget - 1, b1);
-          }
-        }
-      }
     }
 
     @Override

@@ -107,6 +107,19 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
     throw new IllegalStateException(String.format("You tried to end a map entry when you are using a ValueWriter of type %s.", this.getClass().getSimpleName()));
   }
 
+  @Override
+  public void write(ExtensionHolder var1)  {
+    this.fail("Cannot write ExtensionHolder");
+  }
+  @Override
+  public void writeExtension(Object var1)  {
+    this.fail("Cannot write extension object");
+  }
+  @Override
+  public void writeExtension(Object var1, ArrowType type)  {
+    this.fail("Cannot write extension with type " + type);
+  }
+
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign fields = minor.fields!type.fields />
   <#assign friendlyType = (minor.friendlyType!minor.boxedType!type.boxedType) />
@@ -239,6 +252,18 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   @Override
   public MapWriter map(String name, boolean keysSorted) {
     fail("Map");
+    return null;
+  }
+
+  @Override
+  public ExtensionWriter extension(String name, ArrowType arrowType) {
+    fail("Extension");
+    return null;
+  }
+
+  @Override
+  public ExtensionWriter extension(ArrowType arrowType) {
+    fail("Extension");
     return null;
   }
   <#list vv.types as type><#list type.minor as minor>

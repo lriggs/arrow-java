@@ -231,4 +231,39 @@ public class UnionMapWriter extends UnionListWriter {
         return super.map();
     }
   }
+
+  @Override
+  public ExtensionWriter extension(ArrowType type) {
+    switch (mode) {
+      case KEY:
+        return entryWriter.extension(MapVector.KEY_NAME, type);
+      case VALUE:
+        return entryWriter.extension(MapVector.VALUE_NAME, type);
+      default:
+        return super.extension(type);
+    }
+  }
+
+  public FixedSizeBinaryWriter fixedSizeBinary(int byteWidth) {
+    switch (mode) {
+      case KEY:
+        return entryWriter.fixedSizeBinary(MapVector.KEY_NAME, byteWidth);
+      case VALUE:
+        return entryWriter.fixedSizeBinary(MapVector.VALUE_NAME, byteWidth);
+      default:
+        return this;
+    }
+  }
+
+  @Override
+  public FixedSizeBinaryWriter fixedSizeBinary() {
+    switch (mode) {
+      case KEY:
+        return entryWriter.fixedSizeBinary(MapVector.KEY_NAME);
+      case VALUE:
+        return entryWriter.fixedSizeBinary(MapVector.VALUE_NAME);
+      default:
+        return this;
+    }
+  }
 }

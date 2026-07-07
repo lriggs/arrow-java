@@ -74,7 +74,6 @@ public class ListVector extends BaseRepeatedValueVector
     return new ListVector(name, allocator, FieldType.nullable(ArrowType.List.INSTANCE), null);
   }
 
-  protected ArrowBuf validityBuffer;
   protected UnionListReader reader;
   private CallBack callBack;
   protected Field field;
@@ -108,7 +107,8 @@ public class ListVector extends BaseRepeatedValueVector
     this.validityBuffer = allocator.getEmpty();
     this.field = field;
     this.callBack = callBack;
-    this.validityAllocationSizeInBytes = getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION);
+    this.validityAllocationSizeInBytes =
+        BitVectorHelper.getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION);
     this.lastSet = -1;
   }
 
@@ -130,7 +130,7 @@ public class ListVector extends BaseRepeatedValueVector
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    validityAllocationSizeInBytes = getValidityBufferSizeFromCount(numRecords);
+    validityAllocationSizeInBytes = BitVectorHelper.getValidityBufferSizeFromCount(numRecords);
     super.setInitialCapacity(numRecords);
   }
 
@@ -153,7 +153,7 @@ public class ListVector extends BaseRepeatedValueVector
    */
   @Override
   public void setInitialCapacity(int numRecords, double density) {
-    validityAllocationSizeInBytes = getValidityBufferSizeFromCount(numRecords);
+    validityAllocationSizeInBytes = BitVectorHelper.getValidityBufferSizeFromCount(numRecords);
     super.setInitialCapacity(numRecords, density);
   }
 
@@ -172,7 +172,7 @@ public class ListVector extends BaseRepeatedValueVector
    */
   @Override
   public void setInitialTotalCapacity(int numRecords, int totalNumberOfElements) {
-    validityAllocationSizeInBytes = getValidityBufferSizeFromCount(numRecords);
+    validityAllocationSizeInBytes = BitVectorHelper.getValidityBufferSizeFromCount(numRecords);
     super.setInitialTotalCapacity(numRecords, totalNumberOfElements);
   }
 
@@ -270,11 +270,13 @@ public class ListVector extends BaseRepeatedValueVector
       validityBuffer.writerIndex(0);
       ensureEmptyOffsetBufferCapacity(requiredOffsetBufferCapacity);
     } else {
-      validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
+      validityBuffer.writerIndex(BitVectorHelper.getValidityBufferSizeFromCount(valueCount));
     }
-    // IPC serializers use readerIndex and writerIndex to determine readable bytes. Even when the
-    // list is empty, the Arrow layout requires the offset buffer to contain offset[0].
-    offsetBuffer.writerIndex(requiredOffsetBufferCapacity);
+    // IPC serializer will determine readable bytes based on `readerIndex` and `writerIndex`.
+    // Both are set to 0 means 0 bytes are written to the IPC stream which will crash IPC readers
+    // in other libraries. According to Arrow spec, we should still output the offset buffer which
+    // is [0].
+    offsetBuffer.writerIndex((long) (valueCount + 1) * OFFSET_WIDTH);
   }
 
   private void ensureEmptyOffsetBufferCapacity(long requiredCapacity) {
@@ -339,12 +341,10 @@ public class ListVector extends BaseRepeatedValueVector
     return success;
   }
 
+  @Override
   protected void allocateValidityBuffer(final long size) {
-    final int curSize = (int) size;
-    validityBuffer = allocator.buffer(curSize);
-    validityBuffer.readerIndex(0);
-    validityAllocationSizeInBytes = curSize;
-    validityBuffer.setZero(0, validityBuffer.capacity());
+    super.allocateValidityBuffer(size);
+    validityAllocationSizeInBytes = (int) size;
   }
 
   /**
@@ -382,7 +382,8 @@ public class ListVector extends BaseRepeatedValueVector
       if (validityAllocationSizeInBytes > 0) {
         newAllocationSize = validityAllocationSizeInBytes;
       } else {
-        newAllocationSize = getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION) * 2L;
+        newAllocationSize =
+            BitVectorHelper.getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION) * 2L;
       }
     }
     newAllocationSize = CommonUtil.nextPowerOfTwo(newAllocationSize);
@@ -593,70 +594,6 @@ public class ListVector extends BaseRepeatedValueVector
       }
     }
 
-    /*
-     * transfer the validity.
-     */
-    private void splitAndTransferValidityBuffer(int startIndex, int length, ListVector target) {
-      int firstByteSource = BitVectorHelper.byteIndex(startIndex);
-      int lastByteSource = BitVectorHelper.byteIndex(valueCount - 1);
-      int byteSizeTarget = getValidityBufferSizeFromCount(length);
-      int offset = startIndex % 8;
-
-      if (length > 0) {
-        if (offset == 0) {
-          // slice
-          if (target.validityBuffer != null) {
-            target.validityBuffer.getReferenceManager().release();
-          }
-          target.validityBuffer = validityBuffer.slice(firstByteSource, byteSizeTarget);
-          target.validityBuffer.getReferenceManager().retain(1);
-        } else {
-          /* Copy data
-           * When the first bit starts from the middle of a byte (offset != 0),
-           * copy data from src BitVector.
-           * Each byte in the target is composed by a part in i-th byte,
-           * another part in (i+1)-th byte.
-           */
-          target.allocateValidityBuffer(byteSizeTarget);
-
-          for (int i = 0; i < byteSizeTarget - 1; i++) {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(validityBuffer, firstByteSource + i, offset);
-            byte b2 =
-                BitVectorHelper.getBitsFromNextByte(
-                    validityBuffer, firstByteSource + i + 1, offset);
-
-            target.validityBuffer.setByte(i, (b1 + b2));
-          }
-
-          /* Copying the last piece is done in the following manner:
-           * if the source vector has 1 or more bytes remaining, we copy
-           * the last piece as a byte formed by shifting data
-           * from the current byte and the next byte.
-           *
-           * if the source vector has no more bytes remaining
-           * (we are at the last byte), we copy the last piece as a byte
-           * by shifting data from the current byte.
-           */
-          if ((firstByteSource + byteSizeTarget - 1) < lastByteSource) {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(
-                    validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-            byte b2 =
-                BitVectorHelper.getBitsFromNextByte(
-                    validityBuffer, firstByteSource + byteSizeTarget, offset);
-
-            target.validityBuffer.setByte(byteSizeTarget - 1, b1 + b2);
-          } else {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(
-                    validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-            target.validityBuffer.setByte(byteSizeTarget - 1, b1);
-          }
-        }
-      }
-    }
-
     @Override
     public ValueVector getTo() {
       return to;
@@ -698,7 +635,7 @@ public class ListVector extends BaseRepeatedValueVector
       return 0;
     }
     final int offsetBufferSize = (valueCount + 1) * OFFSET_WIDTH;
-    final int validityBufferSize = getValidityBufferSizeFromCount(valueCount);
+    final int validityBufferSize = BitVectorHelper.getValidityBufferSizeFromCount(valueCount);
     return offsetBufferSize + validityBufferSize + vector.getBufferSize();
   }
 
@@ -707,7 +644,7 @@ public class ListVector extends BaseRepeatedValueVector
     if (valueCount == 0) {
       return 0;
     }
-    final int validityBufferSize = getValidityBufferSizeFromCount(valueCount);
+    final int validityBufferSize = BitVectorHelper.getValidityBufferSizeFromCount(valueCount);
 
     return super.getBufferSizeFor(valueCount) + validityBufferSize;
   }
@@ -804,10 +741,10 @@ public class ListVector extends BaseRepeatedValueVector
     if (isSet(index) == 0) {
       return null;
     }
-    final List<Object> vals = new JsonStringArrayList<>();
     final int start = offsetBuffer.getInt(index * OFFSET_WIDTH);
     final int end = offsetBuffer.getInt((index + 1) * OFFSET_WIDTH);
     final ValueVector vv = getDataVector();
+    final List<Object> vals = new JsonStringArrayList<>(end - start);
     for (int i = start; i < end; i++) {
       vals.add(vv.getObject(i));
     }

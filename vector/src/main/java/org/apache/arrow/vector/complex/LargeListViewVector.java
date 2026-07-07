@@ -77,7 +77,6 @@ import org.apache.arrow.vector.util.TransferPair;
 public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
     implements PromotableVector, ValueIterableVector<List<?>> {
 
-  protected ArrowBuf validityBuffer;
   protected UnionLargeListViewReader reader;
   private CallBack callBack;
   protected Field field;
@@ -113,7 +112,8 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
     this.validityBuffer = allocator.getEmpty();
     this.field = field;
     this.callBack = callBack;
-    this.validityAllocationSizeInBytes = getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION);
+    this.validityAllocationSizeInBytes =
+        BitVectorHelper.getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION);
   }
 
   @Override
@@ -134,7 +134,7 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    validityAllocationSizeInBytes = getValidityBufferSizeFromCount(numRecords);
+    validityAllocationSizeInBytes = BitVectorHelper.getValidityBufferSizeFromCount(numRecords);
     super.setInitialCapacity(numRecords);
   }
 
@@ -157,7 +157,7 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
    */
   @Override
   public void setInitialCapacity(int numRecords, double density) {
-    validityAllocationSizeInBytes = getValidityBufferSizeFromCount(numRecords);
+    validityAllocationSizeInBytes = BitVectorHelper.getValidityBufferSizeFromCount(numRecords);
     super.setInitialCapacity(numRecords, density);
   }
 
@@ -176,7 +176,7 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
    */
   @Override
   public void setInitialTotalCapacity(int numRecords, int totalNumberOfElements) {
-    validityAllocationSizeInBytes = getValidityBufferSizeFromCount(numRecords);
+    validityAllocationSizeInBytes = BitVectorHelper.getValidityBufferSizeFromCount(numRecords);
     super.setInitialTotalCapacity(numRecords, totalNumberOfElements);
   }
 
@@ -226,7 +226,7 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
       offsetBuffer.writerIndex(0);
       sizeBuffer.writerIndex(0);
     } else {
-      validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
+      validityBuffer.writerIndex(BitVectorHelper.getValidityBufferSizeFromCount(valueCount));
       offsetBuffer.writerIndex((long) valueCount * OFFSET_WIDTH);
       sizeBuffer.writerIndex((long) valueCount * SIZE_WIDTH);
     }
@@ -284,12 +284,10 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
     return success;
   }
 
+  @Override
   protected void allocateValidityBuffer(final long size) {
-    final int curSize = (int) size;
-    validityBuffer = allocator.buffer(curSize);
-    validityBuffer.readerIndex(0);
-    validityAllocationSizeInBytes = curSize;
-    validityBuffer.setZero(0, validityBuffer.capacity());
+    super.allocateValidityBuffer(size);
+    validityAllocationSizeInBytes = (int) size;
   }
 
   @Override
@@ -323,7 +321,8 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
       if (validityAllocationSizeInBytes > 0) {
         newAllocationSize = validityAllocationSizeInBytes;
       } else {
-        newAllocationSize = getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION) * 2L;
+        newAllocationSize =
+            BitVectorHelper.getValidityBufferSizeFromCount(INITIAL_VALUE_ALLOCATION) * 2L;
       }
     }
     newAllocationSize = CommonUtil.nextPowerOfTwo(newAllocationSize);
@@ -529,71 +528,6 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
       }
     }
 
-    /*
-     * transfer the validity.
-     */
-    private void splitAndTransferValidityBuffer(
-        int startIndex, int length, LargeListViewVector target) {
-      int firstByteSource = BitVectorHelper.byteIndex(startIndex);
-      int lastByteSource = BitVectorHelper.byteIndex(valueCount - 1);
-      int byteSizeTarget = getValidityBufferSizeFromCount(length);
-      int offset = startIndex % 8;
-
-      if (length > 0) {
-        if (offset == 0) {
-          // slice
-          if (target.validityBuffer != null) {
-            target.validityBuffer.getReferenceManager().release();
-          }
-          target.validityBuffer = validityBuffer.slice(firstByteSource, byteSizeTarget);
-          target.validityBuffer.getReferenceManager().retain(1);
-        } else {
-          /* Copy data
-           * When the first bit starts from the middle of a byte (offset != 0),
-           * copy data from src BitVector.
-           * Each byte in the target is composed by a part in i-th byte,
-           * another part in (i+1)-th byte.
-           */
-          target.allocateValidityBuffer(byteSizeTarget);
-
-          for (int i = 0; i < byteSizeTarget - 1; i++) {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(validityBuffer, firstByteSource + i, offset);
-            byte b2 =
-                BitVectorHelper.getBitsFromNextByte(
-                    validityBuffer, firstByteSource + i + 1, offset);
-
-            target.validityBuffer.setByte(i, (b1 + b2));
-          }
-
-          /* Copying the last piece is done in the following manner:
-           * if the source vector has 1 or more bytes remaining, we copy
-           * the last piece as a byte formed by shifting data
-           * from the current byte and the next byte.
-           *
-           * if the source vector has no more bytes remaining
-           * (we are at the last byte), we copy the last piece as a byte
-           * by shifting data from the current byte.
-           */
-          if ((firstByteSource + byteSizeTarget - 1) < lastByteSource) {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(
-                    validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-            byte b2 =
-                BitVectorHelper.getBitsFromNextByte(
-                    validityBuffer, firstByteSource + byteSizeTarget, offset);
-
-            target.validityBuffer.setByte(byteSizeTarget - 1, b1 + b2);
-          } else {
-            byte b1 =
-                BitVectorHelper.getBitsFromCurrentByte(
-                    validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-            target.validityBuffer.setByte(byteSizeTarget - 1, b1);
-          }
-        }
-      }
-    }
-
     @Override
     public ValueVector getTo() {
       return to;
@@ -629,7 +563,7 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
     }
     final int offsetBufferSize = valueCount * OFFSET_WIDTH;
     final int sizeBufferSize = valueCount * SIZE_WIDTH;
-    final int validityBufferSize = getValidityBufferSizeFromCount(valueCount);
+    final int validityBufferSize = BitVectorHelper.getValidityBufferSizeFromCount(valueCount);
     return offsetBufferSize + sizeBufferSize + validityBufferSize + vector.getBufferSize();
   }
 
@@ -644,7 +578,7 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
     if (valueCount == 0) {
       return 0;
     }
-    final int validityBufferSize = getValidityBufferSizeFromCount(valueCount);
+    final int validityBufferSize = BitVectorHelper.getValidityBufferSizeFromCount(valueCount);
 
     return super.getBufferSizeFor(valueCount) + validityBufferSize;
   }
@@ -738,10 +672,10 @@ public class LargeListViewVector extends BaseLargeRepeatedValueViewVector
     if (isSet(index) == 0) {
       return null;
     }
-    final List<Object> vals = new JsonStringArrayList<>();
     final int start = offsetBuffer.getInt(index * OFFSET_WIDTH);
     final int end = start + sizeBuffer.getInt((index) * SIZE_WIDTH);
     final ValueVector vv = getDataVector();
+    final List<Object> vals = new JsonStringArrayList<>(end - start);
     for (int i = start; i < end; i++) {
       vals.add(vv.getObject(checkedCastToInt(i)));
     }

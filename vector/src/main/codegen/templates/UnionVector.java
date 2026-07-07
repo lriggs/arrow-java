@@ -23,6 +23,7 @@ import org.apache.arrow.memory.util.hash.ArrowBufHasher;
 import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.BaseValueVector;
 import org.apache.arrow.vector.BitVectorHelper;
+import org.apache.arrow.vector.DecimalVector;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.complex.AbstractStructVector;
@@ -279,7 +280,10 @@ public class UnionVector extends AbstractContainerVector implements FieldVector 
   <#if minor.class?starts_with("Decimal") || is_timestamp_tz(minor.class) || minor.class == "Duration" || minor.class == "FixedSizeBinary">
   public ${name}Vector get${name}Vector() {
     if (${uncappedName}Vector == null) {
-      throw new IllegalArgumentException("No ${name} present. Provide ArrowType argument to create a new vector");
+      ${uncappedName}Vector = internalStruct.getChild(fieldName(MinorType.${name?upper_case}), ${name}Vector.class);
+      if (${uncappedName}Vector == null) {
+        throw new IllegalArgumentException("No ${name} present. Provide ArrowType argument to create a new vector");
+      }
     }
     return ${uncappedName}Vector;
   }
@@ -373,6 +377,22 @@ public class UnionVector extends AbstractContainerVector implements FieldVector 
       }
     }
     return mapVector;
+  }
+
+  private ExtensionTypeVector extensionVector;
+
+  public ExtensionTypeVector getExtension(ArrowType arrowType) {
+    if (extensionVector == null) {
+      int vectorCount = internalStruct.size();
+      extensionVector = addOrGet(null, MinorType.EXTENSIONTYPE, arrowType, ExtensionTypeVector.class);
+      if (internalStruct.size() > vectorCount) {
+        extensionVector.allocateNew();
+        if (callBack != null) {
+          callBack.doWork();
+        }
+      }
+    }
+    return extensionVector;
   }
 
   public int getTypeValue(int index) {
@@ -721,6 +741,8 @@ public class UnionVector extends AbstractContainerVector implements FieldVector 
           return getListView();
         case MAP:
           return getMap(name, arrowType);
+        case EXTENSIONTYPE:
+          return getExtension(arrowType);
         default:
           throw new UnsupportedOperationException("Cannot support type: " + MinorType.values()[typeId]);
       }

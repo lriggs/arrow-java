@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.complex.AbstractStructVector;
 import org.apache.arrow.vector.complex.ListVector;
@@ -34,9 +35,11 @@ import org.apache.arrow.vector.complex.UnionVector;
 import org.apache.arrow.vector.complex.impl.NullableStructWriter;
 import org.apache.arrow.vector.complex.writer.Float8Writer;
 import org.apache.arrow.vector.complex.writer.IntWriter;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.holders.ComplexHolder;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.Types.MinorType;
+import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.ArrowType.Struct;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
@@ -157,17 +160,23 @@ public class TestStructVector {
       UnionVector unionVector = vector.addOrGetUnion("union");
       unionVector.addVector(new BigIntVector("bigInt", allocator));
       unionVector.addVector(new SmallIntVector("smallInt", allocator));
+      unionVector.addVector(new UuidVector("uuid", allocator));
 
       // add varchar vector
       vector.addOrGet(
           "varchar", FieldType.nullable(MinorType.VARCHAR.getType()), VarCharVector.class);
 
+      // add extension vector
+      vector.addOrGet("extension", FieldType.nullable(UuidType.INSTANCE), UuidVector.class);
+
       List<ValueVector> primitiveVectors = vector.getPrimitiveVectors();
-      assertEquals(4, primitiveVectors.size());
+      assertEquals(6, primitiveVectors.size());
       assertEquals(MinorType.INT, primitiveVectors.get(0).getMinorType());
       assertEquals(MinorType.BIGINT, primitiveVectors.get(1).getMinorType());
       assertEquals(MinorType.SMALLINT, primitiveVectors.get(2).getMinorType());
-      assertEquals(MinorType.VARCHAR, primitiveVectors.get(3).getMinorType());
+      assertEquals(MinorType.EXTENSIONTYPE, primitiveVectors.get(3).getMinorType());
+      assertEquals(MinorType.VARCHAR, primitiveVectors.get(4).getMinorType());
+      assertEquals(MinorType.EXTENSIONTYPE, primitiveVectors.get(5).getMinorType());
     }
   }
 
@@ -334,6 +343,40 @@ public class TestStructVector {
       assertSame(toVector.getField(), fromVector.getField());
       toVector.clear();
     }
+  }
+
+  @Test
+  public void testStructVectorWithExtensionTypes() {
+    UuidType uuidType = UuidType.INSTANCE;
+    Field uuidField = new Field("struct_child", FieldType.nullable(uuidType), null);
+    Field structField =
+        new Field("struct", FieldType.nullable(new ArrowType.Struct()), List.of(uuidField));
+    StructVector s1 = new StructVector(structField, allocator, null);
+    StructVector s2 = (StructVector) structField.createVector(allocator);
+    s1.close();
+    s2.close();
+  }
+
+  @Test
+  public void testStructVectorTransferPairWithExtensionType() {
+    UuidType uuidType = UuidType.INSTANCE;
+    Field uuidField = new Field("uuid_child", FieldType.nullable(uuidType), null);
+    Field structField =
+        new Field("struct", FieldType.nullable(new ArrowType.Struct()), List.of(uuidField));
+
+    StructVector s1 = (StructVector) structField.createVector(allocator);
+    UuidVector uuidVector =
+        s1.addOrGet("uuid_child", FieldType.nullable(uuidType), UuidVector.class);
+    s1.setValueCount(1);
+    uuidVector.set(0, new UUID(1, 2));
+    s1.setIndexDefined(0);
+
+    TransferPair tp = s1.getTransferPair(structField, allocator);
+    final StructVector toVector = (StructVector) tp.getTo();
+    assertEquals(s1.getField(), toVector.getField());
+
+    s1.close();
+    toVector.close();
   }
 
   private StructVector simpleStructVector(String name, BufferAllocator allocator) {

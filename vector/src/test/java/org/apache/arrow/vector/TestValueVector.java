@@ -16,6 +16,7 @@
  */
 package org.apache.arrow.vector;
 
+import static org.apache.arrow.vector.BitVectorHelper.getValidityBufferSizeFromCount;
 import static org.apache.arrow.vector.TestUtils.newVarBinaryVector;
 import static org.apache.arrow.vector.TestUtils.newVarCharVector;
 import static org.apache.arrow.vector.TestUtils.newVector;
@@ -56,6 +57,10 @@ import org.apache.arrow.vector.complex.impl.UnionLargeListViewWriter;
 import org.apache.arrow.vector.complex.impl.UnionListViewWriter;
 import org.apache.arrow.vector.complex.impl.UnionListWriter;
 import org.apache.arrow.vector.holders.NullableIntHolder;
+import org.apache.arrow.vector.holders.NullableTimeStampMicroTZHolder;
+import org.apache.arrow.vector.holders.NullableTimeStampMilliTZHolder;
+import org.apache.arrow.vector.holders.NullableTimeStampNanoTZHolder;
+import org.apache.arrow.vector.holders.NullableTimeStampSecTZHolder;
 import org.apache.arrow.vector.holders.NullableUInt4Holder;
 import org.apache.arrow.vector.holders.NullableVarBinaryHolder;
 import org.apache.arrow.vector.holders.NullableVarCharHolder;
@@ -95,7 +100,7 @@ public class TestValueVector {
   private static final byte[] STR5 = "EEE5".getBytes(utf8Charset);
   private static final byte[] STR6 = "FFFFF6".getBytes(utf8Charset);
   private static final int MAX_VALUE_COUNT =
-      (int) (Integer.getInteger("arrow.vector.max_allocation_bytes", Integer.MAX_VALUE) / 7);
+      (int) (Integer.getInteger("arrow.vector.max_allocation_bytes", Integer.MAX_VALUE) / 9);
   private static final int MAX_VALUE_COUNT_8BYTE = (int) (MAX_VALUE_COUNT / 2);
 
   @AfterEach
@@ -1233,7 +1238,7 @@ public class TestValueVector {
       // the size needed for the validity buffer
       final long validitySize =
           DefaultRoundingPolicy.DEFAULT_ROUNDING_POLICY.getRoundedSize(
-              BaseValueVector.getValidityBufferSizeFromCount(2));
+              getValidityBufferSizeFromCount(2));
       assertEquals(allocatedMem + validitySize, allocator.getAllocatedMemory());
       // The validity and offset buffers are sliced from a same buffer.See
       // BaseFixedWidthVector#allocateBytes.
@@ -2464,7 +2469,7 @@ public class TestValueVector {
       assertTrue(intVector.getValueCapacity() >= defaultCapacity);
       expectedSize =
           (defaultCapacity * IntVector.TYPE_WIDTH)
-              + BaseFixedWidthVector.getValidityBufferSizeFromCount(defaultCapacity);
+              + getValidityBufferSizeFromCount(defaultCapacity);
       assertTrue(childAllocator.getAllocatedMemory() - beforeSize <= expectedSize * 1.05);
 
       // verify that the wastage is within bounds for BigIntVector.
@@ -2473,7 +2478,7 @@ public class TestValueVector {
       assertTrue(bigIntVector.getValueCapacity() >= defaultCapacity);
       expectedSize =
           (defaultCapacity * bigIntVector.TYPE_WIDTH)
-              + BaseFixedWidthVector.getValidityBufferSizeFromCount(defaultCapacity);
+              + getValidityBufferSizeFromCount(defaultCapacity);
       assertTrue(childAllocator.getAllocatedMemory() - beforeSize <= expectedSize * 1.05);
 
       // verify that the wastage is within bounds for DecimalVector.
@@ -2482,7 +2487,7 @@ public class TestValueVector {
       assertTrue(decimalVector.getValueCapacity() >= defaultCapacity);
       expectedSize =
           (defaultCapacity * decimalVector.TYPE_WIDTH)
-              + BaseFixedWidthVector.getValidityBufferSizeFromCount(defaultCapacity);
+              + getValidityBufferSizeFromCount(defaultCapacity);
       assertTrue(childAllocator.getAllocatedMemory() - beforeSize <= expectedSize * 1.05);
 
       // verify that the wastage is within bounds for VarCharVector.
@@ -2492,7 +2497,7 @@ public class TestValueVector {
       assertTrue(varCharVector.getValueCapacity() >= defaultCapacity - 1);
       expectedSize =
           (defaultCapacity * VarCharVector.OFFSET_WIDTH)
-              + BaseFixedWidthVector.getValidityBufferSizeFromCount(defaultCapacity)
+              + getValidityBufferSizeFromCount(defaultCapacity)
               + defaultCapacity * 8;
       // wastage should be less than 5%.
       assertTrue(childAllocator.getAllocatedMemory() - beforeSize <= expectedSize * 1.05);
@@ -2501,7 +2506,7 @@ public class TestValueVector {
       beforeSize = childAllocator.getAllocatedMemory();
       bitVector.allocateNew();
       assertTrue(bitVector.getValueCapacity() >= defaultCapacity);
-      expectedSize = BaseFixedWidthVector.getValidityBufferSizeFromCount(defaultCapacity) * 2;
+      expectedSize = getValidityBufferSizeFromCount(defaultCapacity) * 2;
       assertTrue(childAllocator.getAllocatedMemory() - beforeSize <= expectedSize * 1.05);
     }
   }
@@ -2563,6 +2568,195 @@ public class TestValueVector {
       assertTrue(vector.isNull(1));
 
       buf.close();
+    }
+  }
+
+  @Test
+  public void testTimeStampTZVectorSetSafeUnset() {
+    // reproduction of https://github.com/apache/arrow/issues/45084
+    try (TimeStampMicroTZVector vector = new TimeStampMicroTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+      // Set a valid value
+      NullableTimeStampMicroTZHolder validHolder = new NullableTimeStampMicroTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      // Unset the value using a holder with default (null) timezone
+      // The bug used to throw IllegalArgumentException because holder.timezone (null) !=
+      // vector.timezone ("UTC")
+      // The correct behaviour is to not throw an exception and to unset the value.
+      NullableTimeStampMicroTZHolder unsetHolder = new NullableTimeStampMicroTZHolder();
+      unsetHolder.isSet = 0;
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
+    }
+  }
+
+  @Test
+  public void testTimeStampMilliTZVectorSetSafeUnset() {
+    // reproduction of https://github.com/apache/arrow/issues/45084
+    try (TimeStampMilliTZVector vector = new TimeStampMilliTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+
+      NullableTimeStampMilliTZHolder validHolder = new NullableTimeStampMilliTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      NullableTimeStampMilliTZHolder unsetHolder = new NullableTimeStampMilliTZHolder();
+      unsetHolder.isSet = 0;
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
+    }
+  }
+
+  @Test
+  public void testTimeStampNanoTZVectorSetSafeUnset() {
+    // reproduction of https://github.com/apache/arrow/issues/45084
+    try (TimeStampNanoTZVector vector = new TimeStampNanoTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+
+      NullableTimeStampNanoTZHolder validHolder = new NullableTimeStampNanoTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      NullableTimeStampNanoTZHolder unsetHolder = new NullableTimeStampNanoTZHolder();
+      unsetHolder.isSet = 0;
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
+    }
+  }
+
+  @Test
+  public void testTimeStampSecTZVectorSetSafeUnset() {
+    // reproduction of https://github.com/apache/arrow/issues/45084
+    try (TimeStampSecTZVector vector = new TimeStampSecTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+
+      NullableTimeStampSecTZHolder validHolder = new NullableTimeStampSecTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      NullableTimeStampSecTZHolder unsetHolder = new NullableTimeStampSecTZHolder();
+      unsetHolder.isSet = 0;
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
+    }
+  }
+
+  @Test
+  public void testTimeStampMicroTZVectorSetSafeUnsetExplicitTimezone() {
+    // Test to ensure fix added for https://github.com/apache/arrow/issues/45084 does not break
+    // workaround.
+    try (TimeStampMicroTZVector vector = new TimeStampMicroTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+
+      NullableTimeStampMicroTZHolder validHolder = new NullableTimeStampMicroTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      NullableTimeStampMicroTZHolder unsetHolder = new NullableTimeStampMicroTZHolder();
+      unsetHolder.isSet = 0;
+      unsetHolder.timezone = "UTC";
+
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
+    }
+  }
+
+  @Test
+  public void testTimeStampMilliTZVectorSetSafeUnsetExplicitTimezone() {
+    // Test to ensure fix added for https://github.com/apache/arrow/issues/45084 does not break
+    // workaround.
+    try (TimeStampMilliTZVector vector = new TimeStampMilliTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+
+      NullableTimeStampMilliTZHolder validHolder = new NullableTimeStampMilliTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      NullableTimeStampMilliTZHolder unsetHolder = new NullableTimeStampMilliTZHolder();
+      unsetHolder.isSet = 0;
+      unsetHolder.timezone = "UTC";
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
+    }
+  }
+
+  @Test
+  public void testTimeStampNanoTZVectorSetSafeUnsetExplicitTimezone() {
+    // Test to ensure fix added for https://github.com/apache/arrow/issues/45084 does not break
+    // workaround.
+    try (TimeStampNanoTZVector vector = new TimeStampNanoTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+
+      NullableTimeStampNanoTZHolder validHolder = new NullableTimeStampNanoTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      NullableTimeStampNanoTZHolder unsetHolder = new NullableTimeStampNanoTZHolder();
+      unsetHolder.isSet = 0;
+      unsetHolder.timezone = "UTC";
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
+    }
+  }
+
+  @Test
+  public void testTimeStampSecTZVectorSetSafeUnsetExplicitTimezone() {
+    // Test to ensure fix added for https://github.com/apache/arrow/issues/45084 does not break
+    // workaround.
+    try (TimeStampSecTZVector vector = new TimeStampSecTZVector("vector", allocator, "UTC")) {
+      vector.allocateNew();
+
+      NullableTimeStampSecTZHolder validHolder = new NullableTimeStampSecTZHolder();
+      validHolder.isSet = 1;
+      validHolder.value = 1000L;
+      validHolder.timezone = "UTC";
+      vector.setSafe(0, validHolder);
+
+      assertEquals(1000L, vector.get(0));
+
+      NullableTimeStampSecTZHolder unsetHolder = new NullableTimeStampSecTZHolder();
+      unsetHolder.isSet = 0;
+      unsetHolder.timezone = "UTC";
+      vector.setSafe(0, unsetHolder);
+
+      assertNull(vector.getObject(0));
     }
   }
 
@@ -3744,6 +3938,44 @@ public class TestValueVector {
         assertEquals(5, vector2.get(4));
         assertEquals(6, vector2.get(5));
       }
+    }
+  }
+
+  @Test
+  public void testEmptyVarCharOffsetBuffer() {
+    // Validates that offset buffer has at least OFFSET_WIDTH bytes (for offset[0]=0)
+    // even when valueCount is 0, per Arrow specification.
+    try (VarCharVector vector = newVarCharVector("varchar", allocator)) {
+      vector.allocateNew();
+      vector.setValueCount(0);
+
+      List<ArrowBuf> buffers = vector.getFieldBuffers();
+      // buffers: [validity, offset, data]
+      assertTrue(
+          buffers.get(1).readableBytes() >= BaseVariableWidthVector.OFFSET_WIDTH,
+          "Offset buffer should have at least "
+              + BaseVariableWidthVector.OFFSET_WIDTH
+              + " bytes for offset[0]");
+      assertEquals(0, vector.getOffsetBuffer().getInt(0));
+    }
+  }
+
+  @Test
+  public void testEmptyLargeVarCharOffsetBuffer() {
+    // Validates that offset buffer has at least OFFSET_WIDTH bytes (for offset[0]=0)
+    // even when valueCount is 0, per Arrow specification.
+    try (LargeVarCharVector vector = new LargeVarCharVector("largevarchar", allocator)) {
+      vector.allocateNew();
+      vector.setValueCount(0);
+
+      List<ArrowBuf> buffers = vector.getFieldBuffers();
+      // buffers: [validity, offset, data]
+      assertTrue(
+          buffers.get(1).readableBytes() >= BaseLargeVariableWidthVector.OFFSET_WIDTH,
+          "Offset buffer should have at least "
+              + BaseLargeVariableWidthVector.OFFSET_WIDTH
+              + " bytes for offset[0]");
+      assertEquals(0, vector.getOffsetBuffer().getLong(0));
     }
   }
 }

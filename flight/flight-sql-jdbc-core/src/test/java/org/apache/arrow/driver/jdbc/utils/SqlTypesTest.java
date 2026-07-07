@@ -21,6 +21,7 @@ import static org.apache.arrow.driver.jdbc.utils.SqlTypes.getSqlTypeNameFromArro
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.Types;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.types.DateUnit;
 import org.apache.arrow.vector.types.FloatingPointPrecision;
 import org.apache.arrow.vector.types.IntervalUnit;
@@ -40,9 +41,11 @@ public class SqlTypesTest {
 
     assertEquals(Types.BINARY, getSqlTypeIdFromArrowType(new ArrowType.FixedSizeBinary(1024)));
     assertEquals(Types.VARBINARY, getSqlTypeIdFromArrowType(new ArrowType.Binary()));
+    assertEquals(Types.VARBINARY, getSqlTypeIdFromArrowType(new ArrowType.BinaryView()));
     assertEquals(Types.LONGVARBINARY, getSqlTypeIdFromArrowType(new ArrowType.LargeBinary()));
 
     assertEquals(Types.VARCHAR, getSqlTypeIdFromArrowType(new ArrowType.Utf8()));
+    assertEquals(Types.VARCHAR, getSqlTypeIdFromArrowType(new ArrowType.Utf8View()));
     assertEquals(Types.LONGVARCHAR, getSqlTypeIdFromArrowType(new ArrowType.LargeUtf8()));
 
     assertEquals(Types.DATE, getSqlTypeIdFromArrowType(new ArrowType.Date(DateUnit.MILLISECOND)));
@@ -50,7 +53,13 @@ public class SqlTypesTest {
         Types.TIME, getSqlTypeIdFromArrowType(new ArrowType.Time(TimeUnit.MILLISECOND, 32)));
     assertEquals(
         Types.TIMESTAMP,
+        getSqlTypeIdFromArrowType(new ArrowType.Timestamp(TimeUnit.MILLISECOND, null)));
+    assertEquals(
+        Types.TIMESTAMP,
         getSqlTypeIdFromArrowType(new ArrowType.Timestamp(TimeUnit.MILLISECOND, "")));
+    assertEquals(
+        Types.TIMESTAMP_WITH_TIMEZONE,
+        getSqlTypeIdFromArrowType(new ArrowType.Timestamp(TimeUnit.MILLISECOND, "UTC")));
 
     assertEquals(Types.BOOLEAN, getSqlTypeIdFromArrowType(new ArrowType.Bool()));
 
@@ -77,6 +86,8 @@ public class SqlTypesTest {
     assertEquals(Types.JAVA_OBJECT, getSqlTypeIdFromArrowType(new ArrowType.Map(true)));
 
     assertEquals(Types.NULL, getSqlTypeIdFromArrowType(new ArrowType.Null()));
+
+    assertEquals(Types.OTHER, getSqlTypeIdFromArrowType(UuidType.INSTANCE));
   }
 
   @Test
@@ -88,16 +99,24 @@ public class SqlTypesTest {
 
     assertEquals("BINARY", getSqlTypeNameFromArrowType(new ArrowType.FixedSizeBinary(1024)));
     assertEquals("VARBINARY", getSqlTypeNameFromArrowType(new ArrowType.Binary()));
+    assertEquals("VARBINARY", getSqlTypeNameFromArrowType(new ArrowType.BinaryView()));
     assertEquals("LONGVARBINARY", getSqlTypeNameFromArrowType(new ArrowType.LargeBinary()));
 
     assertEquals("VARCHAR", getSqlTypeNameFromArrowType(new ArrowType.Utf8()));
+    assertEquals("VARCHAR", getSqlTypeNameFromArrowType(new ArrowType.Utf8View()));
     assertEquals("LONGVARCHAR", getSqlTypeNameFromArrowType(new ArrowType.LargeUtf8()));
 
     assertEquals("DATE", getSqlTypeNameFromArrowType(new ArrowType.Date(DateUnit.MILLISECOND)));
     assertEquals("TIME", getSqlTypeNameFromArrowType(new ArrowType.Time(TimeUnit.MILLISECOND, 32)));
     assertEquals(
         "TIMESTAMP",
+        getSqlTypeNameFromArrowType(new ArrowType.Timestamp(TimeUnit.MILLISECOND, null)));
+    assertEquals(
+        "TIMESTAMP",
         getSqlTypeNameFromArrowType(new ArrowType.Timestamp(TimeUnit.MILLISECOND, "")));
+    assertEquals(
+        "TIMESTAMP_WITH_TIMEZONE",
+        getSqlTypeNameFromArrowType(new ArrowType.Timestamp(TimeUnit.MILLISECOND, "UTC")));
 
     assertEquals("BOOLEAN", getSqlTypeNameFromArrowType(new ArrowType.Bool()));
 
@@ -124,5 +143,7 @@ public class SqlTypesTest {
     assertEquals("JAVA_OBJECT", getSqlTypeNameFromArrowType(new ArrowType.Map(true)));
 
     assertEquals("NULL", getSqlTypeNameFromArrowType(new ArrowType.Null()));
+
+    assertEquals("OTHER", getSqlTypeNameFromArrowType(UuidType.INSTANCE));
   }
 }

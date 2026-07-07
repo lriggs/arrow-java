@@ -53,6 +53,7 @@ public class Union${listName}Writer extends AbstractFieldWriter {
   private boolean inStruct = false;
   private boolean listStarted = false;
   private String structName;
+  private ArrowType extensionType;
   <#if listName == "LargeList" || listName == "LargeListView">
   private static final long OFFSET_WIDTH = 8;
   <#else>
@@ -122,8 +123,6 @@ public class Union${listName}Writer extends AbstractFieldWriter {
   <#assign lowerName = minor.class?uncap_first />
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
   <#assign upperName = minor.class?upper_case />
-  <#assign capName = minor.class?cap_first />
-  <#assign vectName = capName />
   @Override
   public ${minor.class}Writer ${lowerName}() {
     return this;
@@ -199,6 +198,17 @@ public class Union${listName}Writer extends AbstractFieldWriter {
   public MapWriter map(String name, boolean keysSorted) {
     MapWriter mapWriter = writer.map(name, keysSorted);
     return mapWriter;
+  }
+
+  @Override
+  public ExtensionWriter extension(ArrowType arrowType) {
+    extensionType = arrowType;
+    return this;
+  }
+
+  @Override
+  public ExtensionWriter extension(String name, ArrowType arrowType) {
+    return writer.extension(name, arrowType);
   }
 
   <#if listName == "LargeList">
@@ -323,6 +333,22 @@ public class Union${listName}Writer extends AbstractFieldWriter {
     }
   }
 
+  @Override
+  public void writeExtension(Object value) {
+    writer.writeExtension(value, extensionType);
+    writer.setPosition(writer.idx() + 1);
+  }
+
+  @Override
+  public void writeExtension(Object value, ArrowType type) {
+    writeExtension(value);
+  }
+
+  public void write(ExtensionHolder var1) {
+    writer.write(var1);
+    writer.setPosition(writer.idx() + 1);
+  }
+
   <#list vv.types as type>
     <#list type.minor as minor>
       <#assign name = minor.class?cap_first />
@@ -342,6 +368,7 @@ public class Union${listName}Writer extends AbstractFieldWriter {
   }
 
   <#elseif minor.class?starts_with("Decimal")>
+  @Override
   public void write${name}(long start, ArrowBuf buffer, ArrowType arrowType) {
     writer.write${name}(start, buffer, arrowType);
     writer.setPosition(writer.idx()+1);
@@ -353,11 +380,13 @@ public class Union${listName}Writer extends AbstractFieldWriter {
     writer.setPosition(writer.idx()+1);
   }
 
+  @Override
   public void write${name}(BigDecimal value) {
     writer.write${name}(value);
     writer.setPosition(writer.idx()+1);
   }
 
+  @Override
   public void writeBigEndianBytesTo${name}(byte[] value, ArrowType arrowType){
     writer.writeBigEndianBytesTo${name}(value, arrowType);
     writer.setPosition(writer.idx() + 1);
@@ -401,6 +430,7 @@ public class Union${listName}Writer extends AbstractFieldWriter {
     writer.setPosition(writer.idx() + 1);
   }
 
+  @Override
   public void write${minor.class}(String value) {
     writer.write${minor.class}(value);
     writer.setPosition(writer.idx() + 1);

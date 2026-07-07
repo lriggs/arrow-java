@@ -78,13 +78,11 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
   // The third 4 bytes of view are allocated for buffer index
   public static final int BUF_INDEX_WIDTH = 4;
   public static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
-  protected ArrowBuf validityBuffer;
   // The view buffer is used to store the variable width view elements
   protected ArrowBuf viewBuffer;
   // The external buffer which stores the long strings
   protected List<ArrowBuf> dataBuffers;
   protected int initialDataBufferSize;
-  protected int valueCount;
   protected int lastSet;
   protected final Field field;
 
@@ -117,7 +115,7 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
 
   /* TODO:
    * Once the entire hierarchy has been refactored, move common functions
-   * like getNullCount(), splitAndTransferValidityBuffer to top level
+   * like getNullCount() to top level
    * base class BaseValueVector.
    *
    * Along with this, some class members (validityBuffer) can also be
@@ -127,12 +125,6 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
    * vector types in ValueVector hierarchy (non-nullable) and those
    * vectors have not yet been refactored/removed so moving things to
    * the top class as of now is not a good idea.
-   */
-
-  /* TODO:
-   * Implement TransferPair functionality
-   * https://github.com/apache/arrow/issues/40932
-   *
    */
 
   /**
@@ -400,7 +392,7 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
       validityBuffer.writerIndex(0);
       viewBuffer.writerIndex(0);
     } else {
-      validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
+      validityBuffer.writerIndex(BitVectorHelper.getValidityBufferSizeFromCount(valueCount));
       viewBuffer.writerIndex(valueCount * ELEMENT_SIZE);
     }
   }
@@ -550,14 +542,17 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
     if (desiredAllocSize == 0) {
       return;
     }
-    long newAllocationSize = CommonUtil.nextPowerOfTwo(desiredAllocSize);
+    long newAllocationSize = Math.min(CommonUtil.nextPowerOfTwo(desiredAllocSize), MAX_BUFFER_SIZE);
     assert newAllocationSize >= 1;
 
-    checkDataBufferSize(newAllocationSize);
     // for each set operation, we have to allocate 16 bytes
     // here we are adjusting the desired allocation-based allocation size
     // to align with the 16bytes requirement.
     newAllocationSize = roundUpToMultipleOf16(newAllocationSize);
+
+    if (newAllocationSize < desiredAllocSize) {
+      checkDataBufferSize(desiredAllocSize);
+    }
 
     final ArrowBuf newBuf = allocator.buffer(newAllocationSize);
     newBuf.setBytes(0, viewBuffer, 0, viewBuffer.capacity());
@@ -587,10 +582,13 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
       return;
     }
 
-    final long newAllocationSize = CommonUtil.nextPowerOfTwo(desiredAllocSize);
+    final long newAllocationSize =
+        Math.min(CommonUtil.nextPowerOfTwo(desiredAllocSize), MAX_BUFFER_SIZE);
     assert newAllocationSize >= 1;
 
-    checkDataBufferSize(newAllocationSize);
+    if (newAllocationSize < desiredAllocSize) {
+      checkDataBufferSize(desiredAllocSize);
+    }
 
     final ArrowBuf newBuf = allocator.buffer(newAllocationSize);
     dataBuffers.add(newBuf);
@@ -677,7 +675,7 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
       return 0;
     }
 
-    final int validityBufferSize = getValidityBufferSizeFromCount(valueCount);
+    final int validityBufferSize = BitVectorHelper.getValidityBufferSizeFromCount(valueCount);
     final int viewBufferSize = valueCount * ELEMENT_SIZE;
     final int dataBufferSize = getDataBufferSize();
     return validityBufferSize + viewBufferSize + dataBufferSize;
@@ -848,77 +846,22 @@ public abstract class BaseVariableWidthViewVector extends BaseValueVector
   }
 
   /* allocate validity buffer */
-  private void allocateValidityBuffer(final long size) {
-    final int curSize = (int) size;
-    validityBuffer = allocator.buffer(curSize);
-    validityBuffer.readerIndex(0);
-    initValidityBuffer();
+  @Override
+  protected void allocateValidityBuffer(final long size) {
+    super.allocateValidityBuffer(size);
   }
 
-  /*
-   * Transfer the validity.
-   */
-  private void splitAndTransferValidityBuffer(
-      int startIndex, int length, BaseVariableWidthViewVector target) {
-    if (length <= 0) {
-      return;
-    }
-
+  @Override
+  protected void sliceAndTransferValidityBuffer(
+      int startIndex, int length, BaseValueVector target) {
     final int firstByteSource = BitVectorHelper.byteIndex(startIndex);
-    final int lastByteSource = BitVectorHelper.byteIndex(valueCount - 1);
-    final int byteSizeTarget = getValidityBufferSizeFromCount(length);
-    final int offset = startIndex % 8;
+    final int byteSizeTarget = BitVectorHelper.getValidityBufferSizeFromCount(length);
 
-    if (offset == 0) {
-      // slice
-      if (target.validityBuffer != null) {
-        target.validityBuffer.getReferenceManager().release();
-      }
-      final ArrowBuf slicedValidityBuffer = validityBuffer.slice(firstByteSource, byteSizeTarget);
-      target.validityBuffer = transferBuffer(slicedValidityBuffer, target.allocator);
-      return;
+    if (target.validityBuffer != null) {
+      target.validityBuffer.getReferenceManager().release();
     }
-
-    /* Copy data
-     * When the first bit starts from the middle of a byte (offset != 0),
-     * copy data from src BitVector.
-     * Each byte in the target is composed by a part in i-th byte,
-     * another part in (i+1)-th byte.
-     */
-    target.allocateValidityBuffer(byteSizeTarget);
-
-    for (int i = 0; i < byteSizeTarget - 1; i++) {
-      byte b1 =
-          BitVectorHelper.getBitsFromCurrentByte(this.validityBuffer, firstByteSource + i, offset);
-      byte b2 =
-          BitVectorHelper.getBitsFromNextByte(this.validityBuffer, firstByteSource + i + 1, offset);
-
-      target.validityBuffer.setByte(i, (b1 + b2));
-    }
-    /* Copying the last piece is done in the following manner:
-     * if the source vector has 1 or more bytes remaining, we copy
-     * the last piece as a byte formed by shifting data
-     * from the current byte and the next byte.
-     *
-     * if the source vector has no more bytes remaining
-     * (we are at the last byte), we copy the last piece as a byte
-     * by shifting data from the current byte.
-     */
-    if ((firstByteSource + byteSizeTarget - 1) < lastByteSource) {
-      byte b1 =
-          BitVectorHelper.getBitsFromCurrentByte(
-              this.validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-      byte b2 =
-          BitVectorHelper.getBitsFromNextByte(
-              this.validityBuffer, firstByteSource + byteSizeTarget, offset);
-
-      target.validityBuffer.setByte(byteSizeTarget - 1, b1 + b2);
-    } else {
-      byte b1 =
-          BitVectorHelper.getBitsFromCurrentByte(
-              this.validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-      target.validityBuffer.setByte(byteSizeTarget - 1, b1);
-    }
+    final ArrowBuf slicedValidityBuffer = validityBuffer.slice(firstByteSource, byteSizeTarget);
+    target.validityBuffer = transferBuffer(slicedValidityBuffer, target.allocator);
   }
 
   /**

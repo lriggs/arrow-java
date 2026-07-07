@@ -17,10 +17,13 @@
 package org.apache.arrow.driver.jdbc.client;
 
 import com.google.common.collect.ImmutableMap;
+import io.grpc.netty.NettyChannelBuilder;
+import io.netty.channel.ChannelOption;
 import java.io.IOException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,19 +32,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.apache.arrow.driver.jdbc.client.oauth.OAuthConfiguration;
+import org.apache.arrow.driver.jdbc.client.oauth.OAuthCredentialWriter;
+import org.apache.arrow.driver.jdbc.client.oauth.OAuthTokenProvider;
 import org.apache.arrow.driver.jdbc.client.utils.ClientAuthenticationUtils;
+import org.apache.arrow.driver.jdbc.client.utils.FlightClientCache;
+import org.apache.arrow.driver.jdbc.client.utils.FlightLocationQueue;
 import org.apache.arrow.flight.CallOption;
 import org.apache.arrow.flight.CallStatus;
 import org.apache.arrow.flight.CloseSessionRequest;
 import org.apache.arrow.flight.FlightClient;
 import org.apache.arrow.flight.FlightClientMiddleware;
 import org.apache.arrow.flight.FlightEndpoint;
+import org.apache.arrow.flight.FlightGrpcUtils;
 import org.apache.arrow.flight.FlightInfo;
 import org.apache.arrow.flight.FlightRuntimeException;
 import org.apache.arrow.flight.FlightStatusCode;
 import org.apache.arrow.flight.Location;
 import org.apache.arrow.flight.LocationSchemes;
-import org.apache.arrow.flight.SessionOptionValue;
 import org.apache.arrow.flight.SessionOptionValueFactory;
 import org.apache.arrow.flight.SetSessionOptionsRequest;
 import org.apache.arrow.flight.SetSessionOptionsResult;
@@ -50,6 +58,7 @@ import org.apache.arrow.flight.auth2.ClientBearerHeaderHandler;
 import org.apache.arrow.flight.auth2.ClientIncomingAuthHeaderMiddleware;
 import org.apache.arrow.flight.client.ClientCookieMiddleware;
 import org.apache.arrow.flight.grpc.CredentialCallOption;
+import org.apache.arrow.flight.grpc.NettyClientBuilder;
 import org.apache.arrow.flight.sql.FlightSqlClient;
 import org.apache.arrow.flight.sql.impl.FlightSql.SqlInfo;
 import org.apache.arrow.flight.sql.util.TableRef;
@@ -59,6 +68,7 @@ import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.util.VisibleForTesting;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.apache.calcite.avatica.DriverVersion;
 import org.apache.calcite.avatica.Meta.StatementType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
@@ -70,21 +80,27 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
   // JDBC connection string query parameter
   private static final String CATALOG = "catalog";
 
+  private final String cacheKey;
   private final FlightSqlClient sqlClient;
   private final Set<CallOption> options = new HashSet<>();
   private final Builder builder;
   private final Optional<String> catalog;
+  private final @Nullable FlightClientCache flightClientCache;
 
   ArrowFlightSqlClientHandler(
+      final String cacheKey,
       final FlightSqlClient sqlClient,
       final Builder builder,
       final Collection<CallOption> credentialOptions,
-      final Optional<String> catalog) {
+      final Optional<String> catalog,
+      final @Nullable FlightClientCache flightClientCache) {
     this.options.addAll(builder.options);
     this.options.addAll(credentialOptions);
+    this.cacheKey = Preconditions.checkNotNull(cacheKey);
     this.sqlClient = Preconditions.checkNotNull(sqlClient);
     this.builder = builder;
     this.catalog = catalog;
+    this.flightClientCache = flightClientCache;
   }
 
   /**
@@ -96,12 +112,15 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
    * @return a new {@link ArrowFlightSqlClientHandler}.
    */
   static ArrowFlightSqlClientHandler createNewHandler(
+      final String cacheKey,
       final FlightClient client,
       final Builder builder,
       final Collection<CallOption> options,
-      final Optional<String> catalog) {
+      final Optional<String> catalog,
+      final @Nullable FlightClientCache flightClientCache) {
     final ArrowFlightSqlClientHandler handler =
-        new ArrowFlightSqlClientHandler(new FlightSqlClient(client), builder, options, catalog);
+        new ArrowFlightSqlClientHandler(
+            cacheKey, new FlightSqlClient(client), builder, options, catalog, flightClientCache);
     handler.setSetCatalogInSessionIfPresent();
     return handler;
   }
@@ -130,23 +149,33 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
     try {
       for (FlightEndpoint endpoint : flightInfo.getEndpoints()) {
         if (endpoint.getLocations().isEmpty()) {
-          // Create a stream using the current client only and do not close the client at the end.
+          // Create a stream using the current client only and do not close the client at
+          // the end.
           endpoints.add(
               new CloseableEndpointStreamPair(
                   sqlClient.getStream(endpoint.getTicket(), getOptions()), null));
         } else {
           // Clone the builder and then set the new endpoint on it.
 
-          // GH-38574: Currently a new FlightClient will be made for each partition that returns a
-          // non-empty Location
-          // then disposed of. It may be better to cache clients because a server may report the
-          // same Locations.
-          // It would also be good to identify when the reported location is the same as the
-          // original connection's
-          // Location and skip creating a FlightClient in that scenario.
+          // GH-38574: Currently a new FlightClient will be made for each partition that
+          // returns a
+          // non-empty Location then disposed of. It may be better to cache clients
+          // because a server
+          // may report the same Locations. It would also be good to identify when the
+          // reported
+          // location
+          // is the same as the original connection's Location and skip creating a
+          // FlightClient in
+          // that scenario.
+          // Also copy the cache to the client so we can share a cache. Cache needs to
+          // cache
+          // negative attempts too.
           List<Exception> exceptions = new ArrayList<>();
           CloseableEndpointStreamPair stream = null;
-          for (Location location : endpoint.getLocations()) {
+          FlightLocationQueue locations =
+              new FlightLocationQueue(flightClientCache, endpoint.getLocations());
+          while (locations.hasNext()) {
+            Location location = locations.next();
             final URI endpointUri = location.getUri();
             if (endpointUri.getScheme().equals(LocationSchemes.REUSE_CONNECTION)) {
               stream =
@@ -158,7 +187,9 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
                 new Builder(ArrowFlightSqlClientHandler.this.builder)
                     .withHost(endpointUri.getHost())
                     .withPort(endpointUri.getPort())
-                    .withEncryption(endpointUri.getScheme().equals(LocationSchemes.GRPC_TLS));
+                    .withEncryption(endpointUri.getScheme().equals(LocationSchemes.GRPC_TLS))
+                    .withClientCache(flightClientCache)
+                    .withConnectTimeout(builder.connectTimeout);
 
             ArrowFlightSqlClientHandler endpointHandler = null;
             try {
@@ -172,10 +203,28 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
               stream.getStream().getSchema();
             } catch (Exception ex) {
               if (endpointHandler != null) {
+                // If the exception is related to connectivity, mark the client as a dud.
+                if (flightClientCache != null) {
+                  if (ex instanceof FlightRuntimeException
+                      && ((FlightRuntimeException) ex).status().code()
+                          == FlightStatusCode.UNAVAILABLE
+                      &&
+                      // IOException covers SocketException and Netty's (private)
+                      // AnnotatedSocketException
+                      // We are looking for things like "Network is unreachable"
+                      ex.getCause() instanceof IOException) {
+                    flightClientCache.markLocationAsDud(location.toString());
+                  }
+                }
+
                 AutoCloseables.close(endpointHandler);
               }
               exceptions.add(ex);
               continue;
+            }
+
+            if (flightClientCache != null) {
+              flightClientCache.markLocationAsReachable(location.toString());
             }
             break;
           }
@@ -221,13 +270,84 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
   @Override
   public void close() throws SQLException {
     if (catalog.isPresent()) {
-      sqlClient.closeSession(new CloseSessionRequest(), getOptions());
+      try {
+        sqlClient.closeSession(new CloseSessionRequest(), getOptions());
+      } catch (FlightRuntimeException fre) {
+        handleBenignCloseException(
+            fre, "Failed to close Flight SQL session.", "closing Flight SQL session");
+      }
     }
     try {
       AutoCloseables.close(sqlClient);
+    } catch (FlightRuntimeException fre) {
+      handleBenignCloseException(
+          fre, "Failed to clean up client resources.", "closing Flight SQL client");
     } catch (final Exception e) {
       throw new SQLException("Failed to clean up client resources.", e);
     }
+  }
+
+  /**
+   * Handles FlightRuntimeException during close operations, suppressing benign gRPC shutdown errors
+   * while re-throwing genuine failures.
+   *
+   * @param fre the FlightRuntimeException to handle
+   * @param sqlErrorMessage the SQLException message to use for genuine failures
+   * @param operationDescription description of the operation for logging
+   * @throws SQLException if the exception represents a genuine failure
+   */
+  private void handleBenignCloseException(
+      FlightRuntimeException fre, String sqlErrorMessage, String operationDescription)
+      throws SQLException {
+    if (isBenignCloseException(fre)) {
+      logSuppressedCloseException(fre, operationDescription);
+    } else {
+      throw new SQLException(sqlErrorMessage, fre);
+    }
+  }
+
+  /**
+   * Handles FlightRuntimeException during close operations, suppressing benign gRPC shutdown errors
+   * while re-throwing genuine failures as FlightRuntimeException.
+   *
+   * @param fre the FlightRuntimeException to handle
+   * @param operationDescription description of the operation for logging
+   * @throws FlightRuntimeException if the exception represents a genuine failure
+   */
+  private void handleBenignCloseException(FlightRuntimeException fre, String operationDescription)
+      throws FlightRuntimeException {
+    if (isBenignCloseException(fre)) {
+      logSuppressedCloseException(fre, operationDescription);
+    } else {
+      throw fre;
+    }
+  }
+
+  /**
+   * Determines if a FlightRuntimeException represents a benign close operation error that should be
+   * suppressed.
+   *
+   * @param fre the FlightRuntimeException to check
+   * @return true if the exception should be suppressed, false otherwise
+   */
+  private boolean isBenignCloseException(FlightRuntimeException fre) {
+    return fre.status().code().equals(FlightStatusCode.UNAVAILABLE)
+        || (fre.status().code().equals(FlightStatusCode.INTERNAL)
+            && fre.getMessage() != null
+            && fre.getMessage().contains("Connection closed after GOAWAY"));
+  }
+
+  /**
+   * Logs a suppressed close exception with appropriate level based on debug settings.
+   *
+   * @param fre the FlightRuntimeException being suppressed
+   * @param operationDescription description of the operation for logging
+   */
+  private void logSuppressedCloseException(
+      FlightRuntimeException fre, String operationDescription) {
+    // ARROW-17785 and GH-863: suppress exceptions caused by flaky gRPC layer during
+    // shutdown
+    LOGGER.debug("Suppressed error {}", operationDescription, fre);
   }
 
   /** A prepared statement handler. */
@@ -277,25 +397,40 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
   /** A connection is created with catalog set as a session option. */
   private void setSetCatalogInSessionIfPresent() {
     if (catalog.isPresent()) {
-      final SetSessionOptionsRequest setSessionOptionRequest =
-          new SetSessionOptionsRequest(
-              ImmutableMap.<String, SessionOptionValue>builder()
-                  .put(CATALOG, SessionOptionValueFactory.makeSessionOptionValue(catalog.get()))
-                  .build());
-      final SetSessionOptionsResult result =
-          sqlClient.setSessionOptions(setSessionOptionRequest, getOptions());
-
-      if (result.hasErrors()) {
-        Map<String, SetSessionOptionsResult.Error> errors = result.getErrors();
-        for (Map.Entry<String, SetSessionOptionsResult.Error> error : errors.entrySet()) {
-          LOGGER.warn(error.toString());
-        }
+      try {
+        setCatalog(catalog.get());
+      } catch (SQLException e) {
         throw CallStatus.INVALID_ARGUMENT
-            .withDescription(
-                String.format(
-                    "Cannot set session option for catalog = %s. Check log for details.", catalog))
+            .withDescription(e.getMessage())
+            .withCause(e)
             .toRuntimeException();
       }
+    }
+  }
+
+  /**
+   * Sets the catalog for the current session.
+   *
+   * @param catalog the catalog to set.
+   * @throws SQLException if an error occurs while setting the catalog.
+   */
+  public void setCatalog(final String catalog) throws SQLException {
+    final SetSessionOptionsRequest request =
+        new SetSessionOptionsRequest(
+            ImmutableMap.of(CATALOG, SessionOptionValueFactory.makeSessionOptionValue(catalog)));
+    try {
+      final SetSessionOptionsResult result = sqlClient.setSessionOptions(request, getOptions());
+      if (result.hasErrors()) {
+        final Map<String, SetSessionOptionsResult.Error> errors = result.getErrors();
+        for (final Map.Entry<String, SetSessionOptionsResult.Error> error : errors.entrySet()) {
+          LOGGER.warn(error.toString());
+        }
+        throw new SQLException(
+            String.format(
+                "Cannot set session option for catalog = %s. Check log for details.", catalog));
+      }
+    } catch (final FlightRuntimeException e) {
+      throw new SQLException(e);
     }
   }
 
@@ -345,14 +480,7 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
         try {
           preparedStatement.close(getOptions());
         } catch (FlightRuntimeException fre) {
-          // ARROW-17785: suppress exceptions caused by flaky gRPC layer
-          if (fre.status().code().equals(FlightStatusCode.UNAVAILABLE)
-              || (fre.status().code().equals(FlightStatusCode.INTERNAL)
-                  && fre.getMessage().contains("Connection closed after GOAWAY"))) {
-            LOGGER.warn("Supressed error closing PreparedStatement", fre);
-            return;
-          }
-          throw fre;
+          handleBenignCloseException(fre, "closing PreparedStatement");
         }
       }
     };
@@ -508,6 +636,9 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
 
   /** Builder for {@link ArrowFlightSqlClientHandler}. */
   public static final class Builder {
+    static final String USER_AGENT_TEMPLATE = "JDBC Flight SQL Driver %s";
+    static final String DEFAULT_VERSION = "(unknown or development build)";
+
     private final Set<FlightClientMiddleware.Factory> middlewareFactories = new HashSet<>();
     private final Set<CallOption> options = new HashSet<>();
     private String host;
@@ -543,7 +674,14 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
 
     @VisibleForTesting Optional<String> catalog = Optional.empty();
 
-    // These two middleware are for internal use within build() and should not be exposed by builder
+    @VisibleForTesting @Nullable FlightClientCache flightClientCache;
+
+    @VisibleForTesting @Nullable Duration connectTimeout;
+
+    @VisibleForTesting @Nullable OAuthConfiguration oauthConfig;
+
+    // These two middleware are for internal use within build() and should not be
+    // exposed by builder
     // APIs.
     // Note that these middleware may not necessarily be registered.
     @VisibleForTesting
@@ -552,6 +690,8 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
 
     @VisibleForTesting
     ClientCookieMiddleware.Factory cookieFactory = new ClientCookieMiddleware.Factory();
+
+    DriverVersion driverVersion;
 
     public Builder() {}
 
@@ -579,6 +719,7 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
       this.clientKeyPath = original.clientKeyPath;
       this.allocator = original.allocator;
       this.catalog = original.catalog;
+      this.oauthConfig = original.oauthConfig;
 
       if (original.retainCookies) {
         this.cookieFactory = original.cookieFactory;
@@ -587,6 +728,8 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
       if (original.retainAuth) {
         this.authFactory = original.authFactory;
       }
+
+      this.driverVersion = original.driverVersion;
     }
 
     /**
@@ -825,6 +968,50 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
       return this;
     }
 
+    public Builder withClientCache(FlightClientCache flightClientCache) {
+      this.flightClientCache = flightClientCache;
+      return this;
+    }
+
+    public Builder withConnectTimeout(Duration connectTimeout) {
+      this.connectTimeout = connectTimeout;
+      return this;
+    }
+
+    /**
+     * Sets the driver version for this handler.
+     *
+     * @param driverVersion the driver version to set
+     * @return this builder instance
+     */
+    public Builder withDriverVersion(DriverVersion driverVersion) {
+      this.driverVersion = driverVersion;
+      return this;
+    }
+
+    /**
+     * Sets the OAuth configuration for this handler.
+     *
+     * @param oauthConfig the OAuth configuration
+     * @return this builder instance
+     */
+    public Builder withOAuthConfiguration(final OAuthConfiguration oauthConfig) {
+      this.oauthConfig = oauthConfig;
+      return this;
+    }
+
+    public String getCacheKey() {
+      return getLocation().toString();
+    }
+
+    /** Get the location that this client will connect to. */
+    public Location getLocation() {
+      if (useEncryption) {
+        return Location.forGrpcTls(host, port);
+      }
+      return Location.forGrpcInsecure(host, port);
+    }
+
     /**
      * Builds a new {@link ArrowFlightSqlClientHandler} from the provided fields.
      *
@@ -832,7 +1019,8 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
      * @throws SQLException on error.
      */
     public ArrowFlightSqlClientHandler build() throws SQLException {
-      // Copy middleware so that the build method doesn't change the state of the builder fields
+      // Copy middleware so that the build method doesn't change the state of the
+      // builder fields
       // itself.
       Set<FlightClientMiddleware.Factory> buildTimeMiddlewareFactories =
           new HashSet<>(this.middlewareFactories);
@@ -840,22 +1028,26 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
       boolean isUsingUserPasswordAuth = username != null && token == null;
 
       try {
-        // Token should take priority since some apps pass in a username/password even when a token
+        // Token should take priority since some apps pass in a username/password even
+        // when a token
         // is provided
         if (isUsingUserPasswordAuth) {
           buildTimeMiddlewareFactories.add(authFactory);
         }
-        final FlightClient.Builder clientBuilder = FlightClient.builder().allocator(allocator);
+        final NettyClientBuilder clientBuilder = new NettyClientBuilder();
+        clientBuilder.allocator(allocator);
+
+        String userAgent = String.format(USER_AGENT_TEMPLATE, DEFAULT_VERSION);
+        if (driverVersion != null && driverVersion.versionString != null) {
+          userAgent = String.format(USER_AGENT_TEMPLATE, driverVersion.versionString);
+        }
 
         buildTimeMiddlewareFactories.add(new ClientCookieMiddleware.Factory());
         buildTimeMiddlewareFactories.forEach(clientBuilder::intercept);
-        Location location;
         if (useEncryption) {
-          location = Location.forGrpcTls(host, port);
           clientBuilder.useTls();
-        } else {
-          location = Location.forGrpcInsecure(host, port);
         }
+        Location location = getLocation();
         clientBuilder.location(location);
 
         if (useEncryption) {
@@ -883,11 +1075,27 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
           }
         }
 
-        client = clientBuilder.build();
+        NettyChannelBuilder channelBuilder = clientBuilder.build();
+
+        channelBuilder.userAgent(userAgent);
+
+        if (connectTimeout != null) {
+          channelBuilder.withOption(
+              ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) connectTimeout.toMillis());
+        }
+        client =
+            FlightGrpcUtils.createFlightClient(
+                allocator, channelBuilder.build(), clientBuilder.middleware());
         final ArrayList<CallOption> credentialOptions = new ArrayList<>();
-        if (isUsingUserPasswordAuth) {
-          // If the authFactory has already been used for a handshake, use the existing token.
-          // This can occur if the authFactory is being re-used for a new connection spawned for
+        // Authentication priority: OAuth > token > username/password
+        if (oauthConfig != null) {
+          OAuthTokenProvider tokenProvider = oauthConfig.createTokenProvider();
+          credentialOptions.add(new CredentialCallOption(new OAuthCredentialWriter(tokenProvider)));
+        } else if (isUsingUserPasswordAuth) {
+          // If the authFactory has already been used for a handshake, use the existing
+          // token.
+          // This can occur if the authFactory is being re-used for a new connection
+          // spawned for
           // getStream().
           if (authFactory.getCredentialCallOption() != null) {
             credentialOptions.add(authFactory.getCredentialCallOption());
@@ -905,7 +1113,7 @@ public final class ArrowFlightSqlClientHandler implements AutoCloseable {
                   options.toArray(new CallOption[0])));
         }
         return ArrowFlightSqlClientHandler.createNewHandler(
-            client, this, credentialOptions, catalog);
+            getCacheKey(), client, this, credentialOptions, catalog, flightClientCache);
 
       } catch (final IllegalArgumentException
           | GeneralSecurityException

@@ -20,10 +20,14 @@ import static org.apache.arrow.driver.jdbc.utils.ArrowFlightConnectionConfigImpl
 
 import io.netty.util.concurrent.DefaultThreadFactory;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler;
+import org.apache.arrow.driver.jdbc.client.utils.FlightClientCache;
 import org.apache.arrow.driver.jdbc.utils.ArrowFlightConnectionConfigImpl;
 import org.apache.arrow.flight.FlightClient;
 import org.apache.arrow.memory.BufferAllocator;
@@ -31,6 +35,7 @@ import org.apache.arrow.util.AutoCloseables;
 import org.apache.arrow.util.Preconditions;
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaFactory;
+import org.apache.calcite.avatica.DriverVersion;
 
 /** Connection to the Arrow Flight server. */
 public final class ArrowFlightConnection extends AvaticaConnection {
@@ -39,6 +44,8 @@ public final class ArrowFlightConnection extends AvaticaConnection {
   private final ArrowFlightSqlClientHandler clientHandler;
   private final ArrowFlightConnectionConfigImpl config;
   private ExecutorService executorService;
+  private int metadataResultSetCount;
+  private Map<Integer, ArrowFlightJdbcFlightStreamResultSet> metadataResultSetMap = new HashMap<>();
 
   /**
    * Creates a new {@link ArrowFlightConnection}.
@@ -63,6 +70,7 @@ public final class ArrowFlightConnection extends AvaticaConnection {
     this.config = Preconditions.checkNotNull(config, "Config cannot be null.");
     this.allocator = Preconditions.checkNotNull(allocator, "Allocator cannot be null.");
     this.clientHandler = Preconditions.checkNotNull(clientHandler, "Handler cannot be null.");
+    this.metadataResultSetCount = 0;
   }
 
   /**
@@ -85,13 +93,16 @@ public final class ArrowFlightConnection extends AvaticaConnection {
       throws SQLException {
     url = replaceSemiColons(url);
     final ArrowFlightConnectionConfigImpl config = new ArrowFlightConnectionConfigImpl(properties);
-    final ArrowFlightSqlClientHandler clientHandler = createNewClientHandler(config, allocator);
+    final ArrowFlightSqlClientHandler clientHandler =
+        createNewClientHandler(config, allocator, driver.getDriverVersion());
     return new ArrowFlightConnection(
         driver, factory, url, properties, config, allocator, clientHandler);
   }
 
   private static ArrowFlightSqlClientHandler createNewClientHandler(
-      final ArrowFlightConnectionConfigImpl config, final BufferAllocator allocator)
+      final ArrowFlightConnectionConfigImpl config,
+      final BufferAllocator allocator,
+      final DriverVersion driverVersion)
       throws SQLException {
     try {
       return new ArrowFlightSqlClientHandler.Builder()
@@ -113,6 +124,10 @@ public final class ArrowFlightConnection extends AvaticaConnection {
           .withRetainCookies(config.retainCookies())
           .withRetainAuth(config.retainAuth())
           .withCatalog(config.getCatalog())
+          .withClientCache(config.useClientCache() ? new FlightClientCache() : null)
+          .withConnectTimeout(config.getConnectTimeout())
+          .withDriverVersion(driverVersion)
+          .withOAuthConfiguration(config.getOauthConfiguration())
           .build();
     } catch (final SQLException e) {
       try {
@@ -163,6 +178,31 @@ public final class ArrowFlightConnection extends AvaticaConnection {
             : executorService;
   }
 
+  /**
+   * Registers a new metadata ResultSet and assigns it a unique ID. Metadata ResultSets are those
+   * created without an associated Statement.
+   *
+   * @param resultSet the ResultSet to register
+   * @return the assigned ID
+   */
+  int getNewMetadataResultSetId(ArrowFlightJdbcFlightStreamResultSet resultSet) {
+    metadataResultSetMap.put(metadataResultSetCount, resultSet);
+    return metadataResultSetCount++;
+  }
+
+  /**
+   * Unregisters a metadata ResultSet when it is closed. This method is called by metadata
+   * ResultSets during their close operation to remove themselves from the tracking map.
+   *
+   * @param id the ID of the ResultSet to unregister, or null if not a metadata ResultSet
+   */
+  void onResultSetClose(Integer id) {
+    if (id == null) {
+      return;
+    }
+    metadataResultSetMap.remove(id);
+  }
+
   @Override
   public Properties getClientInfo() {
     final Properties copy = new Properties();
@@ -172,19 +212,41 @@ public final class ArrowFlightConnection extends AvaticaConnection {
 
   @Override
   public void close() throws SQLException {
-    clientHandler.close();
-    if (executorService != null) {
-      executorService.shutdown();
-    }
-
+    Exception topLevelException = null;
     try {
-      AutoCloseables.close(clientHandler);
-      allocator.getChildAllocators().forEach(AutoCloseables::closeNoChecked);
-      AutoCloseables.close(allocator);
-
+      if (executorService != null) {
+        executorService.shutdown();
+      }
+    } catch (final Exception e) {
+      topLevelException = e;
+    }
+    // copies of the collections are used to avoid concurrent modification problems
+    ArrayList<AutoCloseable> closeables = new ArrayList<>(statementMap.values());
+    closeables.addAll(new ArrayList<>(metadataResultSetMap.values()));
+    closeables.add(clientHandler);
+    closeables.addAll(allocator.getChildAllocators());
+    closeables.add(allocator);
+    try {
+      AutoCloseables.close(closeables);
+    } catch (final Exception e) {
+      if (topLevelException == null) {
+        topLevelException = e;
+      } else {
+        topLevelException.addSuppressed(e);
+      }
+    }
+    try {
       super.close();
     } catch (final Exception e) {
-      throw AvaticaConnection.HELPER.createException(e.getMessage(), e);
+      if (topLevelException == null) {
+        topLevelException = e;
+      } else {
+        topLevelException.addSuppressed(e);
+      }
+    }
+    if (topLevelException != null) {
+      throw AvaticaConnection.HELPER.createException(
+          topLevelException.getMessage(), topLevelException);
     }
   }
 

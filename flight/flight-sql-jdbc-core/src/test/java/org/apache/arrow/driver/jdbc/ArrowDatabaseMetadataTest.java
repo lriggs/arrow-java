@@ -26,7 +26,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.apache.arrow.driver.jdbc.utils.MockFlightSqlProducer.serializeSchema;
-import static org.apache.arrow.flight.sql.impl.FlightSql.CommandGetCrossReference;
 import static org.apache.arrow.flight.sql.impl.FlightSql.SqlSupportsConvert.SQL_CONVERT_BIGINT_VALUE;
 import static org.apache.arrow.flight.sql.impl.FlightSql.SqlSupportsConvert.SQL_CONVERT_BIT_VALUE;
 import static org.apache.arrow.flight.sql.impl.FlightSql.SqlSupportsConvert.SQL_CONVERT_INTEGER_VALUE;
@@ -55,9 +54,11 @@ import org.apache.arrow.driver.jdbc.utils.MockFlightSqlProducer;
 import org.apache.arrow.driver.jdbc.utils.ResultSetTestUtils;
 import org.apache.arrow.driver.jdbc.utils.ThrowableAssertionUtils;
 import org.apache.arrow.flight.FlightProducer.ServerStreamListener;
+import org.apache.arrow.flight.sql.FlightSqlColumnMetadata;
 import org.apache.arrow.flight.sql.FlightSqlProducer.Schemas;
 import org.apache.arrow.flight.sql.impl.FlightSql;
 import org.apache.arrow.flight.sql.impl.FlightSql.CommandGetCatalogs;
+import org.apache.arrow.flight.sql.impl.FlightSql.CommandGetCrossReference;
 import org.apache.arrow.flight.sql.impl.FlightSql.CommandGetDbSchemas;
 import org.apache.arrow.flight.sql.impl.FlightSql.CommandGetExportedKeys;
 import org.apache.arrow.flight.sql.impl.FlightSql.CommandGetImportedKeys;
@@ -79,6 +80,7 @@ import org.apache.arrow.vector.types.TimeUnit;
 import org.apache.arrow.vector.types.Types;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.Text;
 import org.junit.jupiter.api.AfterAll;
@@ -299,8 +301,9 @@ public class ArrowDatabaseMetadataTest {
   private static Connection connection;
 
   static {
-    List<Integer> expectedGetColumnsDataTypes = Arrays.asList(3, 93, 4);
-    List<String> expectedGetColumnsTypeName = Arrays.asList("DECIMAL", "TIMESTAMP", "INTEGER");
+    List<Integer> expectedGetColumnsDataTypes = Arrays.asList(3, 2014, 4);
+    List<String> expectedGetColumnsTypeName =
+        Arrays.asList("DECIMAL", "TIMESTAMP_WITH_TIMEZONE", "INTEGER");
     List<Integer> expectedGetColumnsRadix = Arrays.asList(10, null, 10);
     List<Integer> expectedGetColumnsColumnSize = Arrays.asList(5, 29, 10);
     List<Integer> expectedGetColumnsDecimalDigits = Arrays.asList(2, 9, 0);
@@ -321,7 +324,7 @@ public class ArrowDatabaseMetadataTest {
                       expectedGetColumnsDecimalDigits.get(i % 3),
                       expectedGetColumnsRadix.get(i % 3),
                       !Objects.equals(expectedGetColumnsIsNullable.get(i % 3), "NO") ? 1 : 0,
-                      null,
+                      format("column description #%d", (i % 3) + 1),
                       null,
                       null,
                       null,
@@ -418,17 +421,44 @@ public class ArrowDatabaseMetadataTest {
           try (final BufferAllocator allocator = new RootAllocator();
               final VectorSchemaRoot root =
                   VectorSchemaRoot.create(Schemas.GET_TABLES_SCHEMA, allocator)) {
+            final Field field1 =
+                new Field(
+                    "column_1",
+                    new FieldType(
+                        true,
+                        ArrowType.Decimal.createDecimal(5, 2, 128),
+                        null,
+                        new FlightSqlColumnMetadata.Builder()
+                            .remarks("column description #1")
+                            .build()
+                            .getMetadataMap()),
+                    null);
+            final Field field2 =
+                new Field(
+                    "column_2",
+                    new FieldType(
+                        true,
+                        new ArrowType.Timestamp(TimeUnit.NANOSECOND, "UTC"),
+                        null,
+                        new FlightSqlColumnMetadata.Builder()
+                            .remarks("column description #2")
+                            .build()
+                            .getMetadataMap()),
+                    null);
+            final Field field3 =
+                new Field(
+                    "column_3",
+                    new FieldType(
+                        false,
+                        Types.MinorType.INT.getType(),
+                        null,
+                        new FlightSqlColumnMetadata.Builder()
+                            .remarks("column description #3")
+                            .build()
+                            .getMetadataMap()),
+                    null);
             final byte[] filledTableSchemaBytes =
-                copyFrom(
-                        serializeSchema(
-                            new Schema(
-                                Arrays.asList(
-                                    Field.nullable(
-                                        "column_1", ArrowType.Decimal.createDecimal(5, 2, 128)),
-                                    Field.nullable(
-                                        "column_2",
-                                        new ArrowType.Timestamp(TimeUnit.NANOSECOND, "UTC")),
-                                    Field.notNullable("column_3", Types.MinorType.INT.getType())))))
+                copyFrom(serializeSchema(new Schema(Arrays.asList(field1, field2, field3))))
                     .toByteArray();
             final VarCharVector catalogName = (VarCharVector) root.getVector("catalog_name");
             final VarCharVector schemaName = (VarCharVector) root.getVector("db_schema_name");
@@ -1513,11 +1543,83 @@ public class ArrowDatabaseMetadataTest {
     try (final Connection testConnection =
         FLIGHT_SERVER_EMPTY_SQLINFO_TEST_RULE.getConnection(false)) {
       final DatabaseMetaData metaData = testConnection.getMetaData();
+
       assertThat(metaData.getSQLKeywords(), is(""));
       assertThat(metaData.getNumericFunctions(), is(""));
       assertThat(metaData.getStringFunctions(), is(""));
       assertThat(metaData.getSystemFunctions(), is(""));
       assertThat(metaData.getTimeDateFunctions(), is(""));
+
+      assertThat(metaData.getMaxBinaryLiteralLength(), is(0));
+      assertThat(metaData.getMaxCharLiteralLength(), is(0));
+      assertThat(metaData.getMaxColumnNameLength(), is(0));
+      assertThat(metaData.getMaxColumnsInGroupBy(), is(0));
+      assertThat(metaData.getMaxColumnsInIndex(), is(0));
+      assertThat(metaData.getMaxColumnsInOrderBy(), is(0));
+      assertThat(metaData.getMaxColumnsInSelect(), is(0));
+      assertThat(metaData.getMaxColumnsInTable(), is(0));
+      assertThat(metaData.getMaxConnections(), is(0));
+      assertThat(metaData.getMaxCursorNameLength(), is(0));
+      assertThat(metaData.getMaxIndexLength(), is(0));
+      assertThat(metaData.getMaxSchemaNameLength(), is(0));
+      assertThat(metaData.getMaxProcedureNameLength(), is(0));
+      assertThat(metaData.getMaxCatalogNameLength(), is(0));
+      assertThat(metaData.getMaxRowSize(), is(0));
+      assertThat(metaData.getMaxStatementLength(), is(0));
+      assertThat(metaData.getMaxStatements(), is(0));
+      assertThat(metaData.getMaxTableNameLength(), is(0));
+      assertThat(metaData.getMaxTablesInSelect(), is(0));
+      assertThat(metaData.getMaxUserNameLength(), is(0));
+
+      assertThat(metaData.supportsColumnAliasing(), is(false));
+      assertThat(metaData.nullPlusNonNullIsNull(), is(false));
+      assertThat(metaData.supportsTableCorrelationNames(), is(false));
+      assertThat(metaData.supportsDifferentTableCorrelationNames(), is(false));
+      assertThat(metaData.supportsExpressionsInOrderBy(), is(false));
+      assertThat(metaData.supportsOrderByUnrelated(), is(false));
+      assertThat(metaData.supportsLikeEscapeClause(), is(false));
+      assertThat(metaData.supportsNonNullableColumns(), is(false));
+      assertThat(metaData.supportsIntegrityEnhancementFacility(), is(false));
+      assertThat(metaData.isCatalogAtStart(), is(false));
+      assertThat(metaData.supportsSelectForUpdate(), is(false));
+      assertThat(metaData.supportsStoredProcedures(), is(false));
+      assertThat(metaData.supportsCorrelatedSubqueries(), is(false));
+      assertThat(metaData.doesMaxRowSizeIncludeBlobs(), is(false));
+      assertThat(metaData.supportsTransactions(), is(false));
+      assertThat(metaData.dataDefinitionCausesTransactionCommit(), is(false));
+      assertThat(metaData.dataDefinitionIgnoredInTransactions(), is(false));
+      assertThat(metaData.supportsBatchUpdates(), is(false));
+      assertThat(metaData.supportsSavepoints(), is(false));
+      assertThat(metaData.supportsNamedParameters(), is(false));
+      assertThat(metaData.locatorsUpdateCopy(), is(false));
+      assertThat(metaData.supportsStoredFunctionsUsingCallSyntax(), is(false));
+      assertThat(metaData.supportsGroupBy(), is(false));
+      assertThat(metaData.supportsGroupByUnrelated(), is(false));
+      assertThat(metaData.supportsMinimumSQLGrammar(), is(false));
+      assertThat(metaData.supportsCoreSQLGrammar(), is(false));
+      assertThat(metaData.supportsExtendedSQLGrammar(), is(false));
+      assertThat(metaData.supportsANSI92EntryLevelSQL(), is(false));
+      assertThat(metaData.supportsANSI92IntermediateSQL(), is(false));
+      assertThat(metaData.supportsANSI92FullSQL(), is(false));
+      assertThat(metaData.supportsOuterJoins(), is(false));
+      assertThat(metaData.supportsFullOuterJoins(), is(false));
+      assertThat(metaData.supportsLimitedOuterJoins(), is(false));
+      assertThat(metaData.supportsSchemasInProcedureCalls(), is(false));
+      assertThat(metaData.supportsSchemasInIndexDefinitions(), is(false));
+      assertThat(metaData.supportsSchemasInPrivilegeDefinitions(), is(false));
+      assertThat(metaData.supportsCatalogsInIndexDefinitions(), is(false));
+      assertThat(metaData.supportsCatalogsInPrivilegeDefinitions(), is(false));
+      assertThat(metaData.supportsPositionedDelete(), is(false));
+      assertThat(metaData.supportsPositionedUpdate(), is(false));
+      assertThat(metaData.supportsSubqueriesInComparisons(), is(false));
+      assertThat(metaData.supportsSubqueriesInExists(), is(false));
+      assertThat(metaData.supportsSubqueriesInIns(), is(false));
+      assertThat(metaData.supportsSubqueriesInQuantifieds(), is(false));
+      assertThat(metaData.supportsUnion(), is(false));
+      assertThat(metaData.supportsUnionAll(), is(false));
+      assertThat(metaData.supportsConvert(), is(false));
+
+      assertThat(metaData.getDefaultTransactionIsolation(), is(Connection.TRANSACTION_NONE));
     }
   }
 }

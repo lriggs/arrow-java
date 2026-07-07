@@ -19,6 +19,7 @@ package org.apache.arrow.driver.jdbc.accessor;
 import java.util.function.IntSupplier;
 import org.apache.arrow.driver.jdbc.accessor.impl.ArrowFlightJdbcNullVectorAccessor;
 import org.apache.arrow.driver.jdbc.accessor.impl.binary.ArrowFlightJdbcBinaryVectorAccessor;
+import org.apache.arrow.driver.jdbc.accessor.impl.binary.ArrowFlightJdbcUuidVectorAccessor;
 import org.apache.arrow.driver.jdbc.accessor.impl.calendar.ArrowFlightJdbcDateVectorAccessor;
 import org.apache.arrow.driver.jdbc.accessor.impl.calendar.ArrowFlightJdbcDurationVectorAccessor;
 import org.apache.arrow.driver.jdbc.accessor.impl.calendar.ArrowFlightJdbcIntervalVectorAccessor;
@@ -65,9 +66,12 @@ import org.apache.arrow.vector.UInt1Vector;
 import org.apache.arrow.vector.UInt2Vector;
 import org.apache.arrow.vector.UInt4Vector;
 import org.apache.arrow.vector.UInt8Vector;
+import org.apache.arrow.vector.UuidVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.VarBinaryVector;
 import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.ViewVarBinaryVector;
+import org.apache.arrow.vector.ViewVarCharVector;
 import org.apache.arrow.vector.complex.DenseUnionVector;
 import org.apache.arrow.vector.complex.FixedSizeListVector;
 import org.apache.arrow.vector.complex.LargeListVector;
@@ -130,9 +134,15 @@ public class ArrowFlightJdbcAccessorFactory {
     } else if (vector instanceof VarBinaryVector) {
       return new ArrowFlightJdbcBinaryVectorAccessor(
           (VarBinaryVector) vector, getCurrentRow, setCursorWasNull);
+    } else if (vector instanceof ViewVarBinaryVector) {
+      return new ArrowFlightJdbcBinaryVectorAccessor(
+          (ViewVarBinaryVector) vector, getCurrentRow, setCursorWasNull);
     } else if (vector instanceof LargeVarBinaryVector) {
       return new ArrowFlightJdbcBinaryVectorAccessor(
           (LargeVarBinaryVector) vector, getCurrentRow, setCursorWasNull);
+    } else if (vector instanceof UuidVector) {
+      return new ArrowFlightJdbcUuidVectorAccessor(
+          (UuidVector) vector, getCurrentRow, setCursorWasNull);
     } else if (vector instanceof FixedSizeBinaryVector) {
       return new ArrowFlightJdbcBinaryVectorAccessor(
           (FixedSizeBinaryVector) vector, getCurrentRow, setCursorWasNull);
@@ -163,6 +173,9 @@ public class ArrowFlightJdbcAccessorFactory {
     } else if (vector instanceof LargeVarCharVector) {
       return new ArrowFlightJdbcVarCharVectorAccessor(
           (LargeVarCharVector) vector, getCurrentRow, setCursorWasNull);
+    } else if (vector instanceof ViewVarCharVector) {
+      return new ArrowFlightJdbcVarCharVectorAccessor(
+          (ViewVarCharVector) vector, getCurrentRow, setCursorWasNull);
     } else if (vector instanceof DurationVector) {
       return new ArrowFlightJdbcDurationVectorAccessor(
           (DurationVector) vector, getCurrentRow, setCursorWasNull);

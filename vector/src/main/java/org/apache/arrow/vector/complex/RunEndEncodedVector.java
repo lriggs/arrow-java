@@ -28,6 +28,7 @@ import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.arrow.memory.util.ByteFunctionHelpers;
 import org.apache.arrow.memory.util.hash.ArrowBufHasher;
+import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.BaseIntVector;
 import org.apache.arrow.vector.BaseValueVector;
 import org.apache.arrow.vector.BigIntVector;
@@ -819,5 +820,102 @@ public class RunEndEncodedVector extends BaseValueVector implements FieldVector 
     }
 
     return result;
+  }
+
+  public static class RangeIterator {
+
+    private final RunEndEncodedVector runEndEncodedVector;
+    private final int rangeEnd;
+    private int runIndex;
+    private int runEnd;
+    private int logicalPos;
+
+    /**
+     * Constructs a new RangeIterator for iterating over a range of values in a RunEndEncodedVector.
+     *
+     * @param runEndEncodedVector The vector to iterate over
+     * @param startIndex The logical start index of the range (inclusive)
+     * @param length The number of values to include in the range
+     * @throws IllegalArgumentException if startIndex is negative or (startIndex + length) exceeds
+     *     vector bounds
+     */
+    public RangeIterator(RunEndEncodedVector runEndEncodedVector, int startIndex, int length) {
+      int rangeEnd = startIndex + length;
+      Preconditions.checkArgument(
+          startIndex >= 0, "startIndex %s must be non negative.", startIndex);
+      Preconditions.checkArgument(
+          rangeEnd <= runEndEncodedVector.getValueCount(),
+          "(startIndex + length) %s out of range[0, %s].",
+          rangeEnd,
+          runEndEncodedVector.getValueCount());
+
+      this.rangeEnd = rangeEnd;
+      this.runEndEncodedVector = runEndEncodedVector;
+      this.runIndex = runEndEncodedVector.getPhysicalIndex(startIndex) - 1;
+      this.runEnd = startIndex;
+      this.logicalPos = -1;
+    }
+
+    /**
+     * Advances to the next run in the range.
+     *
+     * @return true if there is another run available, false if iteration has completed
+     */
+    public boolean nextRun() {
+      logicalPos = runEnd;
+      if (logicalPos >= rangeEnd) {
+        return false;
+      }
+      updateRun();
+      return true;
+    }
+
+    private void updateRun() {
+      runIndex++;
+      runEnd = (int) ((BaseIntVector) runEndEncodedVector.runEndsVector).getValueAsLong(runIndex);
+    }
+
+    /**
+     * Advances to the next value in the range.
+     *
+     * @return true if there is another value available, false if iteration has completed
+     */
+    public boolean nextValue() {
+      logicalPos++;
+      if (logicalPos >= rangeEnd) {
+        return false;
+      }
+      if (logicalPos == runEnd) {
+        updateRun();
+      }
+      return true;
+    }
+
+    /**
+     * Gets the current run index (physical position in the run-ends vector).
+     *
+     * @return the current run index
+     */
+    public int getRunIndex() {
+      return runIndex;
+    }
+
+    /**
+     * Gets the length of the current run within the iterator's range.
+     *
+     * @return the number of remaining values in current run within the iterator's range
+     */
+    public int getRunLength() {
+      return Math.min(runEnd, rangeEnd) - logicalPos;
+    }
+
+    /**
+     * Checks if iteration has completed.
+     *
+     * @return true if all values in the range have been processed, false otherwise
+     */
+    public boolean isEnd() {
+      return logicalPos >= rangeEnd;
+    }
   }
 }

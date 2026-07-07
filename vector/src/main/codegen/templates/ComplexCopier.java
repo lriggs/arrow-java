@@ -41,11 +41,8 @@ public class ComplexCopier {
    * @param input field to read from
    * @param output field to write to
    */
-  public static void copy(FieldReader input, FieldWriter output) {
-    writeValue(input, output);
-  }
+  public static void copy(FieldReader reader, FieldWriter writer) {
 
-  private static void writeValue(FieldReader reader, FieldWriter writer) {
     final MinorType mt = reader.getMinorType();
 
       switch (mt) {
@@ -61,7 +58,7 @@ public class ComplexCopier {
             FieldReader childReader = reader.reader();
             FieldWriter childWriter = getListWriterForReader(childReader, writer);
             if (childReader.isSet()) {
-              writeValue(childReader, childWriter);
+              copy(childReader, childWriter);
             } else {
               childWriter.writeNull();
             }
@@ -79,8 +76,8 @@ public class ComplexCopier {
             FieldReader structReader = reader.reader();
             if (structReader.isSet()) {
               writer.startEntry();
-              writeValue(mapReader.key(), getMapWriterForReader(mapReader.key(), writer.key()));
-              writeValue(mapReader.value(), getMapWriterForReader(mapReader.value(), writer.value()));
+              copy(mapReader.key(), getMapWriterForReader(mapReader.key(), writer.key()));
+              copy(mapReader.value(), getMapWriterForReader(mapReader.value(), writer.value()));
               writer.endEntry();
             } else {
               writer.writeNull();
@@ -99,13 +96,23 @@ public class ComplexCopier {
             if (childReader.getMinorType() != Types.MinorType.NULL) {
               FieldWriter childWriter = getStructWriterForReader(childReader, writer, name);
               if (childReader.isSet()) {
-                writeValue(childReader, childWriter);
+                copy(childReader, childWriter);
               } else {
                 childWriter.writeNull();
               }
             }
           }
           writer.end();
+        } else {
+          writer.writeNull();
+        }
+        break;
+      case EXTENSIONTYPE:
+        if (reader.isSet()) {
+          Object value = reader.readObject();
+          if (value != null) {
+            writer.writeExtension(value, reader.getField().getType());
+          }
         } else {
           writer.writeNull();
         }
@@ -162,6 +169,9 @@ public class ComplexCopier {
       return (FieldWriter) writer.map(name);
     case LISTVIEW:
       return (FieldWriter) writer.listView(name);
+    case EXTENSIONTYPE:
+      ExtensionWriter extensionWriter = writer.extension(name, reader.getField().getType());
+      return (FieldWriter) extensionWriter;
     default:
       throw new UnsupportedOperationException(reader.getMinorType().toString());
     }
@@ -186,6 +196,9 @@ public class ComplexCopier {
       return (FieldWriter) writer.list();
     case LISTVIEW:
       return (FieldWriter) writer.listView();
+    case EXTENSIONTYPE:
+      ExtensionWriter extensionWriter = writer.extension(reader.getField().getType());
+      return (FieldWriter) extensionWriter;
     default:
       throw new UnsupportedOperationException(reader.getMinorType().toString());
     }
@@ -211,6 +224,9 @@ public class ComplexCopier {
         return (FieldWriter) writer.listView();
       case MAP:
         return (FieldWriter) writer.map(false);
+      case EXTENSIONTYPE:
+        ExtensionWriter extensionWriter = writer.extension(reader.getField().getType());
+        return (FieldWriter) extensionWriter;
       default:
         throw new UnsupportedOperationException(reader.getMinorType().toString());
     }

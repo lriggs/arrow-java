@@ -16,14 +16,17 @@
  */
 package org.apache.arrow.driver.jdbc.utils;
 
+import com.google.common.base.Strings;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.arrow.vector.extension.UuidType;
 import org.apache.arrow.vector.types.FloatingPointPrecision;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 
 /** SQL Types utility functions. */
 public class SqlTypes {
+
   private static final Map<Integer, String> typeIdToName = new HashMap<>();
 
   static {
@@ -106,12 +109,17 @@ public class SqlTypes {
         }
         break;
       case Binary:
+      case BinaryView:
         return Types.VARBINARY;
       case FixedSizeBinary:
+        if (arrowType instanceof UuidType) {
+          return Types.OTHER;
+        }
         return Types.BINARY;
       case LargeBinary:
         return Types.LONGVARBINARY;
       case Utf8:
+      case Utf8View:
         return Types.VARCHAR;
       case LargeUtf8:
         return Types.LONGVARCHAR;
@@ -120,7 +128,12 @@ public class SqlTypes {
       case Time:
         return Types.TIME;
       case Timestamp:
-        return Types.TIMESTAMP;
+        String tz = ((ArrowType.Timestamp) arrowType).getTimezone();
+        if (Strings.isNullOrEmpty(tz)) {
+          return Types.TIMESTAMP;
+        } else {
+          return Types.TIMESTAMP_WITH_TIMEZONE;
+        }
       case Bool:
         return Types.BOOLEAN;
       case Decimal:

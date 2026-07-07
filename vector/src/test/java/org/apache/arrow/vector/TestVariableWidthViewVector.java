@@ -16,6 +16,7 @@
  */
 package org.apache.arrow.vector;
 
+import static org.apache.arrow.vector.BitVectorHelper.getValidityBufferSizeFromCount;
 import static org.apache.arrow.vector.TestUtils.newVector;
 import static org.apache.arrow.vector.TestUtils.newViewVarBinaryVector;
 import static org.apache.arrow.vector.TestUtils.newViewVarCharVector;
@@ -60,6 +61,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.ReusableByteArray;
 import org.apache.arrow.vector.util.Text;
 import org.apache.arrow.vector.util.TransferPair;
+import org.apache.arrow.vector.validate.ValidateUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -2367,7 +2369,7 @@ public class TestVariableWidthViewVector {
     // the allocation only consists in the size needed for the validity buffer
     final long validitySize =
         DefaultRoundingPolicy.DEFAULT_ROUNDING_POLICY.getRoundedSize(
-            BaseValueVector.getValidityBufferSizeFromCount(2));
+            getValidityBufferSizeFromCount(2));
     // we allocate view and data buffers for the target vector
     assertTrue(allocatedMem + validitySize < allocator.getAllocatedMemory());
     // The validity is sliced from the same buffer.See BaseFixedWidthViewVector#allocateBytes.
@@ -2444,7 +2446,7 @@ public class TestVariableWidthViewVector {
         final ViewVarBinaryVector sourceVector =
             newViewVarBinaryVector(EMPTY_SCHEMA_PATH, allocator)) {
       testSplitAndTransferOnValiditySplitHelper(
-          targetVector, sourceVector, startIndex, length, data);
+          targetVector, sourceVector, startIndex, length, binaryData);
     }
   }
 
@@ -2849,6 +2851,20 @@ public class TestVariableWidthViewVector {
         assertArrayEquals(STR5, vector4.get(4));
         assertArrayEquals(STR6, vector4.get(5));
       }
+    }
+  }
+
+  @Test
+  public void testValidate() {
+    try (final ViewVarCharVector vector = new ViewVarCharVector("v", allocator)) {
+      vector.validateFull();
+      setVector(vector, STR1, STR2, STR3);
+      vector.validateFull();
+
+      vector.getDataBuffer().capacity(0);
+      ValidateUtil.ValidateException e =
+          assertThrows(ValidateUtil.ValidateException.class, () -> vector.validate());
+      assertTrue(e.getMessage().contains("Not enough capacity for data buffer"));
     }
   }
 }

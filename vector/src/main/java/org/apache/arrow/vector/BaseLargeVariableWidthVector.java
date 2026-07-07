@@ -52,10 +52,8 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
   /* protected members */
   public static final int OFFSET_WIDTH = 8; /* 8 byte unsigned int to track offsets */
   protected static final byte[] emptyByteArray = new byte[] {};
-  protected ArrowBuf validityBuffer;
   protected ArrowBuf valueBuffer;
   protected ArrowBuf offsetBuffer;
-  protected int valueCount;
   protected int lastSet;
   protected final Field field;
 
@@ -375,14 +373,26 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
     valueBuffer.readerIndex(0);
     if (valueCount == 0) {
       validityBuffer.writerIndex(0);
-      offsetBuffer.writerIndex(0);
       valueBuffer.writerIndex(0);
     } else {
       final long lastDataOffset = getStartOffset(valueCount);
-      validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
-      offsetBuffer.writerIndex((long) (valueCount + 1) * OFFSET_WIDTH);
+      validityBuffer.writerIndex(BitVectorHelper.getValidityBufferSizeFromCount(valueCount));
       valueBuffer.writerIndex(lastDataOffset);
     }
+    // IPC serializer will determine readable bytes based on `readerIndex` and `writerIndex`.
+    // Both are set to 0 means 0 bytes are written to the IPC stream which will crash IPC readers
+    // in other libraries. According to Arrow spec, we should still output the offset buffer which
+    // is [0].
+    final long requiredOffsetBufferSize = (long) (valueCount + 1) * OFFSET_WIDTH;
+    if (offsetBuffer.capacity() < requiredOffsetBufferSize) {
+      ArrowBuf newOffsetBuffer = allocateOffsetBuffer(requiredOffsetBufferSize);
+      if (offsetBuffer.capacity() > 0) {
+        newOffsetBuffer.setBytes(0, offsetBuffer, 0, offsetBuffer.capacity());
+      }
+      offsetBuffer.getReferenceManager().release();
+      offsetBuffer = newOffsetBuffer;
+    }
+    offsetBuffer.writerIndex(requiredOffsetBufferSize);
   }
 
   /** Same as {@link #allocateNewSafe()}. */
@@ -496,15 +506,14 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
   private ArrowBuf allocateOffsetBuffer(final long size) {
     ArrowBuf offsetBuffer = allocator.buffer(size);
     offsetBuffer.readerIndex(0);
-    initOffsetBuffer();
+    offsetBuffer.setZero(0, offsetBuffer.capacity());
     return offsetBuffer;
   }
 
   /* allocate validity buffer */
-  private void allocateValidityBuffer(final long size) {
-    validityBuffer = allocator.buffer(size);
-    validityBuffer.readerIndex(0);
-    initValidityBuffer();
+  @Override
+  protected void allocateValidityBuffer(final long size) {
+    super.allocateValidityBuffer(size);
   }
 
   /**
@@ -633,7 +642,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
       return 0;
     }
 
-    final long validityBufferSize = getValidityBufferSizeFromCount(valueCount);
+    final long validityBufferSize = BitVectorHelper.getValidityBufferSizeFromCount(valueCount);
     final long offsetBufferSize = (long) (valueCount + 1) * OFFSET_WIDTH;
     /* get the end offset for this valueCount */
     final long dataBufferSize = getStartOffset(valueCount);
@@ -809,69 +818,17 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
     target.valueBuffer = transferBuffer(slicedBuffer, target.allocator);
   }
 
-  /*
-   * Transfer the validity.
-   */
-  private void splitAndTransferValidityBuffer(
-      int startIndex, int length, BaseLargeVariableWidthVector target) {
-    int firstByteSource = BitVectorHelper.byteIndex(startIndex);
-    int lastByteSource = BitVectorHelper.byteIndex(valueCount - 1);
-    int byteSizeTarget = getValidityBufferSizeFromCount(length);
-    int offset = startIndex % 8;
+  @Override
+  protected void sliceAndTransferValidityBuffer(
+      int startIndex, int length, BaseValueVector target) {
+    final int firstByteSource = BitVectorHelper.byteIndex(startIndex);
+    final int byteSizeTarget = BitVectorHelper.getValidityBufferSizeFromCount(length);
 
-    if (length > 0) {
-      if (offset == 0) {
-        // slice
-        if (target.validityBuffer != null) {
-          target.validityBuffer.getReferenceManager().release();
-        }
-        target.validityBuffer = validityBuffer.slice(firstByteSource, byteSizeTarget);
-        target.validityBuffer.getReferenceManager().retain();
-      } else {
-        /* Copy data
-         * When the first bit starts from the middle of a byte (offset != 0),
-         * copy data from src BitVector.
-         * Each byte in the target is composed by a part in i-th byte,
-         * another part in (i+1)-th byte.
-         */
-        target.allocateValidityBuffer(byteSizeTarget);
-
-        for (int i = 0; i < byteSizeTarget - 1; i++) {
-          byte b1 =
-              BitVectorHelper.getBitsFromCurrentByte(
-                  this.validityBuffer, firstByteSource + i, offset);
-          byte b2 =
-              BitVectorHelper.getBitsFromNextByte(
-                  this.validityBuffer, firstByteSource + i + 1, offset);
-
-          target.validityBuffer.setByte(i, (b1 + b2));
-        }
-        /* Copying the last piece is done in the following manner:
-         * if the source vector has 1 or more bytes remaining, we copy
-         * the last piece as a byte formed by shifting data
-         * from the current byte and the next byte.
-         *
-         * if the source vector has no more bytes remaining
-         * (we are at the last byte), we copy the last piece as a byte
-         * by shifting data from the current byte.
-         */
-        if ((firstByteSource + byteSizeTarget - 1) < lastByteSource) {
-          byte b1 =
-              BitVectorHelper.getBitsFromCurrentByte(
-                  this.validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-          byte b2 =
-              BitVectorHelper.getBitsFromNextByte(
-                  this.validityBuffer, firstByteSource + byteSizeTarget, offset);
-
-          target.validityBuffer.setByte(byteSizeTarget - 1, b1 + b2);
-        } else {
-          byte b1 =
-              BitVectorHelper.getBitsFromCurrentByte(
-                  this.validityBuffer, firstByteSource + byteSizeTarget - 1, offset);
-          target.validityBuffer.setByte(byteSizeTarget - 1, b1);
-        }
-      }
+    if (target.validityBuffer != null) {
+      target.validityBuffer.getReferenceManager().release();
     }
+    target.validityBuffer = validityBuffer.slice(firstByteSource, byteSizeTarget);
+    target.validityBuffer.getReferenceManager().retain();
   }
 
   /*----------------------------------------------------------------*

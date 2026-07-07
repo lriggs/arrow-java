@@ -43,6 +43,7 @@ import org.apache.arrow.vector.complex.ListVector;
 import org.apache.arrow.vector.complex.ListViewVector;
 import org.apache.arrow.vector.complex.NonNullableStructVector;
 import org.apache.arrow.vector.complex.RunEndEncodedVector;
+import org.apache.arrow.vector.complex.RunEndEncodedVector.RangeIterator;
 import org.apache.arrow.vector.complex.StructVector;
 import org.apache.arrow.vector.complex.UnionVector;
 
@@ -270,42 +271,35 @@ public class RangeEqualsVisitor implements VectorVisitor<Boolean, Range> {
     RunEndEncodedVector leftVector = (RunEndEncodedVector) left;
     RunEndEncodedVector rightVector = (RunEndEncodedVector) right;
 
-    final int leftRangeEnd = range.getLeftStart() + range.getLength();
-    final int rightRangeEnd = range.getRightStart() + range.getLength();
+    final RunEndEncodedVector.RangeIterator leftIterator =
+        new RunEndEncodedVector.RangeIterator(leftVector, range.getLeftStart(), range.getLength());
+    final RunEndEncodedVector.RangeIterator rightIterator =
+        new RunEndEncodedVector.RangeIterator(
+            rightVector, range.getRightStart(), range.getLength());
 
     FieldVector leftValuesVector = leftVector.getValuesVector();
     FieldVector rightValuesVector = rightVector.getValuesVector();
 
     RangeEqualsVisitor innerVisitor = createInnerVisitor(leftValuesVector, rightValuesVector, null);
 
-    int leftLogicalIndex = range.getLeftStart();
-    int rightLogicalIndex = range.getRightStart();
+    while (nextRun(leftIterator, rightIterator)) {
+      int leftPhysicalIndex = leftIterator.getRunIndex();
+      int rightPhysicalIndex = rightIterator.getRunIndex();
 
-    while (leftLogicalIndex < leftRangeEnd) {
-      // TODO: implement it more efficient
-      // https://github.com/apache/arrow/issues/44157
-      int leftPhysicalIndex = leftVector.getPhysicalIndex(leftLogicalIndex);
-      int rightPhysicalIndex = rightVector.getPhysicalIndex(rightLogicalIndex);
-      if (leftValuesVector.accept(
-          innerVisitor, new Range(leftPhysicalIndex, rightPhysicalIndex, 1))) {
-        int leftRunEnd = leftVector.getRunEnd(leftLogicalIndex);
-        int rightRunEnd = rightVector.getRunEnd(rightLogicalIndex);
-
-        int leftRunLength = Math.min(leftRunEnd, leftRangeEnd) - leftLogicalIndex;
-        int rightRunLength = Math.min(rightRunEnd, rightRangeEnd) - rightLogicalIndex;
-
-        if (leftRunLength != rightRunLength) {
-          return false;
-        } else {
-          leftLogicalIndex = leftRunEnd;
-          rightLogicalIndex = rightRunEnd;
-        }
-      } else {
+      if (leftIterator.getRunLength() != rightIterator.getRunLength()
+          || !leftValuesVector.accept(
+              innerVisitor, new Range(leftPhysicalIndex, rightPhysicalIndex, 1))) {
         return false;
       }
     }
 
-    return true;
+    return leftIterator.isEnd() && rightIterator.isEnd();
+  }
+
+  private static boolean nextRun(RangeIterator leftIterator, RangeIterator rightIterator) {
+    boolean left = leftIterator.nextRun();
+    boolean right = rightIterator.nextRun();
+    return left && right;
   }
 
   protected RangeEqualsVisitor createInnerVisitor(

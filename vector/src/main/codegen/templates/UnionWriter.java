@@ -28,6 +28,8 @@ import org.apache.arrow.vector.types.Types;
 package org.apache.arrow.vector.complex.impl;
 
 <#include "/@includes/vv_imports.ftl" />
+import java.util.HashMap;
+
 import org.apache.arrow.vector.complex.writer.BaseWriter;
 import org.apache.arrow.vector.types.Types.MinorType;
 
@@ -213,6 +215,33 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
     return getMapWriter(arrowType);
   }
 
+  private java.util.Map<ArrowType, ExtensionWriter> extensionWriters = new HashMap<>();
+
+  private ExtensionWriter getExtensionWriter(ArrowType arrowType) {
+    ExtensionWriter w = extensionWriters.get(arrowType);
+    if (w == null) {
+      w = ((ExtensionType) arrowType).getNewFieldWriter(data.getExtension(arrowType));
+      w.setPosition(idx());
+      extensionWriters.put(arrowType, w);
+    }
+    return w;
+  }
+
+  public void writeExtension(Object value, ArrowType type)  {
+    data.setType(idx(), MinorType.EXTENSIONTYPE);
+    ExtensionWriter w = getExtensionWriter(type);
+    w.setPosition(idx());
+    w.writeExtension(value);
+  }
+
+  @Override
+  public void write(ExtensionHolder holder)  {
+    data.setType(idx(), MinorType.EXTENSIONTYPE);
+    ExtensionWriter w = getExtensionWriter(holder.type());
+    w.setPosition(idx());
+    w.write(holder);
+  }
+
   BaseWriter getWriter(MinorType minorType) {
     return getWriter(minorType, null);
   }
@@ -227,6 +256,8 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
       return getListViewWriter();
     case MAP:
       return getMapWriter(arrowType);
+    case EXTENSIONTYPE:
+      return getExtensionWriter(arrowType);
     <#list vv.types as type>
       <#list type.minor as minor>
         <#assign name = minor.class?cap_first />
@@ -458,6 +489,20 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
     data.setType(idx(), MinorType.MAP);
     getStructWriter().setPosition(idx());
     return getStructWriter().map(name, keysSorted);
+  }
+
+  @Override
+  public ExtensionWriter extension(ArrowType arrowType) {
+    data.setType(idx(), MinorType.EXTENSIONTYPE);
+    getListWriter().setPosition(idx());
+    return getListWriter().extension(arrowType);
+  }
+
+  @Override
+  public ExtensionWriter extension(String name, ArrowType arrowType) {
+    data.setType(idx(), MinorType.EXTENSIONTYPE);
+    getStructWriter().setPosition(idx());
+    return getStructWriter().extension(name, arrowType);
   }
 
   <#list vv.types as type><#list type.minor as minor>

@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.memory.util.CommonUtil;
 import org.apache.arrow.vector.BaseValueVector;
 import org.apache.arrow.vector.BaseVariableWidthViewVector;
 import org.apache.arrow.vector.BigIntVector;
@@ -46,6 +47,7 @@ import org.apache.arrow.vector.complex.DenseUnionVector;
 import org.apache.arrow.vector.complex.FixedSizeListVector;
 import org.apache.arrow.vector.complex.LargeListVector;
 import org.apache.arrow.vector.complex.ListVector;
+import org.apache.arrow.vector.complex.RunEndEncodedVector;
 import org.apache.arrow.vector.complex.StructVector;
 import org.apache.arrow.vector.complex.UnionVector;
 import org.apache.arrow.vector.holders.NullableBigIntHolder;
@@ -309,7 +311,15 @@ public class TestVectorAppender {
 
   @Test
   public void testAppendLargeAndSmallVariableVectorsWithinLimit() {
-    int sixteenthOfMaxAllocation = Math.toIntExact(BaseValueVector.MAX_ALLOCATION_SIZE / 16);
+    // Using the max power of 2 allocation size to avoid hitting the max limit at round ups
+    long maxPowerOfTwoAllocationSize =
+        CommonUtil.nextPowerOfTwo(BaseValueVector.MAX_ALLOCATION_SIZE);
+    if (maxPowerOfTwoAllocationSize > BaseValueVector.MAX_ALLOCATION_SIZE) {
+      maxPowerOfTwoAllocationSize =
+          CommonUtil.nextPowerOfTwo(BaseValueVector.MAX_ALLOCATION_SIZE / 2);
+    }
+
+    int sixteenthOfMaxAllocation = Math.toIntExact(maxPowerOfTwoAllocationSize / 16);
     try (VarCharVector target = makeVarCharVec(1, sixteenthOfMaxAllocation);
         VarCharVector delta = makeVarCharVec(sixteenthOfMaxAllocation, 1)) {
       new VectorAppender(delta).visit(target, null);
@@ -1013,6 +1023,72 @@ public class TestVectorAppender {
       // append
       VectorAppender appender = new VectorAppender(targetVector);
       assertThrows(IllegalArgumentException.class, () -> deltaVector.accept(appender, null));
+    }
+  }
+
+  @Test
+  public void testAppendRunEndEncodedVector() {
+    final FieldType reeFieldType = FieldType.notNullable(ArrowType.RunEndEncoded.INSTANCE);
+    final Field runEndsField =
+        new Field("runEnds", FieldType.notNullable(Types.MinorType.INT.getType()), null);
+    final Field valuesField = Field.nullable("values", Types.MinorType.INT.getType());
+    final List<Field> children = Arrays.asList(runEndsField, valuesField);
+
+    final Field targetField = new Field("target", reeFieldType, children);
+    final Field deltaField = new Field("delta", reeFieldType, children);
+    try (RunEndEncodedVector target = new RunEndEncodedVector(targetField, allocator, null);
+        RunEndEncodedVector delta = new RunEndEncodedVector(deltaField, allocator, null)) {
+
+      // populate target
+      target.allocateNew();
+      // data: [1, 1, 2, null, 3, 3, 3] (7 values)
+      // values: [1, 2, null, 3]
+      // runEnds: [2, 3, 4, 7]
+      ValueVectorDataPopulator.setVector((IntVector) target.getValuesVector(), 1, 2, null, 3);
+      ValueVectorDataPopulator.setVector((IntVector) target.getRunEndsVector(), 2, 3, 4, 7);
+      target.setValueCount(7);
+
+      // populate delta
+      delta.allocateNew();
+      // data: [3, 4, 4, 5, null, null] (6 values)
+      // values: [3, 4, 5, null]
+      // runEnds: [1, 3, 4, 6]
+      ValueVectorDataPopulator.setVector((IntVector) delta.getValuesVector(), 3, 4, 5, null);
+      ValueVectorDataPopulator.setVector((IntVector) delta.getRunEndsVector(), 1, 3, 4, 6);
+      delta.setValueCount(6);
+
+      VectorAppender appender = new VectorAppender(target);
+      delta.accept(appender, null);
+
+      assertEquals(13, target.getValueCount());
+
+      final Field expectedField = new Field("expected", reeFieldType, children);
+      try (RunEndEncodedVector expected = new RunEndEncodedVector(expectedField, allocator, null)) {
+        expected.allocateNew();
+        // expected data: [1, 1, 2, null, 3, 3, 3, 3, 4, 4, 5, null, null] (13 values)
+        // expected values: [1, 2, null, 3, 3, 4, 5, null]
+        // expected runEnds: [2, 3, 4, 7, 8, 10, 11, 13]
+        ValueVectorDataPopulator.setVector(
+            (IntVector) expected.getValuesVector(), 1, 2, null, 3, 3, 4, 5, null);
+        ValueVectorDataPopulator.setVector(
+            (IntVector) expected.getRunEndsVector(), 2, 3, 4, 7, 8, 10, 11, 13);
+        expected.setValueCount(13);
+
+        assertVectorsEqual(expected, target);
+      }
+
+      // Check that delta is unchanged.
+      final Field expectedDeltaField = new Field("expectedDelta", reeFieldType, children);
+      try (RunEndEncodedVector expectedDelta =
+          new RunEndEncodedVector(expectedDeltaField, allocator, null)) {
+        expectedDelta.allocateNew();
+        ValueVectorDataPopulator.setVector(
+            (IntVector) expectedDelta.getValuesVector(), 3, 4, 5, null);
+        ValueVectorDataPopulator.setVector(
+            (IntVector) expectedDelta.getRunEndsVector(), 1, 3, 4, 6);
+        expectedDelta.setValueCount(6);
+        assertVectorsEqual(expectedDelta, delta);
+      }
     }
   }
 
