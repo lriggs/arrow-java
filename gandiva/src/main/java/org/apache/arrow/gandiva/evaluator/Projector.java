@@ -42,6 +42,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
  */
 public class Projector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Projector.class);
+  private static final MakeLockStriping MAKE_LOCKS = new MakeLockStriping();
 
   private JniWrapper wrapper;
   private final long moduleId;
@@ -188,7 +189,7 @@ public class Projector {
    * @param configurationId Custom configuration created through config builder.
    * @return A native evaluator object that can be used to invoke these projections on a RecordBatch
    */
-  public static synchronized Projector make(
+  public static Projector make(
       Schema schema,
       List<ExpressionTree> exprs,
       SelectionVectorType selectionVectorType,
@@ -202,13 +203,21 @@ public class Projector {
 
     // Invoke the JNI layer to create the LLVM module representing the expressions
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
+    byte[] schemaBytes = schemaBuf.toByteArray();
+    byte[] exprBytes = builder.build().toByteArray();
     JniWrapper wrapper = JniLoader.getInstance().getWrapper();
-    long moduleId =
-        wrapper.buildProjector(
-            schemaBuf.toByteArray(),
-            builder.build().toByteArray(),
-            selectionVectorType.getNumber(),
-            configurationId);
+    long moduleId;
+    // Concurrent make() calls for the same (schema, expressions, selection vector mode,
+    // configuration) tuple hit the same entry in Gandiva's native expression cache; serializing
+    // those -- and only those -- avoids the duplicate-LLVM-symbol crash from GH-601 without
+    // forcing unrelated compilations on other threads to wait behind one process-wide lock.
+    synchronized (
+        MAKE_LOCKS.forKey(
+            schemaBytes, exprBytes, selectionVectorType.getNumber(), configurationId)) {
+      moduleId =
+          wrapper.buildProjector(
+              schemaBytes, exprBytes, selectionVectorType.getNumber(), configurationId);
+    }
     logger.debug("Created module for the projector with id {}", moduleId);
     return new Projector(wrapper, moduleId, schema, exprs.size());
   }
