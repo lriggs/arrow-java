@@ -19,6 +19,7 @@ package org.apache.arrow.gandiva.evaluator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,10 +30,13 @@ import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
@@ -99,19 +103,74 @@ public class ProjectorTest extends BaseEvaluatorTest {
     return varBufs(strings, utf16Charset);
   }
 
-  private void testMakeProjectorParallel(ConfigurationBuilder.ConfigOptions configOptions)
-      throws InterruptedException {
-    List<Schema> schemas = Lists.newArrayList();
-    Field a = Field.nullable("a", int64);
-    Field b = Field.nullable("b", int64);
-    IntStream.range(0, 1000)
-        .forEach(
-            i -> {
-              Field c = Field.nullable("" + i, int64);
-              List<Field> cols = Lists.newArrayList(a, b, c);
-              schemas.add(new Schema(cols));
-            });
+  /**
+   * Builds projectors concurrently and fails if any of them errors out.
+   *
+   * <p>Failures here surface as a {@link GandivaException} carrying a native {@code CodeGenError},
+   * not as a JVM crash -- see GH-601, where concurrent builds for the same native expression-cache
+   * key raced and produced "Duplicate definition of symbol 'expr_0_0'". Every exception must
+   * therefore be collected and re-thrown; swallowing them makes this test unable to observe the very
+   * bug it exists for.
+   *
+   * @param schemas schemas to pick from, one per task, round-robin
+   * @param exprs the expressions to compile
+   * @param configOptions custom configuration, or null for the default
+   */
+  private void makeProjectorsConcurrently(
+      List<Schema> schemas, List<ExpressionTree> exprs, ConfigurationBuilder.ConfigOptions configOptions)
+      throws Exception {
+    final int numTasks = 1000;
+    ExecutorService executors = Executors.newFixedThreadPool(16);
+    List<Throwable> failures = Collections.synchronizedList(new ArrayList<>());
 
+    try {
+      IntStream.range(0, numTasks)
+          .forEach(
+              i -> {
+                Schema schema = schemas.get(i % schemas.size());
+                executors.submit(
+                    () -> {
+                      Projector evaluator = null;
+                      try {
+                        evaluator =
+                            configOptions == null
+                                ? Projector.make(schema, exprs)
+                                : Projector.make(schema, exprs, configOptions);
+                        assertNotNull(evaluator);
+                      } catch (Throwable t) {
+                        failures.add(t);
+                      } finally {
+                        if (evaluator != null) {
+                          try {
+                            evaluator.close();
+                          } catch (Throwable t) {
+                            failures.add(t);
+                          }
+                        }
+                      }
+                    });
+              });
+      executors.shutdown();
+      assertTrue(
+          executors.awaitTermination(100, java.util.concurrent.TimeUnit.SECONDS),
+          "projector builds did not finish within the timeout");
+    } finally {
+      executors.shutdownNow();
+    }
+
+    if (!failures.isEmpty()) {
+      AssertionError error =
+          new AssertionError(
+              failures.size()
+                  + " of "
+                  + numTasks
+                  + " concurrent Projector.make() calls failed; first failure attached");
+      error.initCause(failures.get(0));
+      throw error;
+    }
+  }
+
+  private List<ExpressionTree> greaterThanExpr(Field a, Field b) {
     TreeNode aNode = TreeBuilder.makeField(a);
     TreeNode bNode = TreeBuilder.makeField(b);
     List<TreeNode> args = Lists.newArrayList(aNode, bNode);
@@ -120,32 +179,110 @@ public class ProjectorTest extends BaseEvaluatorTest {
     TreeNode ifNode = TreeBuilder.makeIf(cond, aNode, bNode, int64);
 
     ExpressionTree expr = TreeBuilder.makeExpression(ifNode, Field.nullable("c", int64));
-    List<ExpressionTree> exprs = Lists.newArrayList(expr);
+    return Lists.newArrayList(expr);
+  }
 
-    // build projectors in parallel choosing schema at random
-    // this should hit the same cache entry thus exposing
-    // any threading issues.
-    ExecutorService executors = Executors.newFixedThreadPool(16);
-
-    IntStream.range(0, 1000)
+  private void testMakeProjectorParallel(ConfigurationBuilder.ConfigOptions configOptions)
+      throws Exception {
+    List<Schema> schemas = Lists.newArrayList();
+    Field a = Field.nullable("a", int64);
+    Field b = Field.nullable("b", int64);
+    IntStream.range(0, 100)
         .forEach(
             i -> {
+              Field c = Field.nullable("" + i, int64);
+              List<Field> cols = Lists.newArrayList(a, b, c);
+              schemas.add(new Schema(cols));
+            });
+
+    // Build projectors in parallel across many distinct schemas. This is the throughput case:
+    // the cache keys mostly differ, so these compilations should proceed independently.
+    makeProjectorsConcurrently(schemas, greaterThanExpr(a, b), configOptions);
+  }
+
+  /**
+   * The actual GH-601 shape: every thread races to build the *same* native expression-cache entry,
+   * starting from a genuine cache miss.
+   *
+   * <p>Two details matter, and both were missing from the older parallel test. First, the threads are
+   * released from a {@link CyclicBarrier} rather than trickling in as the executor ramps up, so the
+   * builds genuinely overlap. Second, each round uses a fresh schema: once a key is in the native
+   * cache every later build takes the cached path and the race window is gone, so a single key gives
+   * at most one chance to observe it.
+   *
+   * <p>Be aware of what this test is and is not. Against a Gandiva without the native fix it does
+   * reproduce the duplicate-symbol failure, but only at roughly one round in 300 -- at the round count
+   * below it will usually pass even on affected builds. Treat it as a smoke test that concurrent
+   * same-key builds succeed and produce usable projectors. The reliable regression guard for GH-601
+   * is the native test (TestConcurrentMake in cpp/src/gandiva/tests/concurrent_make_test.cc), which
+   * reproduces within a handful of iterations because it races the cache read directly without the
+   * protobuf and JNI round trip in between.
+   */
+  private void testMakeProjectorParallelSameKey(ConfigurationBuilder.ConfigOptions configOptions)
+      throws Exception {
+    final int numThreads = 16;
+    final int numRounds = 50;
+
+    Field a = Field.nullable("a", int64);
+    Field b = Field.nullable("b", int64);
+    List<ExpressionTree> exprs = greaterThanExpr(a, b);
+
+    ExecutorService executors = Executors.newFixedThreadPool(numThreads);
+    List<Throwable> failures = Collections.synchronizedList(new ArrayList<>());
+
+    try {
+      for (int round = 0; round < numRounds; round++) {
+        // Unique per round => the first thread to arrive genuinely misses the native cache.
+        Field c = Field.nullable("c" + round, int64);
+        final Schema schema = new Schema(Lists.newArrayList(a, b, c));
+        final CyclicBarrier gate = new CyclicBarrier(numThreads);
+
+        List<Future<?>> futures = new ArrayList<>();
+        for (int i = 0; i < numThreads; i++) {
+          futures.add(
               executors.submit(
                   () -> {
+                    Projector evaluator = null;
                     try {
-                      Projector evaluator =
+                      gate.await(30, java.util.concurrent.TimeUnit.SECONDS);
+                      evaluator =
                           configOptions == null
-                              ? Projector.make(schemas.get((int) (Math.random() * 100)), exprs)
-                              : Projector.make(
-                                  schemas.get((int) (Math.random() * 100)), exprs, configOptions);
-                      evaluator.close();
-                    } catch (GandivaException e) {
-                      e.printStackTrace();
+                              ? Projector.make(schema, exprs)
+                              : Projector.make(schema, exprs, configOptions);
+                      assertNotNull(evaluator);
+                    } catch (Throwable t) {
+                      failures.add(t);
+                    } finally {
+                      if (evaluator != null) {
+                        try {
+                          evaluator.close();
+                        } catch (Throwable t) {
+                          failures.add(t);
+                        }
+                      }
                     }
-                  });
-            });
-    executors.shutdown();
-    executors.awaitTermination(100, java.util.concurrent.TimeUnit.SECONDS);
+                  }));
+        }
+        for (Future<?> future : futures) {
+          future.get(120, java.util.concurrent.TimeUnit.SECONDS);
+        }
+      }
+    } finally {
+      executors.shutdownNow();
+    }
+
+    if (!failures.isEmpty()) {
+      AssertionError error =
+          new AssertionError(
+              failures.size()
+                  + " concurrent same-cache-key Projector.make() calls failed across "
+                  + numRounds
+                  + " rounds of "
+                  + numThreads
+                  + " threads; first failure attached");
+      error.initCause(failures.get(0));
+      throw error;
+    }
   }
 
   @Test
@@ -154,6 +291,14 @@ public class ProjectorTest extends BaseEvaluatorTest {
     testMakeProjectorParallel(new ConfigurationBuilder.ConfigOptions().withTargetCPU(false));
     testMakeProjectorParallel(
         new ConfigurationBuilder.ConfigOptions().withTargetCPU(false).withOptimize(false));
+  }
+
+  @Test
+  public void testMakeProjectorParallelSameKey() throws Exception {
+    // Only the default configuration. The configuration is part of the native cache key, so varying
+    // it just builds unrelated cache entries -- it adds runtime without exercising anything new in
+    // the same-key race this test is about.
+    testMakeProjectorParallelSameKey(null);
   }
 
   // Will be fixed by https://issues.apache.org/jira/browse/ARROW-4371

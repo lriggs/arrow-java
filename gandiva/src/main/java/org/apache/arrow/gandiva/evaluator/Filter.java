@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 public class Filter {
 
   private static final Logger logger = LoggerFactory.getLogger(Filter.class);
-  private static final MakeLockStriping MAKE_LOCKS = new MakeLockStriping();
 
   private final JniWrapper wrapper;
   private final long moduleId;
@@ -120,12 +119,10 @@ public class Filter {
     byte[] schemaBytes = schemaBuf.toByteArray();
     byte[] conditionBytes = conditionBuf.toByteArray();
     JniWrapper wrapper = JniLoader.getInstance().getWrapper();
-    long moduleId;
-    // See the equivalent comment in Projector.make(): serialize only concurrent builds that hit
-    // the same native expression-cache entry, instead of every make() call in the process.
-    synchronized (MAKE_LOCKS.forKey(schemaBytes, conditionBytes, configurationId)) {
-      moduleId = wrapper.buildFilter(schemaBytes, conditionBytes, configurationId);
-    }
+    // No lock here, deliberately -- see the equivalent comment in Projector.make(). The
+    // duplicate-LLVM-symbol race from GH-601 is fixed in Gandiva's native Filter::Make(), so this
+    // no longer needs to be serialized.
+    long moduleId = wrapper.buildFilter(schemaBytes, conditionBytes, configurationId);
     logger.debug("Created module for the filter with id {}", moduleId);
     return new Filter(wrapper, moduleId, schema);
   }
