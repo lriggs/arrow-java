@@ -109,15 +109,17 @@ public class ProjectorTest extends BaseEvaluatorTest {
    * <p>Failures here surface as a {@link GandivaException} carrying a native {@code CodeGenError},
    * not as a JVM crash -- see GH-601, where concurrent builds for the same native expression-cache
    * key raced and produced "Duplicate definition of symbol 'expr_0_0'". Every exception must
-   * therefore be collected and re-thrown; swallowing them makes this test unable to observe the very
-   * bug it exists for.
+   * therefore be collected and re-thrown; swallowing them makes this test unable to observe the
+   * very bug it exists for.
    *
    * @param schemas schemas to pick from, one per task, round-robin
    * @param exprs the expressions to compile
    * @param configOptions custom configuration, or null for the default
    */
   private void makeProjectorsConcurrently(
-      List<Schema> schemas, List<ExpressionTree> exprs, ConfigurationBuilder.ConfigOptions configOptions)
+      List<Schema> schemas,
+      List<ExpressionTree> exprs,
+      ConfigurationBuilder.ConfigOptions configOptions)
       throws Exception {
     final int numTasks = 1000;
     ExecutorService executors = Executors.newFixedThreadPool(16);
@@ -204,19 +206,19 @@ public class ProjectorTest extends BaseEvaluatorTest {
    * The actual GH-601 shape: every thread races to build the *same* native expression-cache entry,
    * starting from a genuine cache miss.
    *
-   * <p>Two details matter, and both were missing from the older parallel test. First, the threads are
-   * released from a {@link CyclicBarrier} rather than trickling in as the executor ramps up, so the
-   * builds genuinely overlap. Second, each round uses a fresh schema: once a key is in the native
-   * cache every later build takes the cached path and the race window is gone, so a single key gives
-   * at most one chance to observe it.
+   * <p>Two details matter, and both were missing from the older parallel test. First, the threads
+   * are released from a {@link CyclicBarrier} rather than trickling in as the executor ramps up, so
+   * the builds genuinely overlap. Second, each round uses a fresh schema: once a key is in the
+   * native cache every later build takes the cached path and the race window is gone, so a single
+   * key gives at most one chance to observe it.
    *
    * <p>Be aware of what this test is and is not. Against a Gandiva without the native fix it does
-   * reproduce the duplicate-symbol failure, but only at roughly one round in 300 -- at the round count
-   * below it will usually pass even on affected builds. Treat it as a smoke test that concurrent
-   * same-key builds succeed and produce usable projectors. The reliable regression guard for GH-601
-   * is the native test (TestConcurrentMake in cpp/src/gandiva/tests/concurrent_make_test.cc), which
-   * reproduces within a handful of iterations because it races the cache read directly without the
-   * protobuf and JNI round trip in between.
+   * reproduce the duplicate-symbol failure, but only at roughly one round in 300 -- at the round
+   * count below it will usually pass even on affected builds. Treat it as a smoke test that
+   * concurrent same-key builds succeed and produce usable projectors. The reliable regression guard
+   * for GH-601 is the native test (TestConcurrentMake in
+   * cpp/src/gandiva/tests/concurrent_make_test.cc), which reproduces within a handful of iterations
+   * because it races the cache read directly without the protobuf and JNI round trip in between.
    */
   private void testMakeProjectorParallelSameKey(ConfigurationBuilder.ConfigOptions configOptions)
       throws Exception {
