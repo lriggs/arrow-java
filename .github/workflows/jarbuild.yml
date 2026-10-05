@@ -267,6 +267,7 @@ jobs:
           # tries to replace /usr/local/bin/2to3 and so on and causes
           # a conflict error.
           brew update
+          brew unlink openssl@1.1
           for python_package in $(brew list | grep python@); do
             brew install --overwrite ${python_package}
           done
