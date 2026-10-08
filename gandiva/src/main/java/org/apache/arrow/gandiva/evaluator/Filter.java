@@ -111,14 +111,18 @@ public class Filter {
    * @param configurationId Custom configuration created through config builder.
    * @return A native evaluator object that can be used to invoke these projections on a RecordBatch
    */
-  public static synchronized Filter make(Schema schema, Condition condition, long configurationId)
+  public static Filter make(Schema schema, Condition condition, long configurationId)
       throws GandivaException {
     // Invoke the JNI layer to create the LLVM module representing the filter.
     GandivaTypes.Condition conditionBuf = condition.toProtobuf();
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
+    byte[] schemaBytes = schemaBuf.toByteArray();
+    byte[] conditionBytes = conditionBuf.toByteArray();
     JniWrapper wrapper = JniLoader.getInstance().getWrapper();
-    long moduleId =
-        wrapper.buildFilter(schemaBuf.toByteArray(), conditionBuf.toByteArray(), configurationId);
+    // No lock here, deliberately -- see the equivalent comment in Projector.make(). The
+    // duplicate-LLVM-symbol race from GH-601 is fixed in Gandiva's native Filter::Make(), so this
+    // no longer needs to be serialized.
+    long moduleId = wrapper.buildFilter(schemaBytes, conditionBytes, configurationId);
     logger.debug("Created module for the filter with id {}", moduleId);
     return new Filter(wrapper, moduleId, schema);
   }

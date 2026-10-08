@@ -188,7 +188,7 @@ public class Projector {
    * @param configurationId Custom configuration created through config builder.
    * @return A native evaluator object that can be used to invoke these projections on a RecordBatch
    */
-  public static synchronized Projector make(
+  public static Projector make(
       Schema schema,
       List<ExpressionTree> exprs,
       SelectionVectorType selectionVectorType,
@@ -202,13 +202,19 @@ public class Projector {
 
     // Invoke the JNI layer to create the LLVM module representing the expressions
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
+    byte[] schemaBytes = schemaBuf.toByteArray();
+    byte[] exprBytes = builder.build().toByteArray();
     JniWrapper wrapper = JniLoader.getInstance().getWrapper();
+    // No lock here, deliberately. This method used to be `static synchronized`, which serialized
+    // every LLVM compilation in the process, because concurrent builds for the same native
+    // expression-cache key could race and fail with a duplicate-LLVM-symbol error (GH-601).
+    // That race was a double read of the native object cache inside Projector::Make(), and it is
+    // fixed in Gandiva itself -- see "GH-601: Fix TOCTOU race in Gandiva's LLVM object cache read"
+    // in the arrow C++ tree. Concurrent buildProjector() calls are safe against a Gandiva that
+    // contains that fix; do not re-add a lock here without first checking the native side.
     long moduleId =
         wrapper.buildProjector(
-            schemaBuf.toByteArray(),
-            builder.build().toByteArray(),
-            selectionVectorType.getNumber(),
-            configurationId);
+            schemaBytes, exprBytes, selectionVectorType.getNumber(), configurationId);
     logger.debug("Created module for the projector with id {}", moduleId);
     return new Projector(wrapper, moduleId, schema, exprs.size());
   }

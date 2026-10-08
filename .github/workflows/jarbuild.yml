@@ -267,6 +267,13 @@ jobs:
           # tries to replace /usr/local/bin/2to3 and so on and causes
           # a conflict error.
           brew update
+          # The runner image has stale symlinks (e.g. bin/openssl) pointing
+          # at the keg-only openssl@1.1. "brew unlink openssl@1.1" doesn't
+          # remove them, and they block openssl@3 from linking when it's
+          # upgraded as a python@XXX dependency. Remove them directly.
+          brew_prefix="$(brew --prefix)"
+          find "${brew_prefix}/bin" "${brew_prefix}/lib" "${brew_prefix}/include" \
+            -maxdepth 2 -type l -lname '*openssl@1.1*' -print -delete 2>/dev/null || :
           for python_package in $(brew list | grep python@); do
             brew install --overwrite ${python_package}
           done
