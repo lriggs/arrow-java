@@ -203,6 +203,13 @@ elif [ -d "${build_dir}/cpp/re2_ep-install" ]; then
   jni_cmake_args="${jni_cmake_args} -Dre2_ROOT=${build_dir}/cpp/re2_ep-install"
 fi
 
+# Bundled Protobuf headers include Abseil, so point the Gandiva JNI build at the
+# bundled Abseil headers if Arrow built them (see upstream GH-1242).
+absl_include_dir="${build_dir}/cpp/_deps/absl-src"
+if [ -d "${absl_include_dir}/absl" ]; then
+  jni_cmake_args="${jni_cmake_args} -DARROW_JAVA_JNI_ABSL_INCLUDE_DIR=${absl_include_dir}"
+fi
+
 export JAVA_JNI_CMAKE_ARGS="${jni_cmake_args}"
 "${source_dir}/ci/scripts/jni_build.sh" \
   "${source_dir}" \
