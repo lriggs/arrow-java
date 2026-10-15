@@ -86,11 +86,18 @@ export AWS_EC2_METADATA_DISABLED=TRUE
 
 install_dir="${build_dir}/cpp-install"
 
+# Gandiva compiles its precompiled bitcode with LLVM's clang, which does not find
+# the gcc-toolset libstdc++ and falls back to the system one (too old for C++20).
+# Pass the host compiler's include directories, as Arrow's cpp_build.sh does.
+gandiva_pc_cxx_flags=$(echo | "${CXX:-c++}" -E -Wp,-v -xc++ - 2>&1 |
+  grep '^ ' | awk '{print "-isystem;" $1}' | tr '\n' ';')
+
 cmake \
   -S "${arrow_dir}/cpp" \
   -B "${build_dir}/cpp" \
   --preset=ninja-release-jni-linux \
   -DORC_SOURCE=BUNDLED \
+  -DARROW_GANDIVA_PC_CXX_FLAGS="${gandiva_pc_cxx_flags}" \
   -DCMAKE_INSTALL_PREFIX="${install_dir}"
 cmake --build "${build_dir}/cpp"
 cmake --install "${build_dir}/cpp"

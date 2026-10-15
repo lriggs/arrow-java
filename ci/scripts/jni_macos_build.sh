@@ -98,7 +98,9 @@ if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
   vcpkg_installed="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}"
   llvm_cmake_dir="${vcpkg_installed}/share/llvm"
   if [ -d "${llvm_cmake_dir}" ]; then
-    llvm_dir_arg="-DLLVM_DIR=${llvm_cmake_dir}"
+    # Use LLVM_ROOT, not LLVM_DIR: Arrow's FindLLVMAlt tries each supported LLVM
+    # version newest-first, and the first mismatch resets LLVM_DIR to NOTFOUND.
+    llvm_dir_arg="-DLLVM_ROOT=${vcpkg_installed}"
 
     # vcpkg's clang needs to know where to find system headers
     # Arrow's GandivaAddBitcode.cmake uses CMAKE_OSX_SYSROOT to set SDKROOT env var
