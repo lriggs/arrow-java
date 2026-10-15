@@ -149,6 +149,11 @@ jobs:
         with:
           repository: apache/parquet-testing
           path: arrow/cpp/submodules/parquet-testing
+      - name: Use the Apache archive for the ORC source
+        # Apache mirrors keep only current releases; archive.apache.org keeps all of them.
+        run: |
+          orc=$(sed -n 's/^ARROW_ORC_BUILD_VERSION=//p' arrow/cpp/thirdparty/versions.txt)
+          echo "ARROW_ORC_URL=https://archive.apache.org/dist/orc/orc-${orc}/orc-${orc}.tar.gz" >> "${GITHUB_ENV}"
       - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
@@ -216,6 +221,11 @@ jobs:
         with:
           repository: apache/parquet-testing
           path: arrow/cpp/submodules/parquet-testing
+      - name: Use the Apache archive for the ORC source
+        # Apache mirrors keep only current releases; archive.apache.org keeps all of them.
+        run: |
+          orc=$(sed -n 's/^ARROW_ORC_BUILD_VERSION=//p' arrow/cpp/thirdparty/versions.txt)
+          echo "ARROW_ORC_URL=https://archive.apache.org/dist/orc/orc-${orc}/orc-${orc}.tar.gz" >> "${GITHUB_ENV}"
       - name: Set up Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
@@ -401,6 +411,10 @@ jobs:
           test -f jni/arrow_dataset_jni/aarch_64/libarrow_dataset_jni.dylib
           test -f jni/arrow_orc_jni/aarch_64/libarrow_orc_jni.dylib
           test -f jni/gandiva_jni/aarch_64/libgandiva_jni.dylib
+
+          for platform in linux-x86_64 linux-aarch_64 osx-aarch_64; do
+            test -f jni/arrow_parquet/${platform}/lib/pkgconfig/arrow-parquet.pc
+          done
 
       - name: Checkout apache/arrow-testing
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

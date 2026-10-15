@@ -111,6 +111,11 @@ export JAVA_JNI_CMAKE_ARGS
   "${install_dir}" \
   "${build_dir}" \
   "${dist_dir}"
+"${source_dir}/ci/scripts/arrow_parquet_package.sh" \
+  "${arrow_dir}" \
+  "${install_dir}" \
+  "${dist_dir}" \
+  "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig"
 
 if [ "${ARROW_USE_CCACHE}" == "ON" ]; then
   github_actions_group_begin "ccache statistics after build"

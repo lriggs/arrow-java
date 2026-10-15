@@ -107,6 +107,7 @@ services:
       - ${DOCKER_VOLUME_PREFIX}maven-cache:/root/.m2:delegated
     environment:
       ARROW_JAVA_CDATA: "ON"
+      ARROW_ORC_URL:
       CCACHE_DIR: "/ccache"
     command:
       ["/bin/bash", "-c",

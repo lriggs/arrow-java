@@ -85,6 +85,34 @@ github_actions_group_end
 popd
 
 github_actions_group_begin "Prepare artifacts"
+# Package the staged Arrow C++ Parquet SDK as platform-classified JARs
+version=$(python3 -c 'import sys, xml.etree.ElementTree as ET; print(ET.parse(sys.argv[1]).getroot().find("{http://maven.apache.org/POM/4.0.0}version").text)' "${source_dir}/pom.xml")
+parquet_artifact="${dist_dir}/arrow-parquet-${version}"
+parquet_dir="${jni_build_dir}/arrow_parquet"
+for platform in linux-x86_64 linux-aarch_64 osx-aarch_64; do
+  cmp "${parquet_dir}/linux-x86_64/ARROW_CPP_REVISION" "${parquet_dir}/${platform}/ARROW_CPP_REVISION"
+  jar cf "${parquet_artifact}-${platform}.jar" -C "${parquet_dir}/${platform}" .
+done
+jar cf "${parquet_artifact}.jar" \
+  -C "${parquet_dir}/linux-x86_64" META-INF \
+  -C "${parquet_dir}/linux-x86_64" ARROW_CPP_REVISION
+cat >"${parquet_artifact}.pom" <<EOF
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.arrow</groupId>
+  <artifactId>arrow-parquet</artifactId>
+  <version>${version}</version>
+  <packaging>jar</packaging>
+  <name>Arrow Parquet</name>
+  <description>Static Arrow C++ Parquet libraries, headers and pkg-config metadata</description>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+</project>
+EOF
 # copy all jar, zip and pom files to the distribution folder
 find ~/.m2/repository/org/apache/arrow \
   "(" \
