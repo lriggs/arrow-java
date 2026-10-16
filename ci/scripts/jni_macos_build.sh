@@ -163,6 +163,8 @@ cmake \
   -DCMAKE_INSTALL_PREFIX="${install_dir}" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
   -DGTest_SOURCE=BUNDLED \
+  -Dsimdjson_SOURCE=BUNDLED \
+  -Duriparser_SOURCE=BUNDLED \
   "${llvm_dir_arg}" \
   "${osx_sysroot_arg}" \
   "${gandiva_cxx_flags}" \
