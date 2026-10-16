@@ -314,6 +314,10 @@ jobs:
           # used on test  We uninstall Homebrew's Protobuf to ensure using
           # bundled Protobuf.
           brew uninstall protobuf || :
+          # Homebrew's Abseil (left behind by Protobuf/gRPC) is shared-only.
+          # Uninstall it so Arrow uses vcpkg's static Abseil and Protobuf
+          # (the "flight" vcpkg feature below), as the Linux build does.
+          brew uninstall --ignore-dependencies abseil || :
 
           echo ""
           echo "=== Free disk space before LLVM build ==="
@@ -327,7 +331,8 @@ jobs:
             --x-install-root=${VCPKG_ROOT_LOCAL}/installed \
             --x-manifest-root=arrow/ci/vcpkg \
             --overlay-ports=arrow/ci/vcpkg/overlay/llvm/ \
-            --x-feature=gandiva-llvm
+            --x-feature=gandiva-llvm \
+            --x-feature=flight
 
           echo ""
           echo "=== Free disk space after LLVM build ==="
