@@ -99,7 +99,7 @@ jar cf "${parquet_artifact}.jar" \
 cat >"${parquet_artifact}.pom" <<EOF
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.arrow</groupId>
+  <groupId>com.dremio.arrow</groupId>
   <artifactId>arrow-parquet</artifactId>
   <version>${version}</version>
   <packaging>jar</packaging>
