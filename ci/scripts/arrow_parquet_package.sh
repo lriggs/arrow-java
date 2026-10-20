@@ -71,7 +71,7 @@ packages=(parquet arrow-compute)
 # Without an external dependency installation, Arrow bundles these into
 # libarrow_bundled_dependencies.a; probing would pick up unrelated host copies.
 if [ -n "${dependency_pkgconfig_dir}" ]; then
-  for dependency in re2 thrift liblz4 libzstd libutf8proc; do
+  for dependency in re2 thrift liblz4 libzstd libutf8proc simdjson; do
     if pkg-config --exists "${dependency}"; then
       packages+=("${dependency}")
     fi
