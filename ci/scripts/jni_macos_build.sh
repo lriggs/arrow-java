@@ -94,6 +94,8 @@ llvm_dir_arg=""
 gandiva_cxx_flags=""
 osx_sysroot_arg=""
 re2_source_arg="-Dre2_SOURCE=BUNDLED"
+absl_source_arg="-Dabsl_SOURCE=BUNDLED"
+protobuf_args=()
 if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
   vcpkg_installed="${VCPKG_ROOT_LOCAL}/installed/${vcpkg_triplet}"
   llvm_cmake_dir="${vcpkg_installed}/share/llvm"
@@ -123,6 +125,18 @@ if [ -n "${VCPKG_ROOT_LOCAL:-}" ]; then
     if [ -d "${re2_cmake_dir}" ]; then
       re2_source_arg="-Dre2_ROOT=${vcpkg_installed}"
     fi
+
+    # Use vcpkg's static Abseil and Protobuf, as the Linux build does. vcpkg's RE2
+    # is built against this Abseil, and Arrow 26 does not export the Abseil
+    # dependency of a bundled Protobuf to static consumers such as the JNI libs.
+    # protobuf_ROOT is for Arrow's config-mode lookup, Protobuf_ROOT for
+    # FindProtobuf in the JNI build.
+    if [ -d "${vcpkg_installed}/share/absl" ]; then
+      absl_source_arg="-Dabsl_ROOT=${vcpkg_installed}"
+    fi
+    if [ -d "${vcpkg_installed}/share/protobuf" ]; then
+      protobuf_args=("-Dprotobuf_ROOT=${vcpkg_installed}" "-DProtobuf_ROOT=${vcpkg_installed}")
+    fi
   fi
 fi
 
@@ -149,6 +163,8 @@ cmake \
   -DCMAKE_INSTALL_PREFIX="${install_dir}" \
   -DCMAKE_UNITY_BUILD="${CMAKE_UNITY_BUILD}" \
   -DGTest_SOURCE=BUNDLED \
+  -Dsimdjson_SOURCE=BUNDLED \
+  -Duriparser_SOURCE=BUNDLED \
   "${llvm_dir_arg}" \
   "${osx_sysroot_arg}" \
   "${gandiva_cxx_flags}" \
@@ -156,13 +172,10 @@ cmake \
   -DPARQUET_BUILD_EXECUTABLES=OFF \
   -DPARQUET_REQUIRE_ENCRYPTION=OFF \
   "${re2_source_arg}" \
+  "${absl_source_arg}" \
+  ${protobuf_args[@]+"${protobuf_args[@]}"} \
   -GNinja
 cmake --build "${build_dir}/cpp" --target install
-# Arrow 23+ builds Protobuf via FetchContent. The protobuf_fc target installs it
-# to protobuf_fc-install so the separate JNI CMake invocation can find it.
-# This target is NOT in the install dependency chain (Ninja skips ALL-only targets
-# when building --target install), so we must trigger it explicitly.
-cmake --build "${build_dir}/cpp" --target protobuf_fc || true
 github_actions_group_end
 
 if [ "${ARROW_RUN_TESTS:-}" == "ON" ]; then
@@ -186,10 +199,16 @@ fi
 # Build up the JNI CMake args based on what's available
 jni_cmake_args="${llvm_dir_arg}"
 
-# Add Protobuf path if bundled, otherwise CMake will find system Protobuf.
-# Arrow 23+ uses FetchContent (protobuf_fc-install); older versions used ExternalProject (protobuf_ep-install).
-if [ -d "${build_dir}/cpp/protobuf_fc-install" ]; then
-  jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/protobuf_fc-install"
+# Protobuf for the JNI build: the vcpkg one if the C++ build used it. Otherwise
+# Arrow built it via FetchContent; use its build and source trees directly as
+# upstream does (installing it via the protobuf_fc target fails for Protobuf 31,
+# whose install script expects protoc-gen-upb, which is not built).
+# Older Arrow versions used ExternalProject (protobuf_ep-install).
+if [ ${#protobuf_args[@]} -gt 0 ]; then
+  jni_cmake_args="${jni_cmake_args} ${protobuf_args[*]}"
+elif [ -d "${build_dir}/cpp/_deps/protobuf-src" ]; then
+  jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/_deps/protobuf-build"
+  jni_cmake_args="${jni_cmake_args} -DProtobuf_SRC_ROOT_FOLDER=${build_dir}/cpp/_deps/protobuf-src"
 elif [ -d "${build_dir}/cpp/protobuf_ep-install" ]; then
   jni_cmake_args="${jni_cmake_args} -DProtobuf_ROOT=${build_dir}/cpp/protobuf_ep-install"
 fi
@@ -205,11 +224,12 @@ elif [ -d "${build_dir}/cpp/re2_ep-install" ]; then
   jni_cmake_args="${jni_cmake_args} -Dre2_ROOT=${build_dir}/cpp/re2_ep-install"
 fi
 
-# Bundled Protobuf headers include Abseil, so point the Gandiva JNI build at the
-# bundled Abseil headers if Arrow built them (see upstream GH-1242).
-absl_include_dir="${build_dir}/cpp/_deps/absl-src"
-if [ -d "${absl_include_dir}/absl" ]; then
-  jni_cmake_args="${jni_cmake_args} -DARROW_JAVA_JNI_ABSL_INCLUDE_DIR=${absl_include_dir}"
+# Point the JNI build at the same Abseil the C++ build used. With bundled
+# Protobuf, its headers need the bundled Abseil headers (see upstream GH-1242).
+if [ "${absl_source_arg}" != "-Dabsl_SOURCE=BUNDLED" ]; then
+  jni_cmake_args="${jni_cmake_args} ${absl_source_arg}"
+elif [ -d "${build_dir}/cpp/_deps/absl-src/absl" ]; then
+  jni_cmake_args="${jni_cmake_args} -DARROW_JAVA_JNI_ABSL_INCLUDE_DIR=${build_dir}/cpp/_deps/absl-src"
 fi
 
 export JAVA_JNI_CMAKE_ARGS="${jni_cmake_args}"
